@@ -1,0 +1,2 @@
+public/data/Batas_desa_simplified.geojson filter=lfs diff=lfs merge=lfs -text
+public/data/Data_Gereja.gdb/a0000000a.gdbtable filter=lfs diff=lfs merge=lfs -text
