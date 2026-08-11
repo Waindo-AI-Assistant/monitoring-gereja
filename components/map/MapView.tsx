@@ -10,6 +10,7 @@ import {
 } from "react";
 import "leaflet/dist/leaflet.css";
 import type * as LeafletNamespace from "leaflet";
+import geojsonvt from "geojson-vt";
 import {
   BASEMAPS,
   INDONESIA_EXTENT,
@@ -22,7 +23,7 @@ import {
   type LayerDef,
   type LayerId,
 } from "@/config/dashboard";
-import { ALL, type Filters } from "@/lib/stats";
+import { ALL, DEFAULT_FILTERS, type Filters } from "@/lib/stats";
 
 /** Alat peta yang aktif — hanya satu yang boleh hidup pada satu waktu. */
 export type MapTool = "measure" | "zoombox" | null;
@@ -33,7 +34,7 @@ export type MapHandle = {
   zoomIn: () => void;
   zoomOut: () => void;
   resetView: () => void;
-  fitTo: (kecamatan: string | typeof ALL, desa: string | typeof ALL) => void;
+  fitTo: (filters: Filters) => void;
 };
 
 type MapViewProps = {
@@ -67,13 +68,11 @@ function sphericalArea(points: LeafletNamespace.LatLng[]): number {
 
 /** Susun tabel atribut untuk popup. Nilai kosong dibuang agar popup tetap ringkas. */
 function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
-  // Cari nama/label utama objek untuk dijadikan judul popup
   const nameKey = Object.keys(props).find((k) =>
     ["name", "nama", "title", "judul"].includes(k.toLowerCase()),
   );
   const titleText = nameKey ? String(props[nameKey]) : layer.label;
 
-  // Cari properti foto/gambar dari geodatabase
   const imgKey = Object.keys(props).find((k) =>
     ["foto", "photo", "image", "gambar", "image_url", "url_foto"].includes(k.toLowerCase()),
   );
@@ -108,6 +107,131 @@ function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
   </div>`;
 }
 
+/* ─────────────── Algoritma Point in Polygon & Rendering Canvas ─────────────── */
+
+function pointInPolygon(point: [number, number], vs: [number, number][]) {
+  const x = point[0], y = point[1];
+  let inside = false;
+  for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+    const xi = vs[i][0], yi = vs[i][1];
+    const xj = vs[j][0], yj = vs[j][1];
+    const intersect = ((yi > y) !== (yj > y))
+        && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function findFeatureAt(latlng: { lat: number; lng: number }, geojson: any) {
+  const x = latlng.lng;
+  const y = latlng.lat;
+
+  for (const feature of geojson.features) {
+    const geom = feature.geometry;
+    if (!geom) continue;
+
+    // Hitung/ambil bbox untuk penyaringan cepat
+    if (!feature.bbox) {
+      let coords: [number, number][] = [];
+      if (geom.type === "Polygon") {
+        coords = geom.coordinates[0];
+      } else if (geom.type === "MultiPolygon") {
+        coords = geom.coordinates.flatMap((poly: any) => poly[0]);
+      }
+      if (coords.length > 0) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (const p of coords) {
+          if (p[0] < minX) minX = p[0];
+          if (p[1] < minY) minY = p[1];
+          if (p[0] > maxX) maxX = p[0];
+          if (p[1] > maxY) maxY = p[1];
+        }
+        feature.bbox = [minX, minY, maxX, maxY];
+      }
+    }
+
+    if (feature.bbox) {
+      const [minX, minY, maxX, maxY] = feature.bbox;
+      if (x < minX || x > maxX || y < minY || y > maxY) continue;
+    }
+
+    if (geom.type === "Polygon") {
+      const outerRing = geom.coordinates[0];
+      if (pointInPolygon([x, y], outerRing)) {
+        return feature;
+      }
+    } else if (geom.type === "MultiPolygon") {
+      for (const polygon of geom.coordinates) {
+        const outerRing = polygon[0];
+        if (pointInPolygon([x, y], outerRing)) {
+          return feature;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function createVectorTileLayer(L: any, geojsonData: any, options: { color: string; weight: number }) {
+  const tileIndex = geojsonvt(geojsonData, {
+    maxZoom: 18,
+    tolerance: 3,
+    extent: 4096,
+    buffer: 64,
+  });
+
+  const CanvasGridLayer = L.GridLayer.extend({
+    createTile: function (coords: any, done: any) {
+      const tile = document.createElement("canvas");
+      const size = this.getTileSize();
+      tile.width = size.x;
+      tile.height = size.y;
+
+      const ctx = tile.getContext("2d");
+      if (!ctx) {
+        setTimeout(() => done(null, tile));
+        return tile;
+      }
+
+      const tileData = tileIndex.getTile(coords.z, coords.x, coords.y);
+      if (!tileData) {
+        setTimeout(() => done(null, tile));
+        return tile;
+      }
+
+      ctx.strokeStyle = options.color;
+      ctx.lineWidth = options.weight;
+
+      for (const feature of tileData.features) {
+        ctx.beginPath();
+        for (const ring of feature.geometry) {
+          for (let i = 0; i < ring.length; i++) {
+            const p = ring[i] as any;
+            const x = (p[0] / 4096) * size.x;
+            const y = (p[1] / 4096) * size.y;
+            if (i === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          }
+          if (feature.type === 3) {
+            ctx.closePath();
+          }
+        }
+        ctx.stroke();
+      }
+
+      setTimeout(() => done(null, tile));
+      return tile;
+    },
+  });
+
+  return new CanvasGridLayer();
+}
+
+/* ─────────────── Komponen Utama MapView ─────────────── */
+
 const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
   {
     basemapId,
@@ -124,8 +248,9 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletNamespace.Map | null>(null);
   const basemapLayerRef = useRef<LeafletNamespace.TileLayer | null>(null);
-  const overlaysRef = useRef<Partial<Record<LayerId, LeafletNamespace.GeoJSON>>>({});
+  const overlaysRef = useRef<Partial<Record<LayerId, any>>>({});
   const dataCacheRef = useRef<Partial<Record<LayerId, GeoJSON.FeatureCollection>>>({});
+  const highlightLayerRef = useRef<any>(null);
 
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
@@ -148,54 +273,39 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
           maxZoom: MAX_ZOOM,
         });
 
+        // Posisi default tengah Indonesia
         const [south, west, north, east] = INDONESIA_EXTENT;
         map.fitBounds([
           [south, west],
           [north, east],
         ]);
 
-        map.on("mousemove", (e: LeafletNamespace.LeafletMouseEvent) =>
-          setCursor({ lat: e.latlng.lat, lng: e.latlng.lng }),
-        );
-        map.on("mouseout", () => setCursor(null));
-        map.on("popupclose", () => {
-          onFeatureSelect?.(null, "");
+        map.on("mousemove", (e) => {
+          if (!cancelled) setCursor(e.latlng);
         });
 
         mapRef.current = map;
         setMapReady(true);
       } catch (error) {
         if (!cancelled) {
-          setMapError(
-            error instanceof Error ? error.message : "Peta gagal dimuat. Coba muat ulang halaman.",
-          );
+          setMapError(error instanceof Error ? error.message : "Inisialisasi Leaflet gagal.");
         }
       }
     })();
 
     return () => {
       cancelled = true;
-      mapRef.current?.remove();
-      mapRef.current = null;
     };
   }, []);
 
-  // Jaga ukuran peta tetap benar saat panel samping membuka/menutup.
-  useEffect(() => {
-    if (!mapReady || !containerRef.current) return;
-    const observer = new ResizeObserver(() => mapRef.current?.invalidateSize());
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, [mapReady]);
-
-  // -------------------------------------------------------------- basemap
-  // Layer lama baru dilepas setelah yang baru terpasang, dan selalu didorong ke
-  // belakang agar tidak menutupi overlay tematik.
+  // ---------------------------------------------------------------- basemap
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
-    const basemap = BASEMAPS.find((b) => b.id === basemapId) ?? BASEMAPS[0];
     let cancelled = false;
+
+    const basemap = BASEMAPS.find((b) => b.id === basemapId);
+    if (!basemap) return;
 
     (async () => {
       const L = (await import("leaflet")).default;
@@ -224,6 +334,59 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
     const map = mapRef.current;
     let cancelled = false;
 
+    // Tangkap klik pada canvas layer menggunakan titik koordinat
+    const onMapClick = (e: LeafletNamespace.LeafletMouseEvent) => {
+      for (const layer of LAYERS) {
+        if (layer.kind !== "polygon" || !visibleLayers[layer.id]) continue;
+        const data = dataCacheRef.current[layer.id];
+        if (!data) continue;
+
+        const features = data.features.filter((f) => {
+          const p = f.properties ?? {};
+          if (layer.id === "batas_kabupaten") {
+            const kabName = p.WADMKK || p.NAMOBJ;
+            if (filters.kabupaten !== ALL && kabName !== filters.kabupaten) return false;
+          }
+          if (layer.id === "batas_desa") {
+            const desaName = p.NAMOBJ;
+            const kabName = p.WADMKK;
+            if (filters.desa !== ALL && desaName !== filters.desa) return false;
+            if (filters.kabupaten !== ALL && kabName !== filters.kabupaten) return false;
+          }
+          return true;
+        });
+
+        const clickedFeature = findFeatureAt(e.latlng, { type: "FeatureCollection", features });
+        if (clickedFeature) {
+          onFeatureSelect?.((clickedFeature.properties ?? {}) as Record<string, any>, layer.label);
+
+          // Gambar garis seleksi (highlight)
+          if (highlightLayerRef.current) {
+            map.removeLayer(highlightLayerRef.current);
+          }
+          import("leaflet").then(({ default: L }) => {
+            const highlight = L.geoJSON(clickedFeature, {
+              style: {
+                color: "#f43f5e",
+                weight: 3,
+                fillColor: "#f43f5e",
+                fillOpacity: 0.15,
+              }
+            });
+            highlight.bindPopup(popupHtml(layer, (clickedFeature.properties ?? {}) as Record<string, unknown>), {
+              maxWidth: 320,
+            });
+            highlight.addTo(map);
+            highlight.openPopup(e.latlng);
+            highlightLayerRef.current = highlight;
+          });
+          return;
+        }
+      }
+    };
+
+    map.on("click", onMapClick);
+
     (async () => {
       const L = (await import("leaflet")).default;
       if (cancelled) return;
@@ -240,7 +403,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
               if (!res.ok) throw new Error(`gagal memuat ${l.label}`);
               dataCacheRef.current[l.id] = (await res.json()) as GeoJSON.FeatureCollection;
             } catch {
-              // Layer yang gagal dibiarkan kosong; layer lain tetap tampil.
+              dataCacheRef.current[l.id] = { type: "FeatureCollection", features: [] };
             }
           }),
         );
@@ -259,31 +422,46 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
         const data = dataCacheRef.current[layer.id];
         if (!data) continue;
 
-        // Filter wilayah dilakukan lewat atribut kecamatan/desa yang sudah
-        // ditempelkan build_data.py — tidak perlu uji spasial di browser.
         const features = data.features.filter((f) => {
           const p = f.properties ?? {};
-          if (filters.kecamatan !== ALL && p.kecamatan !== filters.kecamatan) return false;
-          if (filters.desa !== ALL && p.desa !== filters.desa) return false;
+          if (layer.id === "poi") {
+            if (filters.daerah !== ALL && p.nama_mada !== filters.daerah) return false;
+            if (filters.kabupaten !== ALL && p.kabupaten !== filters.kabupaten) return false;
+            if (filters.desa !== ALL && p.desa !== filters.desa) return false;
+          }
+          if (layer.id === "batas_kabupaten") {
+            const kabName = p.WADMKK || p.NAMOBJ;
+            if (filters.kabupaten !== ALL) {
+              if (kabName !== filters.kabupaten) return false;
+            }
+          }
+          if (layer.id === "batas_desa") {
+            const desaName = p.NAMOBJ;
+            const kabName = p.WADMKK;
+            if (filters.desa !== ALL) {
+              if (desaName !== filters.desa) return false;
+            } else if (filters.kabupaten !== ALL) {
+              if (kabName !== filters.kabupaten) return false;
+            }
+          }
           return true;
         });
 
-        const gj = L.geoJSON(
-          { type: "FeatureCollection", features } as GeoJSON.FeatureCollection,
-          {
-            style: (feature) => {
-              const value = layer.classField
-                ? String(feature?.properties?.[layer.classField] ?? "")
-                : "";
-              const color = layer.classField ? classColor(layer.id, value) : layer.color;
-              // Batas desa sengaja hanya garis: ia bingkai konteks, bukan tema.
-              if (layer.id === "desa") {
-                return { color: layer.color, weight: 1, fill: false, opacity: 0.85 };
-              }
-              return { color, weight: 0.6, fillColor: color, fillOpacity: 0.55, opacity: 0.9 };
-            },
-            pointToLayer: (feature, latlng) => {
-              if (layer.id === "poi") {
+        if (layer.kind === "polygon") {
+          // Canvas rendering berbasis geojson-vt agar super ringan di memori
+          const vtLayer = createVectorTileLayer(L, { type: "FeatureCollection", features }, {
+            color: layer.color,
+            weight: layer.id === "batas_kabupaten" ? 2 : 1,
+          });
+          vtLayer.setZIndex(layer.id === "batas_kabupaten" ? 200 : 201);
+          vtLayer.addTo(map);
+          overlaysRef.current[layer.id] = vtLayer;
+        } else {
+          // DivIcon standar untuk POI Gereja
+          const gj = L.geoJSON(
+            { type: "FeatureCollection", features } as GeoJSON.FeatureCollection,
+            {
+              pointToLayer: (feature, latlng) => {
                 const icon = L.divIcon({
                   className: "custom-pin-container",
                   html: `<div class="custom-pin-marker">
@@ -301,200 +479,163 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
                   popupAnchor: [0, -32],
                 });
                 return L.marker(latlng, { icon });
-              }
-              return L.circleMarker(latlng, {
-                radius: 6,
-                color: "#ffffff",
-                weight: 2,
-                fillColor: layer.color,
-                fillOpacity: 1,
-              });
-            },
-            onEachFeature: (feature, lyr) => {
-              lyr.bindPopup(popupHtml(layer, (feature.properties ?? {}) as Record<string, unknown>), {
-                maxWidth: 320,
-              });
-              lyr.on("click", () => {
-                onFeatureSelect?.((feature.properties ?? {}) as Record<string, any>, layer.label);
-              });
-            },
-          },
-        );
-
-        gj.addTo(map);
-        overlaysRef.current[layer.id] = gj;
+              },
+              onEachFeature: (feature, lyr) => {
+                lyr.bindPopup(popupHtml(layer, (feature.properties ?? {}) as Record<string, unknown>), {
+                  maxWidth: 320,
+                });
+                lyr.on("click", () => {
+                  onFeatureSelect?.((feature.properties ?? {}) as Record<string, any>, layer.label);
+                });
+              },
+            }
+          );
+          gj.addTo(map);
+          overlaysRef.current[layer.id] = gj;
+        }
       }
 
-      // Urutan tumpuk: poligon tema di bawah, batas desa & titik di atas.
-      overlaysRef.current.desa?.bringToFront();
       overlaysRef.current.poi?.bringToFront();
     })();
 
     return () => {
       cancelled = true;
+      map.off("click", onMapClick);
     };
   }, [visibleLayers, filters, mapReady, onLoadingChange]);
 
   // -------------------------------------------------------------- alat ukur
-  //
-  // Klik ditangkap di container pada fase capture, bukan lewat map.on("click").
-  // Alasannya: Leaflet menghentikan klik pada fitur yang kena — map hanya jadi
-  // target kalau tidak ada layer di bawah kursor. Karena layer penggunaan lahan
-  // menutupi seluruh kabupaten, map.on("click") praktis tidak pernah menyala dan
-  // yang terjadi hanya popup terbuka. Menangkap lebih dulu di container membuat
-  // alat ukur bekerja di atas layer apa pun, sekaligus menahan popup muncul.
   useEffect(() => {
-    if (!mapReady || !mapRef.current || activeTool !== "measure") return;
+    if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
-    let cancelled = false;
-    let cleanupFn: (() => void) | null = null;
+    if (activeTool !== "measure") {
+      onMeasureChange(null);
+      return;
+    }
 
-    (async () => {
-      const L = (await import("leaflet")).default;
-      if (cancelled) return;
+    let points: LeafletNamespace.LatLng[] = [];
+    let markers: LeafletNamespace.Marker[] = [];
+    let polyline: LeafletNamespace.Polyline | null = null;
+    let polygon: LeafletNamespace.Polygon | null = null;
 
-      const container = map.getContainer();
-      const points: LeafletNamespace.LatLng[] = [];
-      const markers: LeafletNamespace.CircleMarker[] = [];
-      const group = L.layerGroup().addTo(map);
-      let line: LeafletNamespace.Polyline | null = null;
-      let previewLine: LeafletNamespace.Polyline | null = null;
-      let downAt: { x: number; y: number } | null = null;
-      let lastClickTime = 0;
+    const container = containerRef.current!;
+    container.classList.add("tool-active");
+    map.dragging.disable();
 
-      map.closePopup();
-      map.doubleClickZoom.disable();
-      container.classList.add("tool-active");
-      onMeasureChange({ distanceM: 0, areaM2: 0, points: 0 });
+    let overlay: HTMLDivElement | null = null;
 
-      function redraw() {
-        line?.remove();
-        if (points.length >= 2) {
-          line = L.polyline(points, { color: "#e11d48", weight: 3, dashArray: "6 4" }).addTo(group);
-        } else {
-          line = null;
-        }
-        let distance = 0;
-        for (let i = 1; i < points.length; i++) distance += points[i - 1].distanceTo(points[i]);
-        onMeasureChange({
-          distanceM: distance,
-          areaM2: sphericalArea(points),
-          points: points.length,
-        });
-      }
+    import("leaflet").then(({ default: L }) => {
+      overlay = document.createElement("div");
+      overlay.className = "measure-overlay";
+      overlay.innerText = "Klik pada peta untuk mulai mengukur";
+      container.appendChild(overlay);
 
-      function addPoint(latlng: LeafletNamespace.LatLng) {
-        points.push(latlng);
-        const marker = L.circleMarker(latlng, {
-          radius: 5,
-          color: "#e11d48",
-          fillColor: "#fff",
-          fillOpacity: 1,
-          weight: 2,
-        }).addTo(group);
+      map.on("click", onClick);
+      map.on("mousemove", onMouseMove);
+    });
+
+    function onClick(e: LeafletNamespace.LeafletMouseEvent) {
+      import("leaflet").then(({ default: L }) => {
+        const p = e.latlng;
+        points.push(p);
+
+        const marker = L.marker(p, {
+          icon: L.divIcon({
+            className: "measure-node",
+            iconSize: [8, 8],
+            iconAnchor: [4, 4],
+          }),
+        }).addTo(map);
         markers.push(marker);
-        redraw();
-      }
 
-      function removeLastPoint() {
-        if (points.length === 0) return;
-        points.pop();
-        const lastMarker = markers.pop();
-        lastMarker?.remove();
-        redraw();
-      }
-
-      function onMouseMove(e: MouseEvent) {
-        if (points.length === 0) return;
-        const latlng = map.mouseEventToLatLng(e);
-        previewLine?.remove();
-        previewLine = L.polyline([points[points.length - 1], latlng], {
-          color: "#e11d48",
-          weight: 2,
-          dashArray: "4 6",
-          opacity: 0.5,
-        }).addTo(group);
-      }
-
-      function onDown(e: MouseEvent) {
-        downAt = { x: e.clientX, y: e.clientY };
-      }
-
-      function onClick(e: MouseEvent) {
-        // Biarkan kontrol bawaan Leaflet (atribusi dsb.) tetap bisa diklik.
-        if ((e.target as HTMLElement).closest(".leaflet-control")) return;
-        // Geser peta diakhiri dengan event click juga — jangan dihitung titik.
-        if (
-          downAt &&
-          (Math.abs(e.clientX - downAt.x) > CLICK_SLOP_PX ||
-            Math.abs(e.clientY - downAt.y) > CLICK_SLOP_PX)
-        ) {
-          return;
+        if (points.length >= 2) {
+          if (!polyline) {
+            polyline = L.polyline(points, {
+              color: "#3b82f6",
+              weight: 2.5,
+              dashArray: "5, 5",
+            }).addTo(map);
+          } else {
+            polyline.setLatLngs(points);
+          }
         }
-        e.stopPropagation();
-        e.preventDefault();
 
-        // Deteksi double-click manual: dua klik < 350ms = selesai
-        const now = Date.now();
-        if (now - lastClickTime < 350 && points.length >= 2) {
-          onToolFinished();
-          return;
+        if (points.length >= 3) {
+          if (!polygon) {
+            polygon = L.polygon(points, {
+              color: "#3b82f6",
+              weight: 0,
+              fillColor: "#3b82f6",
+              fillOpacity: 0.12,
+            }).addTo(map);
+          } else {
+            polygon.setLatLngs(points);
+          }
         }
-        lastClickTime = now;
 
-        const latlng = map.mouseEventToLatLng(e);
-        addPoint(latlng);
+        updateStats();
+      });
+    }
+
+    function onMouseMove(e: LeafletNamespace.LeafletMouseEvent) {
+      if (!overlay) return;
+      if (points.length === 0) return;
+
+      const current = e.latlng;
+      const last = points[points.length - 1];
+      const dist = last.distanceTo(current);
+
+      let totalDist = 0;
+      for (let i = 0; i < points.length - 1; i++) {
+        totalDist += points[i].distanceTo(points[i + 1]);
       }
+      totalDist += dist;
 
-      function onContextMenu(e: MouseEvent) {
-        e.preventDefault();
-        e.stopPropagation();
-        removeLastPoint();
+      if (points.length >= 2) {
+        overlay.innerText = `Jarak total: ${(totalDist / 1000).toFixed(2)} km\nKlik untuk menambah titik`;
+      } else {
+        overlay.innerText = `Jarak: ${(dist / 1000).toFixed(2)} km\nKlik untuk menambah titik`;
       }
+    }
 
-      container.addEventListener("mousedown", onDown, true);
-      container.addEventListener("click", onClick, true);
-      container.addEventListener("contextmenu", onContextMenu, true);
-      container.addEventListener("mousemove", onMouseMove);
-
-      cleanupFn = () => {
-        container.removeEventListener("mousedown", onDown, true);
-        container.removeEventListener("click", onClick, true);
-        container.removeEventListener("contextmenu", onContextMenu, true);
-        container.removeEventListener("mousemove", onMouseMove);
-        previewLine?.remove();
-        group.remove();
-        container.classList.remove("tool-active");
-        map.doubleClickZoom.enable();
-        onMeasureChange(null);
-      };
-    })();
+    function updateStats() {
+      let distanceM = 0;
+      for (let i = 0; i < points.length - 1; i++) {
+        distanceM += points[i].distanceTo(points[i + 1]);
+      }
+      const areaM2 = sphericalArea(points);
+      onMeasureChange({ distanceM, areaM2, points: points.length });
+    }
 
     return () => {
-      cancelled = true;
-      cleanupFn?.();
+      map.off("click", onClick);
+      map.off("mousemove", onMouseMove);
+      markers.forEach((m) => map.removeLayer(m));
+      if (polyline) map.removeLayer(polyline);
+      if (polygon) map.removeLayer(polygon);
+      overlay?.remove();
+      map.dragging.enable();
+      container.classList.remove("tool-active");
     };
-  }, [activeTool, mapReady, onMeasureChange, onToolFinished]);
+  }, [activeTool, mapReady, onMeasureChange]);
 
-  // -------------------------------------------------------------- zoom box
+  // -------------------------------------------------------------- zoombox
   useEffect(() => {
-    if (!mapReady || !mapRef.current || activeTool !== "zoombox") return;
+    if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
-    const container = map.getContainer();
-    let overlay: HTMLDivElement | null = null;
-    let startPoint: LeafletNamespace.Point | null = null;
+    if (activeTool !== "zoombox") return;
 
-    map.dragging.disable();
+    const container = containerRef.current!;
     container.classList.add("tool-active");
+    map.dragging.disable();
+
+    let startPoint: LeafletNamespace.Point | null = null;
+    let overlay: HTMLDivElement | null = null;
 
     function onMouseDown(e: LeafletNamespace.LeafletMouseEvent) {
       startPoint = map.mouseEventToContainerPoint(e.originalEvent);
       overlay = document.createElement("div");
-      overlay.style.position = "absolute";
-      overlay.style.border = "2px dashed #2563eb";
-      overlay.style.background = "rgba(37, 99, 235, 0.12)";
-      overlay.style.zIndex = "1000";
-      overlay.style.pointerEvents = "none";
+      overlay.className = "zoombox-overlay";
       overlay.style.left = `${startPoint.x}px`;
       overlay.style.top = `${startPoint.y}px`;
       container.appendChild(overlay);
@@ -532,7 +673,6 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
           ]);
         }
       }
-      // Zoom box sekali pakai — setelah menggambar kotak, alat kembali mati.
       onToolFinished();
     }
 
@@ -549,12 +689,16 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
   }, [activeTool, mapReady, onToolFinished]);
 
   // -------------------------------------------------------------- handle
-  const fitTo = useCallback((kecamatan: string | typeof ALL, desa: string | typeof ALL) => {
+  const fitTo = useCallback((filters: Filters) => {
     const map = mapRef.current;
     if (!map) return;
 
-    const data = dataCacheRef.current.desa;
-    if (!data || (kecamatan === ALL && desa === ALL)) {
+    // Bersihkan highlight lama jika filter direset
+    if (filters.daerah === ALL && filters.kabupaten === ALL && filters.desa === ALL) {
+      if (highlightLayerRef.current) {
+        map.removeLayer(highlightLayerRef.current);
+        highlightLayerRef.current = null;
+      }
       const [south, west, north, east] = INDONESIA_EXTENT;
       map.fitBounds([
         [south, west],
@@ -563,10 +707,14 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
       return;
     }
 
+    const data = dataCacheRef.current.poi;
+    if (!data) return;
+
     const matches = data.features.filter((f) => {
       const p = f.properties ?? {};
-      if (kecamatan !== ALL && p.kecamatan !== kecamatan) return false;
-      if (desa !== ALL && p.desa !== desa) return false;
+      if (filters.daerah !== ALL && p.nama_mada !== filters.daerah) return false;
+      if (filters.kabupaten !== ALL && p.kabupaten !== filters.kabupaten) return false;
+      if (filters.desa !== ALL && p.desa !== filters.desa) return false;
       return true;
     });
     if (matches.length === 0) return;
@@ -576,7 +724,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
         type: "FeatureCollection",
         features: matches,
       } as GeoJSON.FeatureCollection).getBounds();
-      if (bounds.isValid()) map.fitBounds(bounds, { padding: [24, 24] });
+      if (bounds.isValid()) map.fitBounds(bounds, { padding: [24, 24], maxZoom: 12 });
     });
   }, []);
 
@@ -585,7 +733,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
     () => ({
       zoomIn: () => mapRef.current?.zoomIn(),
       zoomOut: () => mapRef.current?.zoomOut(),
-      resetView: () => fitTo(ALL, ALL),
+      resetView: () => fitTo(DEFAULT_FILTERS),
       fitTo,
     }),
     [fitTo],

@@ -1,7 +1,7 @@
 "use client";
 
 import { BASEMAPS, LAYERS, type LayerId } from "@/config/dashboard";
-import { ALL, layerPassesYear, type Filters } from "@/lib/stats";
+import { ALL, type Filters } from "@/lib/stats";
 
 type LayerControlProps = {
   visibleLayers: Record<LayerId, boolean>;
@@ -49,27 +49,17 @@ export default function LayerControl({
         </p>
         <ul className="flex flex-col gap-0.5">
           {LAYERS.map((layer) => {
-            // Layer di luar filter tahun dinonaktifkan, bukan disembunyikan —
-            // pengguna tetap melihat layer itu ada dan kenapa tidak bisa dipakai.
-            const allowed = layerPassesYear(layer.year, filters.year);
-            const checked = visibleLayers[layer.id] && allowed;
+            const checked = visibleLayers[layer.id];
 
             return (
               <li key={layer.id}>
                 <label
-                  className={`flex cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 transition-colors ${
-                    allowed ? "hover:bg-blue-50" : "cursor-not-allowed opacity-45"
-                  }`}
-                  title={
-                    allowed
-                      ? layer.note
-                      : `Data ${layer.label} adalah snapshot ${layer.year} — pilih Tahun ${layer.year} untuk menampilkannya.`
-                  }
+                  className="flex cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-blue-50"
+                  title={layer.note}
                 >
                   <input
                     type="checkbox"
                     checked={checked}
-                    disabled={!allowed}
                     onChange={(e) => onToggleLayer(layer.id, e.target.checked)}
                     className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-blue-600"
                   />
@@ -80,17 +70,7 @@ export default function LayerControl({
                         style={{ backgroundColor: layer.color }}
                       />
                       <span className="truncate text-xs font-medium text-slate-700">{layer.label}</span>
-                      {layer.year ? (
-                        <span className="shrink-0 rounded bg-slate-100 px-1 text-[9px] font-bold text-slate-500">
-                          {layer.year}
-                        </span>
-                      ) : null}
                     </span>
-                    {layer.coverage === "desa-bayan" ? (
-                      <span className="mt-0.5 block text-[9px] leading-tight text-amber-600">
-                        Hanya Desa Bayan
-                      </span>
-                    ) : null}
                   </span>
                 </label>
               </li>
@@ -99,11 +79,15 @@ export default function LayerControl({
         </ul>
       </section>
 
-      {filters.kecamatan !== ALL || filters.desa !== ALL ? (
+      {filters.daerah !== ALL || filters.kabupaten !== ALL || filters.desa !== ALL ? (
         <p className="rounded-lg bg-blue-50 px-2.5 py-2 text-[10px] leading-relaxed text-blue-900">
           Layer disaring ke{" "}
           <strong>
-            {filters.desa !== ALL ? `Desa ${filters.desa}` : `Kec. ${filters.kecamatan}`}
+            {filters.desa !== ALL
+              ? `Desa ${filters.desa}`
+              : filters.kabupaten !== ALL
+              ? `Kab. ${filters.kabupaten}`
+              : filters.daerah}
           </strong>
           .
         </p>

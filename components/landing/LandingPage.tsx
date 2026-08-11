@@ -126,10 +126,10 @@ export default function LandingPage() {
             <div className="landing-navbar__logo-wrap" style={{ display: "none" }} />
             <div className="landing-navbar__text">
               <span className="landing-navbar__title">
-                Dashboard Monitoring Gereja
+                Gereja Gerakan Pentakosta
               </span>
               <span className="landing-navbar__subtitle">
-                Pemetaan &amp; Analisis Spasial Jemaat
+                Dashboard Pemetaan Sebaran Data Gereja
               </span>
             </div>
           </Link>
@@ -164,9 +164,9 @@ export default function LandingPage() {
             </div> */}
 
             <h1 className="landing-hero__heading">
-              Monitoring &amp; Analisis{" "}
+              Pentakosta Geo{" "}
               <span className="landing-hero__heading-accent">
-                Sebaran &amp; Data Gereja
+                Sebaran Data Gereja
               </span>
             </h1>
 
@@ -262,7 +262,7 @@ export default function LandingPage() {
               <div className="landing-footer__brand-logo" style={{ display: "none" }} />
               <div>
                 <p className="landing-footer__brand-name">
-                  Dashboard Monitoring Gereja
+                  PentaCosta Geo
                 </p>
                 <p className="landing-footer__brand-sub">
                   Sistem Informasi Spasial
@@ -343,7 +343,7 @@ export default function LandingPage() {
         {/* Copyright bar */}
         <div className="landing-footer__copy">
           <p>
-            &copy; {new Date().getFullYear()} Dashboard Monitoring Gereja. Semua Hak Dilindungi.
+            &copy; {new Date().getFullYear()} PentaCosta Geo. Semua Hak Dilindungi.
           </p>
         </div>
       </footer>

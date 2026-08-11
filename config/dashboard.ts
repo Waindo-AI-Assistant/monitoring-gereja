@@ -59,12 +59,8 @@ export const MIN_ZOOM = 4;
 export const MAX_ZOOM = 20;
 
 export type LayerId =
-  | "desa"
-  | "penutup_lahan"
-  | "kehutanan"
-  | "bangunan_osm"
-  | "jalan"
-  | "persil"
+  | "batas_kabupaten"
+  | "batas_desa"
   | "poi";
 
 export type LayerDef = {
@@ -84,90 +80,40 @@ export type LayerDef = {
   note?: string;
 };
 
-// Catatan cakupan: hanya batas desa, penutup lahan, dan kawasan hutan yang
-// menutupi seluruh kabupaten. Persil/jalan/POI/bangunan hanya tersedia untuk
-// Desa Bayan, jadi ditandai eksplisit agar angka nol di desa lain tidak salah
-// dibaca sebagai "tidak ada objek" padahal artinya "belum ada datanya".
+// Batas wilayah nasional yang relevan dengan plotting gereja.
 export const LAYERS: LayerDef[] = [
   {
-    id: "desa",
+    id: "batas_kabupaten",
+    label: "Batas Kabupaten",
+    file: "/data/Batas_Kabupaten_simplified.geojson",
+    kind: "polygon",
+    year: null,
+    color: "#4f46e5",
+    defaultVisible: false,
+    coverage: "kabupaten",
+    note: "Batas wilayah seluruh kabupaten/kota Indonesia (Simplified)",
+  },
+  {
+    id: "batas_desa",
     label: "Batas Desa",
-    file: "/data/desa.geojson",
+    file: "/data/Batas_desa_simplified.geojson",
     kind: "polygon",
     year: null,
-    color: "#1d4ed8",
-    defaultVisible: true,
-    coverage: "kabupaten",
-    note: "Sumber: PODES — Batas Administrasi",
-  },
-  {
-    id: "penutup_lahan",
-    label: "Penggunaan Lahan",
-    file: "/data/penutup_lahan.geojson",
-    kind: "polygon",
-    year: 2020,
-    classField: "penutup_lahan",
-    color: "#65a30d",
-    defaultVisible: true,
-    coverage: "kabupaten",
-    note: "Sumber: Penutup Lahan 2020 (KLHK)",
-  },
-  {
-    id: "kehutanan",
-    label: "Kehutanan",
-    file: "/data/kehutanan.geojson",
-    kind: "polygon",
-    year: 2021,
-    classField: "fungsi_kawasan",
-    color: "#166534",
+    color: "#0891b2",
     defaultVisible: false,
     coverage: "kabupaten",
-    note: "Sumber: Kawasan Hutan 2021 (KLHK)",
-  },
-  {
-    id: "persil",
-    label: "Persil",
-    file: "/data/persil.geojson",
-    kind: "polygon",
-    year: null,
-    color: "#b45309",
-    defaultVisible: false,
-    coverage: "desa-bayan",
-    note: "Hanya tersedia untuk Desa Bayan",
-  },
-  {
-    id: "jalan",
-    label: "Jalan OSM",
-    file: "/data/jalan.geojson",
-    kind: "polygon",
-    year: null,
-    color: "#334155",
-    defaultVisible: false,
-    coverage: "desa-bayan",
-    note: "Poligon badan jalan; hanya Desa Bayan",
-  },
-  {
-    id: "bangunan_osm",
-    label: "Bangunan OSM",
-    file: "/data/penggunaan_lahan.geojson",
-    kind: "polygon",
-    year: null,
-    classField: "kategori",
-    color: "#7c3aed",
-    defaultVisible: false,
-    coverage: "desa-bayan",
-    note: "Dari layer Penggunaan Lahan OSM — isinya footprint bangunan; hanya Desa Bayan",
+    note: "Batas wilayah seluruh desa/kelurahan Indonesia (Simplified)",
   },
   {
     id: "poi",
-    label: "POI OSM",
+    label: "Titik Gereja",
     file: "/data/poi.geojson",
     kind: "point",
     year: null,
     color: "#db2777",
-    defaultVisible: false,
-    coverage: "desa-bayan",
-    note: "Hanya tersedia untuk Desa Bayan",
+    defaultVisible: true,
+    coverage: "kabupaten",
+    note: "Sebaran lokasi gereja",
   },
 ];
 
@@ -230,14 +176,14 @@ export const BANGUNAN_OSM_COLORS: Record<string, string> = {
 export const DEFAULT_CLASS_COLOR = "#94a3b8";
 
 /** Warna & label kelas untuk sebuah layer — dipakai peta, legenda, dan grafik. */
-export function classColor(layerId: LayerId, value: string): string {
+export function classColor(layerId: string, value: string): string {
   if (layerId === "penutup_lahan") return PENUTUP_LAHAN_COLORS[value] ?? DEFAULT_CLASS_COLOR;
   if (layerId === "kehutanan") return FUNGSI_KAWASAN_COLORS[value] ?? DEFAULT_CLASS_COLOR;
   if (layerId === "bangunan_osm") return BANGUNAN_OSM_COLORS[value] ?? DEFAULT_CLASS_COLOR;
   return DEFAULT_CLASS_COLOR;
 }
 
-export function classLabel(layerId: LayerId, value: string): string {
+export function classLabel(layerId: string, value: string): string {
   if (layerId === "kehutanan") return FUNGSI_KAWASAN_LABEL[value] ?? value;
   if (layerId === "bangunan_osm") return BANGUNAN_OSM_LABEL[value] ?? value;
   return value;
@@ -267,4 +213,14 @@ export const ATTRIBUTE_LABELS: Record<string, string> = {
   power: "Kelistrikan",
   railway: "Perkeretaapian",
   admin_leve: "Level Administrasi",
+  nama_pendeta: "Pimpinan / Pendeta",
+  no_hp_wa: "No. HP / WA",
+  alamat_gereja: "Alamat",
+  tahun_berdiri: "Tahun Berdiri",
+  jumlah_jemaat: "Jumlah Jemaat",
+  jam_operasional: "Jam Operasional",
+  status: "Status",
+  mawil: "Mawil",
+  kode_mada: "Kode Mada",
+  nama_mada: "Nama Mada",
 };
