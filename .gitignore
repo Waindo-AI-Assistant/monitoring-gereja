@@ -34,6 +34,7 @@ next-env.d.ts
 # Large GIS raw data files
 /public/data/Batas_desa.geojson
 /public/data/Batas_Kabupaten.geojson
+/public/data/Batas_Provinsi.geojson
 /public/data/batas_desa_active.geojson
 /public/data/batas_kabupaten_active.geojson
 

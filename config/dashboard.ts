@@ -60,7 +60,7 @@ export const MAX_ZOOM = 20;
 
 export type LayerId =
   | "batas_kabupaten"
-  | "batas_desa"
+  | "batas_provinsi"
   | "poi";
 
 export type LayerDef = {
@@ -94,15 +94,15 @@ export const LAYERS: LayerDef[] = [
     note: "Batas wilayah seluruh kabupaten/kota Indonesia (Simplified)",
   },
   {
-    id: "batas_desa",
-    label: "Batas Desa",
-    file: "/data/Batas_desa_simplified.geojson",
+    id: "batas_provinsi",
+    label: "Batas Mada",
+    file: "/data/Batas_Provinsi_simplified.geojson",
     kind: "polygon",
     year: null,
     color: "#0891b2",
     defaultVisible: false,
     coverage: "kabupaten",
-    note: "Batas wilayah seluruh desa/kelurahan Indonesia (Simplified)",
+    note: "Batas wilayah seluruh provinsi Indonesia (Simplified)",
   },
   {
     id: "poi",

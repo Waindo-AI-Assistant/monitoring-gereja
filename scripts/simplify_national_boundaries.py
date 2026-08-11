@@ -50,17 +50,17 @@ def main():
     project_root = os.path.dirname(script_dir)
     
     raw_kab_path = os.path.join(project_root, "public", "data", "Batas_Kabupaten.geojson")
-    raw_desa_path = os.path.join(project_root, "public", "data", "Batas_desa.geojson")
+    raw_prov_path = os.path.join(project_root, "public", "data", "Batas_Provinsi.geojson")
     
     out_kab_path = os.path.join(project_root, "public", "data", "Batas_Kabupaten_simplified.geojson")
-    out_desa_path = os.path.join(project_root, "public", "data", "Batas_desa_simplified.geojson")
+    out_prov_path = os.path.join(project_root, "public", "data", "Batas_Provinsi_simplified.geojson")
     
     # Toleransi 0.0015 derajat (~150 meter) sangat pas untuk visualisasi nasional yang tajam dan ringan
     print("=== MEMPROSES BATAS KABUPATEN SE-INDONESIA ===")
     simplify_large_file(raw_kab_path, out_kab_path, tolerance=0.0015)
     
-    print("\n=== MEMPROSES BATAS DESA SE-INDONESIA (2.5 GB) ===")
-    simplify_large_file(raw_desa_path, out_desa_path, tolerance=0.0015)
+    print("\n=== MEMPROSES BATAS PROVINSI SE-INDONESIA ===")
+    simplify_large_file(raw_prov_path, out_prov_path, tolerance=0.002)
     
     print("\nSeluruh proses kompresi batas wilayah nasional selesai!")
 
