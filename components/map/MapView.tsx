@@ -384,11 +384,8 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
             const kabName = p.WADMKK || p.NAMOBJ;
             if (filters.kabupaten !== ALL && kabName !== filters.kabupaten) return false;
           }
-          if (layer.id === "batas_desa") {
-            const desaName = p.NAMOBJ;
-            const kabName = p.WADMKK;
-            if (filters.desa !== ALL && desaName !== filters.desa) return false;
-            if (filters.kabupaten !== ALL && kabName !== filters.kabupaten) return false;
+          if (layer.id === "batas_provinsi") {
+            // Batas provinsi selalu diizinkan diklik secara utuh tanpa filter
           }
           return true;
         });
@@ -473,25 +470,21 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
               if (kabName !== filters.kabupaten) return false;
             }
           }
-          if (layer.id === "batas_desa") {
-            const desaName = p.NAMOBJ;
-            const kabName = p.WADMKK;
-            if (filters.desa !== ALL) {
-              if (desaName !== filters.desa) return false;
-            } else if (filters.kabupaten !== ALL) {
-              if (kabName !== filters.kabupaten) return false;
-            }
+          if (layer.id === "batas_provinsi") {
+            // Batas provinsi selalu ditampilkan secara utuh tanpa filter
           }
           return true;
         });
 
         if (layer.kind === "polygon") {
           // Canvas rendering berbasis geojson-vt agar super ringan di memori
+          const isProv = layer.id === "batas_provinsi";
+          const isKab = layer.id === "batas_kabupaten";
           const vtLayer = createVectorTileLayer(L, { type: "FeatureCollection", features }, {
             color: layer.color,
-            weight: layer.id === "batas_kabupaten" ? 2 : 1,
+            weight: isProv ? 3 : isKab ? 2 : 1,
           });
-          vtLayer.setZIndex(layer.id === "batas_kabupaten" ? 200 : 201);
+          vtLayer.setZIndex(isProv ? 199 : isKab ? 200 : 201);
           vtLayer.addTo(map);
           overlaysRef.current[layer.id] = vtLayer;
         } else {

@@ -35,11 +35,12 @@ next-env.d.ts
 /public/data/Batas_desa.geojson
 /public/data/Batas_Kabupaten.geojson
 /public/data/Batas_Provinsi.geojson
+/public/data/Batas_desa_simplified.geojson
 /public/data/batas_desa_active.geojson
 /public/data/batas_kabupaten_active.geojson
 
 # We WANT to track these simplified boundaries and poi
-!/public/data/Batas_desa_simplified.geojson
+!/public/data/Batas_Provinsi_simplified.geojson
 !/public/data/Batas_Kabupaten_simplified.geojson
 !/public/data/poi.geojson
 
