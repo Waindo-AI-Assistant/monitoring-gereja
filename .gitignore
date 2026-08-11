@@ -31,10 +31,3 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Large GIS & Database files
-/public/data/*.geojson
-!/public/data/poi.geojson
-/public/data/Data_Gereja.gdb/
-/public/data/Foto_Plot.gdb/
-/public/data/photos/
-/scratch/
