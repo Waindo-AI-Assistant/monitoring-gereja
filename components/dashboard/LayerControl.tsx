@@ -79,7 +79,7 @@ export default function LayerControl({
         </ul>
       </section>
 
-      {filters.daerah !== ALL || filters.kabupaten !== ALL || filters.desa !== ALL ? (
+      {filters.daerah !== ALL || filters.wilayah !== ALL || filters.kabupaten !== ALL || filters.desa !== ALL ? (
         <p className="rounded-lg bg-blue-50 px-2.5 py-2 text-[10px] leading-relaxed text-blue-900">
           Layer disaring ke{" "}
           <strong>
@@ -87,6 +87,8 @@ export default function LayerControl({
               ? `Desa ${filters.desa}`
               : filters.kabupaten !== ALL
               ? `Kab. ${filters.kabupaten}`
+              : filters.wilayah !== ALL
+              ? `Wilayah ${filters.wilayah}`
               : filters.daerah}
           </strong>
           .

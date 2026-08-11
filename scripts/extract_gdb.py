@@ -89,7 +89,14 @@ def main():
         gdf['foto_2'] = foto_2_paths
         gdf['photos'] = photos_list
         gdf['foto_pendeta'] = foto_pendeta_paths
-        
+
+        if 'no' not in gdf.columns:
+            gdf['no'] = None
+        if 'x' not in gdf.columns:
+            gdf['x'] = None
+        if 'y' not in gdf.columns:
+            gdf['y'] = None
+            
         # Kembalikan kolom fid dari index
         gdf = gdf.reset_index()
         if 'index' in gdf.columns:
@@ -106,6 +113,9 @@ def main():
         mawil_list = []
         kode_mada_list = []
         nama_mada_list = []
+        no_list = []
+        x_list = []
+        y_list = []
         
         foto_paths = []
         foto_2_paths = []
@@ -135,6 +145,11 @@ def main():
             mawil_list.append(str(gdf.loc[fid, 'MAWIL']) if 'MAWIL' in gdf.columns else "")
             kode_mada_list.append(str(gdf.loc[fid, 'K_MADA']) if 'K_MADA' in gdf.columns else "")
             nama_mada_list.append(str(gdf.loc[fid, 'NAMA_MADA']) if 'NAMA_MADA' in gdf.columns else "")
+            
+            # Atribut tambahan NO, X, dan Y
+            no_list.append(int(gdf.loc[fid, 'NO']) if 'NO' in gdf.columns and gdf.loc[fid, 'NO'] is not None else None)
+            x_list.append(float(gdf.loc[fid, 'X']) if 'X' in gdf.columns and gdf.loc[fid, 'X'] is not None else None)
+            y_list.append(float(gdf.loc[fid, 'Y']) if 'Y' in gdf.columns and gdf.loc[fid, 'Y'] is not None else None)
 
         # Masukkan kolom bersih ke GeoDataFrame
         gdf['name'] = names
@@ -148,6 +163,9 @@ def main():
         gdf['mawil'] = mawil_list
         gdf['kode_mada'] = kode_mada_list
         gdf['nama_mada'] = nama_mada_list
+        gdf['no'] = no_list
+        gdf['x'] = x_list
+        gdf['y'] = y_list
         
         gdf['foto'] = foto_paths
         gdf['foto_2'] = foto_2_paths

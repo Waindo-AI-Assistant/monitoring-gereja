@@ -6,9 +6,9 @@ type FilterBarProps = {
   filters: Filters;
   onChange: (filters: Filters) => void;
   daerahList: string[];
+  wilayahList: string[];
   kabupatenList: string[];
   desaList: string[];
-  onReset: () => void;
 };
 
 const fieldClass =
@@ -21,9 +21,9 @@ export default function FilterBar({
   filters,
   onChange,
   daerahList,
+  wilayahList,
   kabupatenList,
   desaList,
-  onReset,
 }: FilterBarProps) {
   return (
     <>
@@ -40,6 +40,7 @@ export default function FilterBar({
             onChange({ 
               ...filters, 
               daerah: e.target.value,
+              wilayah: ALL,
               kabupaten: ALL,
               desa: ALL
             })
@@ -49,6 +50,33 @@ export default function FilterBar({
           {daerahList.map((d) => (
             <option key={d} value={d}>
               {d}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Filter Wilayah */}
+      <div className={fieldClass}>
+        <label htmlFor="filter-wilayah" className={labelClass}>
+          Wilayah
+        </label>
+        <select
+          id="filter-wilayah"
+          className={selectClass}
+          value={filters.wilayah}
+          onChange={(e) => 
+            onChange({ 
+              ...filters, 
+              wilayah: e.target.value,
+              kabupaten: ALL,
+              desa: ALL
+            })
+          }
+        >
+          <option value={ALL}>Semua Wilayah</option>
+          {wilayahList.map((w) => (
+            <option key={w} value={w}>
+              {w}
             </option>
           ))}
         </select>
@@ -99,15 +127,6 @@ export default function FilterBar({
           ))}
         </select>
       </div>
-
-      <button
-        type="button"
-        onClick={onReset}
-        title="Kembalikan filter ke tampilan awal"
-        className="h-9 shrink-0 rounded-xl border border-slate-200 bg-white px-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 shadow-sm shadow-blue-900/10 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-      >
-        Reset
-      </button>
     </>
   );
 }

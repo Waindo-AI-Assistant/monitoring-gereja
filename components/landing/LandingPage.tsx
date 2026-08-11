@@ -100,8 +100,8 @@ const FEATURES = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
       </svg>
     ),
-    title: "Pencarian & Filter Cerdas",
-    desc: "Cari desa atau kecamatan dengan cepat dan filter data berdasarkan tahun untuk analisis temporal.",
+    title: "Filter Berdasarkan Wilayah & Daerah",
+    desc: "Saring sebaran lokasi jemaat dan gereja secara dinamis berdasarkan Majelis Daerah (Mada), Majelis Wilayah (Wilayah), Kabupaten, dan Desa.",
   },
 
 ];
@@ -122,8 +122,12 @@ export default function LandingPage() {
         className={`landing-navbar ${scrolled ? "landing-navbar--scrolled" : ""}`}
       >
         <div className="landing-navbar__inner">
-          <Link href="/" className="landing-navbar__brand">
-            <div className="landing-navbar__logo-wrap" style={{ display: "none" }} />
+          <Link href="/" className="landing-navbar__brand flex items-center gap-3">
+            <img
+              src="/images/Logo GGP2.png?v=2"
+              alt="Logo GGP"
+              className="h-10 w-auto object-contain shrink-0"
+            />
             <div className="landing-navbar__text">
               <span className="landing-navbar__title">
                 Gereja Gerakan Pentakosta
@@ -258,11 +262,15 @@ export default function LandingPage() {
         <div className="landing-footer__inner">
           {/* Company info */}
           <div className="landing-footer__col landing-footer__col--brand">
-            <div className="landing-footer__brand">
-              <div className="landing-footer__brand-logo" style={{ display: "none" }} />
+            <div className="landing-footer__brand flex items-center gap-3">
+              <img
+                src="/images/Logo GGP2.png"
+                alt="Logo GGP"
+                className="h-12 w-auto object-contain shrink-0"
+              />
               <div>
                 <p className="landing-footer__brand-name">
-                  PentaCosta Geo
+                  PENTAKOSTA GEO
                 </p>
                 <p className="landing-footer__brand-sub">
                   Sistem Informasi Spasial
@@ -343,7 +351,7 @@ export default function LandingPage() {
         {/* Copyright bar */}
         <div className="landing-footer__copy">
           <p>
-            &copy; {new Date().getFullYear()} PentaCosta Geo. Semua Hak Dilindungi.
+            &copy; {new Date().getFullYear()} PENTAKOSTA GEO.
           </p>
         </div>
       </footer>

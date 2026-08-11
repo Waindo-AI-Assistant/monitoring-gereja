@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { DEFAULT_BASEMAP_ID, LAYERS, type LayerId } from "@/config/dashboard";
+import { DEFAULT_BASEMAP_ID, LAYERS, ATTRIBUTE_LABELS, GEREJA_ORDERED_FIELDS, type LayerId } from "@/config/dashboard";
 import {
   ALL,
   DEFAULT_FILTERS,
@@ -155,6 +156,17 @@ export default function DashboardShell() {
     return [...new Set(list)].sort() as string[];
   }, [poiFeatures]);
 
+  const wilayahList = useMemo(() => {
+    let filtered = poiFeatures;
+    if (filters.daerah !== ALL) {
+      filtered = filtered.filter((f: any) => f.properties?.nama_mada === filters.daerah);
+    }
+    const list = filtered
+      .map((f: any) => f.properties?.mawil)
+      .filter((name: any) => name && name.trim() !== "");
+    return [...new Set(list)].sort() as string[];
+  }, [poiFeatures, filters.daerah]);
+
   const kabupatenList = useMemo(() => {
     if (regionsHierarchy) {
       return Object.keys(regionsHierarchy).sort();
@@ -163,11 +175,14 @@ export default function DashboardShell() {
     if (filters.daerah !== ALL) {
       filtered = filtered.filter((f: any) => f.properties?.nama_mada === filters.daerah);
     }
+    if (filters.wilayah !== ALL) {
+      filtered = filtered.filter((f: any) => f.properties?.mawil === filters.wilayah);
+    }
     const list = filtered
       .map((f: any) => f.properties?.kabupaten)
       .filter((name: any) => name && name.trim() !== "");
     return [...new Set(list)].sort() as string[];
-  }, [poiFeatures, filters.daerah, regionsHierarchy]);
+  }, [poiFeatures, filters.daerah, filters.wilayah, regionsHierarchy]);
 
   const desaList = useMemo(() => {
     if (regionsHierarchy && filters.kabupaten !== ALL) {
@@ -177,6 +192,9 @@ export default function DashboardShell() {
     if (filters.daerah !== ALL) {
       filtered = filtered.filter((f: any) => f.properties?.nama_mada === filters.daerah);
     }
+    if (filters.wilayah !== ALL) {
+      filtered = filtered.filter((f: any) => f.properties?.mawil === filters.wilayah);
+    }
     if (filters.kabupaten !== ALL) {
       filtered = filtered.filter((f: any) => f.properties?.kabupaten === filters.kabupaten);
     }
@@ -184,23 +202,25 @@ export default function DashboardShell() {
       .map((f: any) => f.properties?.desa)
       .filter((name: any) => name && name.trim() !== "");
     return [...new Set(list)].sort() as string[];
-  }, [poiFeatures, filters.daerah, filters.kabupaten, regionsHierarchy]);
+  }, [poiFeatures, filters.daerah, filters.wilayah, filters.kabupaten, regionsHierarchy]);
 
   const summary = useMemo(() => {
     const total = poiFeatures.length;
     const filtered = poiFeatures.filter((f: any) => {
       const p = f.properties ?? {};
       if (filters.daerah !== ALL && p.nama_mada !== filters.daerah) return false;
+      if (filters.wilayah !== ALL && p.mawil !== filters.wilayah) return false;
       if (filters.kabupaten !== ALL && p.kabupaten !== filters.kabupaten) return false;
       if (filters.desa !== ALL && p.desa !== filters.desa) return false;
       return true;
     });
     return {
       jumlahMada: daerahList.length,
+      jumlahWilayah: wilayahList.length,
       totalGereja: total,
       gerejaTerfilter: filtered.length,
     };
-  }, [poiFeatures, filters, daerahList]);
+  }, [poiFeatures, filters, daerahList, wilayahList]);
 
   const handleFiltersChange = useCallback((next: Filters) => {
     setFilters(next);
@@ -213,6 +233,7 @@ export default function DashboardShell() {
     setVisibleLayers(DEFAULT_VISIBLE);
     setSelectedFeature(null);
     mapRef.current?.resetView();
+    mapRef.current?.closePopup();
   }, []);
 
   const handleToggleLayer = useCallback((id: LayerId, visible: boolean) => {
@@ -274,6 +295,12 @@ export default function DashboardShell() {
           </svg>
         </button>
 
+        <img
+          src="/images/Logo GGP2.png?v=2"
+          alt="Logo GGP"
+          className="h-8 w-auto object-contain shrink-0"
+        />
+
         <div className="min-w-0">
           <h1 className="truncate text-sm font-bold leading-tight">
             Dashboard Geospasial Monitoring Gereja
@@ -290,13 +317,21 @@ export default function DashboardShell() {
           filters={filters}
           onChange={handleFiltersChange}
           daerahList={daerahList}
+          wilayahList={wilayahList}
           kabupatenList={kabupatenList}
           desaList={desaList}
-          onReset={handleReset}
         />
         <SummaryCards
           summary={summary}
         />
+        <button
+          type="button"
+          onClick={handleReset}
+          title="Kembalikan filter ke tampilan awal"
+          className="h-9 shrink-0 rounded-xl border border-slate-200 bg-white px-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 shadow-sm shadow-blue-900/10 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+        >
+          Reset
+        </button>
       </div>
 
       {/* ------------------------------------------------------------- konten */}
@@ -338,6 +373,15 @@ export default function DashboardShell() {
           />
 
           <div className="pointer-events-none absolute inset-0">
+            {/* Logo overlay di pojok kanan atas peta */}
+            <div className="pointer-events-none absolute top-3 right-3 z-[400]">
+              <img
+                src="/images/Logo GGP2.png?v=2"
+                alt="Logo GGP"
+                className="h-16 w-auto object-contain shrink-0 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
+              />
+            </div>
+
             <div className="pointer-events-auto absolute left-3 top-3 z-[400]">
               <MapControls
                 onZoomIn={() => mapRef.current?.zoomIn()}
@@ -381,7 +425,6 @@ export default function DashboardShell() {
                       </span>
                     ) : null}
                     <span className="text-[10px] text-slate-400">
-                      Klik kanan: undo
                     </span>
                     <button
                       type="button"
@@ -393,7 +436,7 @@ export default function DashboardShell() {
                   </div>
                 ) : (
                   <p className="text-[11px] text-slate-500">
-                    Klik titik-titik di peta untuk mengukur jarak &amp; luas. Double-klik untuk menyelesaikan.
+                    Klik titik-titik di peta untuk mengukur jarak &amp; luas. Klik kanan untuk undo.
                   </p>
                 )}
               </div>
@@ -430,11 +473,14 @@ export default function DashboardShell() {
                   </h2>
                 </div>
                 <button
-                  type="button"
-                  onClick={() => setSelectedFeature(null)}
-                  aria-label="Tutup Detail"
-                  className="rounded-lg p-1.5 hover:bg-white/10 transition-colors"
-                >
+                   type="button"
+                   onClick={() => {
+                     setSelectedFeature(null);
+                     mapRef.current?.closePopup();
+                   }}
+                   aria-label="Tutup Detail"
+                   className="rounded-lg p-1.5 hover:bg-white/10 transition-colors"
+                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -620,27 +666,47 @@ export default function DashboardShell() {
                   </h3>
                   <table className="w-full border-collapse">
                     <tbody>
-                      {Object.entries(selectedFeature.properties)
-                        .filter(([k, v]) => 
-                          !["foto", "photo", "image", "gambar", "image_url", "url_foto"].includes(k.toLowerCase()) &&
-                          !["foto_pendeta", "photo_pendeta", "foto_pastor", "photo_pastor", "pastor_photo", "pastor_image"].includes(k.toLowerCase()) &&
-                          !["pendeta", "nama_pendeta", "pastor", "nama_pastor", "priest", "pimpinan"].includes(k.toLowerCase()) &&
-                          !["name", "nama", "title", "judul"].includes(k.toLowerCase()) &&
-                          v !== null && v !== undefined && v !== ""
-                        )
-                        .map(([k, v]) => {
-                          const label = k.replace(/_/g, " ");
+                      {selectedFeature.layerLabel === "Titik Gereja" ? (
+                        GEREJA_ORDERED_FIELDS.map((key) => {
+                          const val = selectedFeature.properties[key];
+                          const displayVal = (val === null || val === undefined || String(val).trim() === "")
+                            ? "-"
+                            : (typeof val === "number" ? new Intl.NumberFormat("id-ID").format(val) : String(val));
+                          const label = ATTRIBUTE_LABELS[key] ?? key;
                           return (
-                            <tr key={k} className="border-b border-slate-100 last:border-0">
+                            <tr key={key} className="border-b border-slate-100 last:border-0 animate-fade-in">
                               <td className="py-2 pr-3 text-[10px] font-medium uppercase text-slate-400 align-top">
                                 {label}
                               </td>
                               <td className="py-2 text-xs font-semibold text-slate-800 text-right">
-                                {typeof v === "number" ? new Intl.NumberFormat("id-ID").format(v) : String(v)}
+                                {displayVal}
                               </td>
                             </tr>
                           );
-                        })}
+                        })
+                      ) : (
+                        Object.entries(selectedFeature.properties)
+                          .filter(([k, v]) => 
+                            !["foto", "photo", "image", "gambar", "image_url", "url_foto"].includes(k.toLowerCase()) &&
+                            !["foto_pendeta", "photo_pendeta", "foto_pastor", "photo_pastor", "pastor_photo", "pastor_image"].includes(k.toLowerCase()) &&
+                            !["pendeta", "nama_pendeta", "pastor", "nama_pastor", "priest", "pimpinan"].includes(k.toLowerCase()) &&
+                            !["name", "nama", "title", "judul"].includes(k.toLowerCase()) &&
+                            v !== null && v !== undefined && v !== ""
+                          )
+                          .map(([k, v]) => {
+                            const label = ATTRIBUTE_LABELS[k] ?? k.replace(/_/g, " ");
+                            return (
+                              <tr key={k} className="border-b border-slate-100 last:border-0">
+                                <td className="py-2 pr-3 text-[10px] font-medium uppercase text-slate-400 align-top">
+                                  {label}
+                                </td>
+                                <td className="py-2 text-xs font-semibold text-slate-800 text-right">
+                                  {typeof v === "number" ? new Intl.NumberFormat("id-ID").format(v) : String(v)}
+                                </td>
+                              </tr>
+                            );
+                          })
+                      )}
                     </tbody>
                   </table>
                 </div>

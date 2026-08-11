@@ -84,7 +84,7 @@ export type LayerDef = {
 export const LAYERS: LayerDef[] = [
   {
     id: "batas_kabupaten",
-    label: "Batas Kabupaten",
+    label: "Batas Wilayah",
     file: "/data/Batas_Kabupaten_simplified.geojson",
     kind: "polygon",
     year: null,
@@ -205,7 +205,7 @@ export const ATTRIBUTE_LABELS: Record<string, string> = {
   kategori: "Kategori",
   osm_id: "OSM ID",
   osm_type: "Tipe OSM",
-  name: "Nama",
+  name: "Nama Jemaah",
   amenity: "Fasilitas",
   leisure: "Rekreasi",
   building: "Bangunan",
@@ -213,14 +213,35 @@ export const ATTRIBUTE_LABELS: Record<string, string> = {
   power: "Kelistrikan",
   railway: "Perkeretaapian",
   admin_leve: "Level Administrasi",
-  nama_pendeta: "Pimpinan / Pendeta",
-  no_hp_wa: "No. HP / WA",
-  alamat_gereja: "Alamat",
+  nama_pendeta: "Nama Gembala",
+  no_hp_wa: "No HP/WA",
+  alamat_gereja: "Alamat Gereja",
   tahun_berdiri: "Tahun Berdiri",
   jumlah_jemaat: "Jumlah Jemaat",
-  jam_operasional: "Jam Operasional",
-  status: "Status",
-  mawil: "Mawil",
+  jam_operasional: "Jam Ibadah",
+  status: "Status Kepemilikan",
+  mawil: "Majelis Wilayah",
   kode_mada: "Kode Mada",
-  nama_mada: "Nama Mada",
+  nama_mada: "Nama Majelis Daerah",
+  no: "NO",
+  x: "X (Longitude)",
+  y: "Y (Latitude)",
 };
+
+/** Atribut gereja terurut yang akan ditampilkan pada UI ketika diklik */
+export const GEREJA_ORDERED_FIELDS = [
+  "nama_mada",
+  "mawil",
+  "no",
+  "name",
+  "nama_pendeta",
+  "no_hp_wa",
+  "alamat_gereja",
+  "y",
+  "x",
+  "tahun_berdiri",
+  "jumlah_jemaat",
+  "jam_operasional",
+  "status"
+];
+

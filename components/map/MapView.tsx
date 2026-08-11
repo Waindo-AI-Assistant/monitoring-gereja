@@ -18,6 +18,7 @@ import {
   MIN_ZOOM,
   MAX_ZOOM,
   ATTRIBUTE_LABELS,
+  GEREJA_ORDERED_FIELDS,
   classColor,
   classLabel,
   type LayerDef,
@@ -35,6 +36,7 @@ export type MapHandle = {
   zoomOut: () => void;
   resetView: () => void;
   fitTo: (filters: Filters) => void;
+  closePopup: () => void;
 };
 
 type MapViewProps = {
@@ -78,19 +80,34 @@ function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
   );
   const imageUrl = imgKey ? String(props[imgKey]) : null;
 
-  const rows = Object.entries(props)
-    .filter(([k, v]) => k !== imgKey && k !== nameKey && v !== null && v !== undefined && v !== "")
-    .map(([k, v]) => {
+  let rows = "";
+  if (layer.id === "poi") {
+    rows = GEREJA_ORDERED_FIELDS.map((k) => {
+      const v = props[k];
+      const value = (v === null || v === undefined || String(v).trim() === "")
+        ? "-"
+        : (typeof v === "number" ? new Intl.NumberFormat("id-ID").format(v) : String(v));
       const label = ATTRIBUTE_LABELS[k] ?? k;
-      let value = String(v);
-      if (layer.classField === k) value = classLabel(layer.id, value);
-      if (typeof v === "number") value = new Intl.NumberFormat("id-ID").format(v);
       return `<tr class="border-b border-slate-100 last:border-0">
         <td class="py-1.5 pr-3 align-top text-[11px] font-medium uppercase tracking-wide text-slate-500">${label}</td>
         <td class="py-1.5 text-right text-xs font-semibold text-slate-800">${value}</td>
       </tr>`;
-    })
-    .join("");
+    }).join("");
+  } else {
+    rows = Object.entries(props)
+      .filter(([k, v]) => k !== imgKey && k !== nameKey && v !== null && v !== undefined && v !== "")
+      .map(([k, v]) => {
+        const label = ATTRIBUTE_LABELS[k] ?? k;
+        let value = String(v);
+        if (layer.classField === k) value = classLabel(layer.id, value);
+        if (typeof v === "number") value = new Intl.NumberFormat("id-ID").format(v);
+        return `<tr class="border-b border-slate-100 last:border-0">
+          <td class="py-1.5 pr-3 align-top text-[11px] font-medium uppercase tracking-wide text-slate-500">${label}</td>
+          <td class="py-1.5 text-right text-xs font-semibold text-slate-800">${value}</td>
+        </tr>`;
+      })
+      .join("");
+  }
 
   const imageHtml = imageUrl
     ? `<div class="w-full h-36 overflow-hidden bg-slate-100 border-b border-slate-100">
@@ -251,6 +268,11 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
   const overlaysRef = useRef<Partial<Record<LayerId, any>>>({});
   const dataCacheRef = useRef<Partial<Record<LayerId, GeoJSON.FeatureCollection>>>({});
   const highlightLayerRef = useRef<any>(null);
+  const activeToolRef = useRef(activeTool);
+
+  useEffect(() => {
+    activeToolRef.current = activeTool;
+  }, [activeTool]);
 
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
@@ -282,6 +304,21 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
 
         map.on("mousemove", (e) => {
           if (!cancelled) setCursor(e.latlng);
+        });
+
+        map.on("popupclose", () => {
+          setTimeout(() => {
+            if (cancelled || !mapRef.current) return;
+            let anyPopupOpen = false;
+            mapRef.current.eachLayer((layer: any) => {
+              if (layer.getPopup && layer.getPopup()?.isOpen()) {
+                anyPopupOpen = true;
+              }
+            });
+            if (!anyPopupOpen) {
+              onFeatureSelect?.(null, "");
+            }
+          }, 50);
         });
 
         mapRef.current = map;
@@ -426,6 +463,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
           const p = f.properties ?? {};
           if (layer.id === "poi") {
             if (filters.daerah !== ALL && p.nama_mada !== filters.daerah) return false;
+            if (filters.wilayah !== ALL && p.mawil !== filters.wilayah) return false;
             if (filters.kabupaten !== ALL && p.kabupaten !== filters.kabupaten) return false;
             if (filters.desa !== ALL && p.desa !== filters.desa) return false;
           }
@@ -467,9 +505,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
                   html: `<div class="custom-pin-marker">
                     <div class="pin-drop">
                       <div class="pin-icon-wrap">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="pin-cross-icon">
-                          <path d="M12 5v14M8 9h8" />
-                        </svg>
+                        <img src="/images/Logo GGP.png?v=2" alt="Logo GGP" style="width: 100%; height: 100%; object-fit: contain;" />
                       </div>
                     </div>
                     <div class="pin-shadow"></div>
@@ -484,8 +520,17 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
                 lyr.bindPopup(popupHtml(layer, (feature.properties ?? {}) as Record<string, unknown>), {
                   maxWidth: 320,
                 });
-                lyr.on("click", () => {
-                  onFeatureSelect?.((feature.properties ?? {}) as Record<string, any>, layer.label);
+                lyr.on("click", (e: any) => {
+                  if (activeToolRef.current === "measure") {
+                    map.fire("click", { latlng: e.latlng, originalEvent: e.originalEvent });
+                  } else {
+                    onFeatureSelect?.((feature.properties ?? {}) as Record<string, any>, layer.label);
+                  }
+                });
+                lyr.on("popupopen", () => {
+                  if (activeToolRef.current === "measure") {
+                    lyr.closePopup();
+                  }
                 });
               },
             }
@@ -517,6 +562,8 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
     let markers: LeafletNamespace.Marker[] = [];
     let polyline: LeafletNamespace.Polyline | null = null;
     let polygon: LeafletNamespace.Polygon | null = null;
+    let tempPolyline: LeafletNamespace.Polyline | null = null;
+    let tempPolygon: LeafletNamespace.Polygon | null = null;
 
     const container = containerRef.current!;
     container.classList.add("tool-active");
@@ -528,10 +575,13 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
       overlay = document.createElement("div");
       overlay.className = "measure-overlay";
       overlay.innerText = "Klik pada peta untuk mulai mengukur";
+      overlay.style.left = "0px";
+      overlay.style.top = "0px";
       container.appendChild(overlay);
 
       map.on("click", onClick);
       map.on("mousemove", onMouseMove);
+      map.on("contextmenu", onRightClick);
     });
 
     function onClick(e: LeafletNamespace.LeafletMouseEvent) {
@@ -579,9 +629,58 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
 
     function onMouseMove(e: LeafletNamespace.LeafletMouseEvent) {
       if (!overlay) return;
-      if (points.length === 0) return;
+
+      const containerPoint = map.mouseEventToContainerPoint(e.originalEvent);
+      overlay.style.left = `${containerPoint.x + 16}px`;
+      overlay.style.top = `${containerPoint.y + 16}px`;
+
+      if (points.length === 0) {
+        if (tempPolyline) {
+          map.removeLayer(tempPolyline);
+          tempPolyline = null;
+        }
+        if (tempPolygon) {
+          map.removeLayer(tempPolygon);
+          tempPolygon = null;
+        }
+        overlay.innerText = "Klik pada peta untuk mulai mengukur";
+        return;
+      }
 
       const current = e.latlng;
+
+      // Draw/update dynamic preview line
+      import("leaflet").then(({ default: L }) => {
+        const previewPoints = [...points, current];
+        if (!tempPolyline) {
+          tempPolyline = L.polyline(previewPoints, {
+            color: "#3b82f6",
+            weight: 2,
+            dashArray: "5, 5",
+            opacity: 0.7,
+          }).addTo(map);
+        } else {
+          tempPolyline.setLatLngs(previewPoints);
+        }
+
+        // Draw/update dynamic preview polygon
+        if (points.length >= 2) {
+          if (!tempPolygon) {
+            tempPolygon = L.polygon(previewPoints, {
+              color: "#3b82f6",
+              weight: 0,
+              fillColor: "#3b82f6",
+              fillOpacity: 0.08,
+            }).addTo(map);
+          } else {
+            tempPolygon.setLatLngs(previewPoints);
+          }
+        } else if (tempPolygon) {
+          map.removeLayer(tempPolygon);
+          tempPolygon = null;
+        }
+      });
+
       const last = points[points.length - 1];
       const dist = last.distanceTo(current);
 
@@ -592,10 +691,54 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
       totalDist += dist;
 
       if (points.length >= 2) {
-        overlay.innerText = `Jarak total: ${(totalDist / 1000).toFixed(2)} km\nKlik untuk menambah titik`;
+        overlay.innerText = `Jarak total: ${(totalDist / 1000).toFixed(2)} km\nKlik untuk menambah titik\nKlik kanan untuk undo`;
       } else {
-        overlay.innerText = `Jarak: ${(dist / 1000).toFixed(2)} km\nKlik untuk menambah titik`;
+        overlay.innerText = `Jarak: ${(dist / 1000).toFixed(2)} km\nKlik untuk menambah titik\nKlik kanan untuk undo`;
       }
+    }
+
+    function onRightClick(e: LeafletNamespace.LeafletMouseEvent) {
+      if (e.originalEvent) {
+        e.originalEvent.preventDefault();
+        e.originalEvent.stopPropagation();
+      }
+
+      if (points.length === 0) return;
+
+      // Hapus titik terakhir
+      points.pop();
+
+      // Hapus marker terakhir
+      const lastMarker = markers.pop();
+      if (lastMarker) {
+        map.removeLayer(lastMarker);
+      }
+
+      // Update polyline
+      if (polyline) {
+        if (points.length >= 2) {
+          polyline.setLatLngs(points);
+        } else {
+          map.removeLayer(polyline);
+          polyline = null;
+        }
+      }
+
+      // Update polygon
+      if (polygon) {
+        if (points.length >= 3) {
+          polygon.setLatLngs(points);
+        } else {
+          map.removeLayer(polygon);
+          polygon = null;
+        }
+      }
+
+      // Update stats
+      updateStats();
+
+      // Trigger mousemove update to refresh tooltip text
+      onMouseMove(e);
     }
 
     function updateStats() {
@@ -610,9 +753,12 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
     return () => {
       map.off("click", onClick);
       map.off("mousemove", onMouseMove);
+      map.off("contextmenu", onRightClick);
       markers.forEach((m) => map.removeLayer(m));
       if (polyline) map.removeLayer(polyline);
       if (polygon) map.removeLayer(polygon);
+      if (tempPolyline) map.removeLayer(tempPolyline);
+      if (tempPolygon) map.removeLayer(tempPolygon);
       overlay?.remove();
       map.dragging.enable();
       container.classList.remove("tool-active");
@@ -673,7 +819,14 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
           ]);
         }
       }
-      onToolFinished();
+      // Clean up drag events and overlay div so it's ready for another draw
+      map.off("mousemove", onMouseMove);
+      map.off("mouseup", onMouseUp);
+      if (overlay) {
+        overlay.remove();
+        overlay = null;
+      }
+      startPoint = null;
     }
 
     map.on("mousedown", onMouseDown);
@@ -694,7 +847,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
     if (!map) return;
 
     // Bersihkan highlight lama jika filter direset
-    if (filters.daerah === ALL && filters.kabupaten === ALL && filters.desa === ALL) {
+    if (filters.daerah === ALL && filters.wilayah === ALL && filters.kabupaten === ALL && filters.desa === ALL) {
       if (highlightLayerRef.current) {
         map.removeLayer(highlightLayerRef.current);
         highlightLayerRef.current = null;
@@ -713,6 +866,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
     const matches = data.features.filter((f) => {
       const p = f.properties ?? {};
       if (filters.daerah !== ALL && p.nama_mada !== filters.daerah) return false;
+      if (filters.wilayah !== ALL && p.mawil !== filters.wilayah) return false;
       if (filters.kabupaten !== ALL && p.kabupaten !== filters.kabupaten) return false;
       if (filters.desa !== ALL && p.desa !== filters.desa) return false;
       return true;
@@ -735,6 +889,13 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
       zoomOut: () => mapRef.current?.zoomOut(),
       resetView: () => fitTo(DEFAULT_FILTERS),
       fitTo,
+      closePopup: () => {
+        mapRef.current?.closePopup();
+        if (highlightLayerRef.current) {
+          mapRef.current?.removeLayer(highlightLayerRef.current);
+          highlightLayerRef.current = null;
+        }
+      },
     }),
     [fitTo],
   );

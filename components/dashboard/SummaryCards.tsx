@@ -20,6 +20,11 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
       hint: "Jumlah Majelis Daerah yang terdaftar",
     },
     {
+      label: "Total Wilayah",
+      value: formatInt(summary.jumlahWilayah),
+      hint: "Jumlah Majelis Wilayah yang terdaftar pada Mada aktif",
+    },
+    {
       label: "Total Gereja",
       value: formatInt(summary.totalGereja),
       hint: "Total seluruh titik plot gereja di Geodatabase",

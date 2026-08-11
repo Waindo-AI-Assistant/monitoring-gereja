@@ -949,10 +949,10 @@ body {
   bottom: 0;
   width: 28px;
   height: 28px;
-  background: #ef4444; /* Google Maps Red */
+  background: #dc2626; /* Red Brand */
   border-radius: 50% 50% 50% 0;
   transform: rotate(-45deg);
-  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
+  /* box-shadow: 0 4px 10px rgba(220, 38, 38, 0.35); */
   border: 2px solid #ffffff;
   display: flex;
   align-items: center;
@@ -961,20 +961,19 @@ body {
   animation: pin-float 2s ease-in-out infinite alternate;
 }
 
-/* Rotate content back by 45deg so it is upright */
+/* Rotate content back by 45deg so it is upright, and style it as white circular container */
 .pin-icon-wrap {
   transform: rotate(45deg);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  color: #ffffff;
-}
-
-.pin-cross-icon {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: 50%;
+  padding: 1.5px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Pulse Shadow beneath the pin */
@@ -1014,7 +1013,40 @@ body {
 
 /* Hover effects */
 .custom-pin-marker:hover .pin-drop {
-  background: #dc2626; /* Darker red on hover */
+  background: #b91c1c; /* Darker red on hover */
   transform: translateY(-8px) rotate(-45deg) scale(1.1);
-  box-shadow: 0 8px 16px rgba(220, 38, 38, 0.5);
+  box-shadow: 0 8px 16px rgba(185, 28, 28, 0.45);
+}
+
+/* Zoom Box Drag Overlay */
+.zoombox-overlay {
+  position: absolute;
+  z-index: 1000;
+  border: 2px dashed #2563eb; /* Royal Blue */
+  background: rgba(37, 99, 235, 0.15);
+  pointer-events: none;
+}
+
+/* Measure Tool Overlay */
+.measure-overlay {
+  position: absolute;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e2e8f0;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  color: #475569;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* Measure Node Marker */
+.measure-node {
+  background: #2563eb;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
