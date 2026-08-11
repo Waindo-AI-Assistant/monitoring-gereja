@@ -17,7 +17,7 @@ RUN npm run build
 FROM node:20-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=3006
+ENV PORT=3007
 
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json ./
