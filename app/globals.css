@@ -1018,6 +1018,51 @@ body {
   box-shadow: 0 8px 16px rgba(185, 28, 28, 0.45);
 }
 
+.custom-image-pin {
+  background: transparent;
+  border: none;
+  transition: transform 0.2s ease-in-out;
+  transform-origin: bottom center;
+}
+
+/* Zoom dependent scaling */
+.map-zoom-low .custom-image-pin {
+  transform: scale(1.0);
+}
+
+.map-zoom-medium .custom-image-pin {
+  transform: scale(1.15);
+}
+
+.map-zoom-high .custom-image-pin {
+  transform: scale(1.5);
+}
+
+.map-zoom-very-high .custom-image-pin {
+  transform: scale(1.85);
+}
+
+/* Hover effects with responsive scale */
+.custom-image-pin:hover {
+  z-index: 1000 !important;
+}
+
+.map-zoom-low .custom-image-pin:hover {
+  transform: scale(1.2) translateY(-4px);
+}
+
+.map-zoom-medium .custom-image-pin:hover {
+  transform: scale(1.35) translateY(-5px);
+}
+
+.map-zoom-high .custom-image-pin:hover {
+  transform: scale(1.75) translateY(-7px);
+}
+
+.map-zoom-very-high .custom-image-pin:hover {
+  transform: scale(2.15) translateY(-9px);
+}
+
 /* Zoom Box Drag Overlay */
 .zoombox-overlay {
   position: absolute;

@@ -321,6 +321,29 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
           }, 50);
         });
 
+        const mapContainer = containerRef.current!;
+        const updateZoomClass = () => {
+          if (cancelled || !map) return;
+          const zoom = map.getZoom();
+          mapContainer.className = mapContainer.className
+            .split(" ")
+            .filter((c) => !c.startsWith("map-zoom-"))
+            .join(" ");
+
+          if (zoom < 8) {
+            mapContainer.classList.add("map-zoom-low");
+          } else if (zoom >= 8 && zoom <= 12) {
+            mapContainer.classList.add("map-zoom-medium");
+          } else if (zoom > 12 && zoom <= 15) {
+            mapContainer.classList.add("map-zoom-high");
+          } else {
+            mapContainer.classList.add("map-zoom-very-high");
+          }
+        };
+
+        map.on("zoomend", updateZoomClass);
+        updateZoomClass();
+
         mapRef.current = map;
         setMapReady(true);
       } catch (error) {
@@ -484,7 +507,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
             color: layer.color,
             weight: isProv ? 3 : isKab ? 2 : 1,
           });
-          vtLayer.setZIndex(isProv ? 199 : isKab ? 200 : 201);
+          vtLayer.setZIndex(isProv ? 201 : isKab ? 200 : 199);
           vtLayer.addTo(map);
           overlaysRef.current[layer.id] = vtLayer;
         } else {
@@ -494,18 +517,11 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
             {
               pointToLayer: (feature, latlng) => {
                 const icon = L.divIcon({
-                  className: "custom-pin-container",
-                  html: `<div class="custom-pin-marker">
-                    <div class="pin-drop">
-                      <div class="pin-icon-wrap">
-                        <img src="/images/Logo GGP.png?v=2" alt="Logo GGP" style="width: 100%; height: 100%; object-fit: contain;" />
-                      </div>
-                    </div>
-                    <div class="pin-shadow"></div>
-                  </div>`,
-                  iconSize: [32, 32],
-                  iconAnchor: [16, 32],
-                  popupAnchor: [0, -32],
+                  className: "custom-image-pin",
+                  html: `<img src="/images/pin gereja.png" alt="Pin Gereja" style="width: 48px; height: 48px; object-fit: contain;" />`,
+                  iconSize: [48, 48],
+                  iconAnchor: [24, 48],
+                  popupAnchor: [0, -48],
                 });
                 return L.marker(latlng, { icon });
               },
