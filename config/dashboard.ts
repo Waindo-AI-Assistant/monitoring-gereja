@@ -226,6 +226,28 @@ export const ATTRIBUTE_LABELS: Record<string, string> = {
   no: "NO",
   x: "X (Longitude)",
   y: "Y (Latitude)",
+
+  // Atribut GIS Administrasi Batas Wilayah & Batas Mada
+  WADMKK: "Kabupaten / Kota",
+  WADMPR: "Provinsi",
+  WADMKC: "Kecamatan",
+  WADMKD: "Desa / Kelurahan",
+  NAMOBJ: "Nama Wilayah / Objek",
+  LUASWH: "Luas Wilayah (Ha)",
+  KDPPUM: "Kode Provinsi",
+  KDPKAB: "Kode Kabupaten",
+  KDCPUM: "Kode Kecamatan",
+  KDEPUM: "Kode Desa",
+  REMARK: "Keterangan",
+  METADATA: "Sumber Data / Metadata",
+  SRS_ID: "Sistem Koordinat (SRS ID)",
+  FCODE: "Kode Unsur (FCODE)",
+  Shape_Leng: "Panjang Keliling (Derajat)",
+  Shape_Area: "Luas Area (Derajat²)",
+  OBJECTID: "ID Objek",
+  UUPP: "Undang-Undang / Peraturan",
+  TIPADM: "Tipe Administrasi",
+  luas: "Luas Area (Km²)",
 };
 
 /** Atribut gereja terurut yang akan ditampilkan pada UI ketika diklik */
@@ -244,4 +266,32 @@ export const GEREJA_ORDERED_FIELDS = [
   "jam_operasional",
   "status"
 ];
+
+/** Formats values nicely, parsing scientific notation strings and rounding to at most 2 decimal places */
+export function formatValue(v: unknown): string {
+  if (v === null || v === undefined || String(v).trim() === "") {
+    return "-";
+  }
+  
+  if (typeof v === "number") {
+    if (Number.isNaN(v)) return "-";
+    return new Intl.NumberFormat("id-ID", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(v);
+  }
+  
+  const strVal = String(v).trim();
+  const num = Number(strVal);
+  
+  // Periksa apakah berupa format angka biasa atau scientific notation (e.g. 3.8609e+03)
+  if (!Number.isNaN(num) && strVal !== "" && /^-?\d+(\.\d+)?(e[+-]?\d+)?$/i.test(strVal)) {
+    return new Intl.NumberFormat("id-ID", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(num);
+  }
+  
+  return strVal;
+}
 

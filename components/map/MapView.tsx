@@ -21,6 +21,7 @@ import {
   GEREJA_ORDERED_FIELDS,
   classColor,
   classLabel,
+  formatValue,
   type LayerDef,
   type LayerId,
 } from "@/config/dashboard";
@@ -84,9 +85,7 @@ function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
   if (layer.id === "poi") {
     rows = GEREJA_ORDERED_FIELDS.map((k) => {
       const v = props[k];
-      const value = (v === null || v === undefined || String(v).trim() === "")
-        ? "-"
-        : (typeof v === "number" ? new Intl.NumberFormat("id-ID").format(v) : String(v));
+      const value = formatValue(v);
       const label = ATTRIBUTE_LABELS[k] ?? k;
       return `<tr class="border-b border-slate-100 last:border-0">
         <td class="py-1.5 pr-3 align-top text-[11px] font-medium uppercase tracking-wide text-slate-500">${label}</td>
@@ -98,9 +97,8 @@ function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
       .filter(([k, v]) => k !== imgKey && k !== nameKey && v !== null && v !== undefined && v !== "")
       .map(([k, v]) => {
         const label = ATTRIBUTE_LABELS[k] ?? k;
-        let value = String(v);
+        let value = formatValue(v);
         if (layer.classField === k) value = classLabel(layer.id, value);
-        if (typeof v === "number") value = new Intl.NumberFormat("id-ID").format(v);
         return `<tr class="border-b border-slate-100 last:border-0">
           <td class="py-1.5 pr-3 align-top text-[11px] font-medium uppercase tracking-wide text-slate-500">${label}</td>
           <td class="py-1.5 text-right text-xs font-semibold text-slate-800">${value}</td>

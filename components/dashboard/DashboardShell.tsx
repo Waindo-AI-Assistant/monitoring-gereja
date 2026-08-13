@@ -4,7 +4,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { DEFAULT_BASEMAP_ID, LAYERS, ATTRIBUTE_LABELS, GEREJA_ORDERED_FIELDS, type LayerId } from "@/config/dashboard";
+import { DEFAULT_BASEMAP_ID, LAYERS, ATTRIBUTE_LABELS, GEREJA_ORDERED_FIELDS, formatValue, type LayerId } from "@/config/dashboard";
 import {
   ALL,
   DEFAULT_FILTERS,
@@ -661,17 +661,12 @@ export default function DashboardShell() {
                 })()}
 
                 <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    Atribut Geodatabase
-                  </h3>
                   <table className="w-full border-collapse">
                     <tbody>
                       {selectedFeature.layerLabel === "Titik Gereja" ? (
                         GEREJA_ORDERED_FIELDS.map((key) => {
                           const val = selectedFeature.properties[key];
-                          const displayVal = (val === null || val === undefined || String(val).trim() === "")
-                            ? "-"
-                            : (typeof val === "number" ? new Intl.NumberFormat("id-ID").format(val) : String(val));
+                          const displayVal = formatValue(val);
                           const label = ATTRIBUTE_LABELS[key] ?? key;
                           return (
                             <tr key={key} className="border-b border-slate-100 last:border-0 animate-fade-in">
@@ -695,13 +690,14 @@ export default function DashboardShell() {
                           )
                           .map(([k, v]) => {
                             const label = ATTRIBUTE_LABELS[k] ?? k.replace(/_/g, " ");
+                            const displayVal = formatValue(v);
                             return (
                               <tr key={k} className="border-b border-slate-100 last:border-0">
                                 <td className="py-2 pr-3 text-[10px] font-medium uppercase text-slate-400 align-top">
                                   {label}
                                 </td>
                                 <td className="py-2 text-xs font-semibold text-slate-800 text-right">
-                                  {typeof v === "number" ? new Intl.NumberFormat("id-ID").format(v) : String(v)}
+                                  {displayVal}
                                 </td>
                               </tr>
                             );
