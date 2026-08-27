@@ -337,23 +337,28 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
   const dataCacheRef = useRef<Partial<Record<LayerId, GeoJSON.FeatureCollection>>>({});
   const highlightLayerRef = useRef<any>(null);
   const activeToolRef = useRef(activeTool);
-
   useEffect(() => {
     activeToolRef.current = activeTool;
   }, [activeTool]);
 
+  const onFeatureSelectRef = useRef(onFeatureSelect);
+  useEffect(() => {
+    onFeatureSelectRef.current = onFeatureSelect;
+  }, [onFeatureSelect]);
+
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
-  const [cursor, setCursor] = useState<{ lat: number; lng: number } | null>(null);
+  const coordsTextRef = useRef<HTMLSpanElement | null>(null);
+  const coordsDotRef = useRef<HTMLSpanElement | null>(null);
 
   // ---------------------------------------------------------------- init peta
   useEffect(() => {
-    let cancelled = false;
+    let unmounted = false;
 
     (async () => {
       try {
         const L = (await import("leaflet")).default;
-        if (cancelled || !containerRef.current || mapRef.current) return;
+        if (unmounted || !containerRef.current || mapRef.current) return;
 
         const map = L.map(containerRef.current, {
           zoomControl: false,
@@ -370,23 +375,62 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
           [north, east],
         ]);
 
+        const updateCoords = (lat: number, lng: number) => {
+          if (coordsTextRef.current) {
+            coordsTextRef.current.textContent = `Lat: ${lat.toFixed(5)} | Long: ${lng.toFixed(5)}`;
+          }
+          if (coordsDotRef.current) {
+            coordsDotRef.current.className = "h-2 w-2 rounded-full shrink-0 bg-emerald-500 animate-pulse";
+          }
+        };
+
+        const clearCoords = () => {
+          if (coordsTextRef.current) {
+            coordsTextRef.current.textContent = "Arahkan kursor ke peta";
+          }
+          if (coordsDotRef.current) {
+            coordsDotRef.current.className = "h-2 w-2 rounded-full shrink-0 bg-slate-400";
+          }
+        };
+
         map.on("mousemove", (e) => {
-          if (!cancelled) setCursor(e.latlng);
+          if (e?.latlng) {
+            updateCoords(e.latlng.lat, e.latlng.lng);
+          }
         });
+        map.on("mouseout", () => {
+          clearCoords();
+        });
+
+        const mapContainer = containerRef.current!;
+        const handleContainerMouseMove = (e: MouseEvent) => {
+          if (!mapRef.current) return;
+          try {
+            const latlng = mapRef.current.mouseEventToLatLng(e);
+            if (latlng) {
+              updateCoords(latlng.lat, latlng.lng);
+            }
+          } catch {}
+        };
+        const handleContainerMouseLeave = () => {
+          clearCoords();
+        };
+
+        mapContainer.addEventListener("mousemove", handleContainerMouseMove);
+        mapContainer.addEventListener("mouseleave", handleContainerMouseLeave);
 
         map.on("popupclose", () => {
           setTimeout(() => {
-            if (cancelled || !mapRef.current) return;
+            if (!mapRef.current) return;
             if (!checkAnyPopupOpen(mapRef.current)) {
-              onFeatureSelect?.(null, "");
+              onFeatureSelectRef.current?.(null, "");
             }
           }, 50);
         });
 
-        const mapContainer = containerRef.current!;
         const handleZoomChange = () => {
-          if (cancelled || !map) return;
-          applyZoomClassToContainer(mapContainer, map.getZoom());
+          if (!mapRef.current) return;
+          applyZoomClassToContainer(mapContainer, mapRef.current.getZoom());
         };
 
         map.on("zoomend", handleZoomChange);
@@ -395,16 +439,16 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
         mapRef.current = map;
         setMapReady(true);
       } catch (error) {
-        if (!cancelled) {
+        if (!unmounted) {
           setMapError(error instanceof Error ? error.message : "Inisialisasi Leaflet gagal.");
         }
       }
     })();
 
     return () => {
-      cancelled = true;
+      unmounted = true;
     };
-  }, [onFeatureSelect]);
+  }, []);
 
   // ---------------------------------------------------------------- resize observer
   useEffect(() => {
@@ -1109,8 +1153,9 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
         </div>
       ) : null}
 
-      <div className="pointer-events-none absolute bottom-3 right-3 z-400 rounded-full bg-white/90 px-3 py-1.5 font-mono text-xs font-medium text-slate-700 shadow-xs">
-        {cursor ? `${cursor.lat.toFixed(5)}, ${cursor.lng.toFixed(5)}` : "Arahkan kursor ke peta"}
+      <div className="pointer-events-none absolute bottom-3 right-3 z-1000 flex items-center gap-2 rounded-full border border-slate-200/90 bg-white/95 px-3.5 py-1.5 font-mono text-xs font-semibold text-slate-700 shadow-md backdrop-blur-sm transition-opacity">
+        <span ref={coordsDotRef} className="h-2 w-2 rounded-full shrink-0 bg-slate-400" />
+        <span ref={coordsTextRef}>Arahkan kursor ke peta</span>
       </div>
     </div>
   );

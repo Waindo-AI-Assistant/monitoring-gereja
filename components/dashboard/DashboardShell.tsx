@@ -906,6 +906,14 @@ export default function DashboardShell() {
     });
   }, []);
 
+  const handleFeatureSelect = useCallback((props: Record<string, any> | null, label: string) => {
+    if (props) {
+      setSelectedFeature({ properties: props, layerLabel: label });
+    } else {
+      setSelectedFeature(null);
+    }
+  }, []);
+
   const effectiveLayers = visibleLayers;
 
   return (
@@ -973,13 +981,7 @@ export default function DashboardShell() {
             onToolFinished={handleToolFinished}
             onMeasureChange={setMeasure}
             onLoadingChange={setLayerLoading}
-            onFeatureSelect={(props, label) => {
-              if (props) {
-                setSelectedFeature({ properties: props, layerLabel: label });
-              } else {
-                setSelectedFeature(null);
-              }
-            }}
+            onFeatureSelect={handleFeatureSelect}
           />
 
           <div className="pointer-events-none absolute inset-0">
