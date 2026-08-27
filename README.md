@@ -332,27 +332,54 @@ Berikut adalah sifat data sumber yang bukan bug — sudah ditandai di UI agar ti
 
 ---
 
+## Menjalankan dengan Docker & Database (Prisma ORM)
+
+Aplikasi ini telah dilengkapi dengan konfigurasi **Docker** dan **PostgreSQL (Prisma ORM)**:
+
+### 1. Menjalankan via Docker Compose (Rekomendasi Produksi)
+```bash
+# Build dan jalankan container Next.js + PostgreSQL di background
+docker-compose up -d --build
+
+# Inisialisasi skema database dan seed data 579 gereja
+docker-compose exec web npx prisma db push
+docker-compose exec web node prisma/seed.js
+```
+Aplikasi akan aktif di `http://localhost:3000` dan panel admin di `http://localhost:3000/admin`.
+
+### 2. Menjalankan secara Lokal
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Generate Prisma Client
+npx prisma generate
+
+# 3. Jalankan server development
+npm run dev
+```
+
+---
+
 ## Pengembangan Selanjutnya
 
 Beberapa fitur yang dapat dikembangkan di iterasi berikutnya:
 
-- [ ] **Tambah data kecamatan/desa lain** selain Desa Bayan untuk layer persil, jalan, bangunan, dan POI
-- [ ] **Snapshot tahun tambahan** — cukup tambahkan layer bertahun di `config/dashboard.ts`
-- [ ] **Analisis perubahan antar waktu** (change detection) saat ada data multi-temporal
-- [ ] **Export data** — unduh GeoJSON atau statistik yang terfilter sebagai CSV/Excel
-- [ ] **Integrasi API dinamis** — ganti file statis dengan endpoint API jika data berubah secara periodik
-- [ ] **Layer 3D** — implementasi tinggi bangunan jika data `04_3D` diperbarui ke format yang kompatibel (misal: GeoJSON dengan properti `height`)
-- [ ] **Autentikasi** — tambahkan login jika dashboard perlu diproteksi akses
+- [x] **Autentikasi Akun & JWT** — Login & registrasi admin terlindungi dengan JWT RFC 7519
+- [x] **Panel Admin Khusus** — Tabel master data gereja dan form edit atribut
+- [x] **Integrasi Prisma ORM & Docker** — Database terstruktur siap deploy multi-container
+- [ ] **Cloud Media Storage** — Upload foto fisik gereja langsung ke S3/Supabase Storage bucket
+- [ ] **Export Data Excel/CSV** — Unduh data jemaat terfilter dalam format spreadsheet
 
 ---
 
 ## Kontak
 
 **Sekretariat Dashboard Monitoring Gereja**  
-Jl. Jenderal Sudirman No. 12, Pusat Pelayanan Eklesia  
-📞 021-12345678  
-📧 info@monitoringgereja.org  
+Jl. Kramat Pulo no. 22B, Jakarta Pusat 10450  
+Telp: 021 2128302 | WA: 081322260088  
+Email: sekretariatmajelispusat@gmail.com  
 
 ---
 
-*© 2025 Dashboard Monitoring Gereja. Semua Hak Dilindungi.*
+*© 2026 Dashboard Monitoring Gereja. Semua Hak Dilindungi.*

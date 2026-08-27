@@ -19,7 +19,6 @@ import {
   MAX_ZOOM,
   ATTRIBUTE_LABELS,
   GEREJA_ORDERED_FIELDS,
-  classColor,
   classLabel,
   formatValue,
   type LayerDef,
@@ -38,6 +37,7 @@ export type MapHandle = {
   resetView: () => void;
   fitTo: (filters: Filters) => void;
   closePopup: () => void;
+  focusPOI: (latlng: [number, number], properties: any) => void;
 };
 
 type MapViewProps = {
@@ -85,7 +85,7 @@ function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
   if (layer.id === "poi") {
     rows = GEREJA_ORDERED_FIELDS.map((k) => {
       const v = props[k];
-      const value = formatValue(v);
+      const value = formatValue(v, k);
       const label = ATTRIBUTE_LABELS[k] ?? k;
       return `<tr class="border-b border-slate-100 last:border-0">
         <td class="py-1.5 pr-3 align-top text-[11px] font-medium uppercase tracking-wide text-slate-500">${label}</td>
@@ -97,7 +97,7 @@ function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
       .filter(([k, v]) => k !== imgKey && k !== nameKey && v !== null && v !== undefined && v !== "")
       .map(([k, v]) => {
         const label = ATTRIBUTE_LABELS[k] ?? k;
-        let value = formatValue(v);
+        let value = formatValue(v, k);
         if (layer.classField === k) value = classLabel(layer.id, value);
         return `<tr class="border-b border-slate-100 last:border-0">
           <td class="py-1.5 pr-3 align-top text-[11px] font-medium uppercase tracking-wide text-slate-500">${label}</td>
@@ -113,7 +113,7 @@ function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
       </div>`
     : "";
 
-  return `<div class="overflow-hidden rounded-xl bg-white shadow-sm max-w-[280px]">
+  return `<div class="overflow-hidden rounded-xl bg-white shadow-sm max-w-70">
     ${imageHtml}
     <div class="bg-blue-950 px-3 py-2 text-xs font-semibold text-white">${titleText}</div>
     <div class="max-h-56 overflow-y-auto px-3 py-1">
@@ -137,6 +137,35 @@ function pointInPolygon(point: [number, number], vs: [number, number][]) {
   return inside;
 }
 
+function computeBbox(geom: any): [number, number, number, number] | null {
+  let coords: [number, number][] = [];
+  if (geom.type === "Polygon") {
+    coords = geom.coordinates[0];
+  } else if (geom.type === "MultiPolygon") {
+    coords = geom.coordinates.flatMap((poly: any) => poly[0]);
+  }
+  if (coords.length === 0) return null;
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const p of coords) {
+    if (p[0] < minX) minX = p[0];
+    if (p[1] < minY) minY = p[1];
+    if (p[0] > maxX) maxX = p[0];
+    if (p[1] > maxY) maxY = p[1];
+  }
+  return [minX, minY, maxX, maxY];
+}
+
+function checkGeomContainsPoint(geom: any, x: number, y: number): boolean {
+  if (geom.type === "Polygon") {
+    return pointInPolygon([x, y], geom.coordinates[0]);
+  }
+  if (geom.type === "MultiPolygon") {
+    return geom.coordinates.some((polygon: any) => pointInPolygon([x, y], polygon[0]));
+  }
+  return false;
+}
+
 function findFeatureAt(latlng: { lat: number; lng: number }, geojson: any) {
   const x = latlng.lng;
   const y = latlng.lat;
@@ -145,24 +174,8 @@ function findFeatureAt(latlng: { lat: number; lng: number }, geojson: any) {
     const geom = feature.geometry;
     if (!geom) continue;
 
-    // Hitung/ambil bbox untuk penyaringan cepat
     if (!feature.bbox) {
-      let coords: [number, number][] = [];
-      if (geom.type === "Polygon") {
-        coords = geom.coordinates[0];
-      } else if (geom.type === "MultiPolygon") {
-        coords = geom.coordinates.flatMap((poly: any) => poly[0]);
-      }
-      if (coords.length > 0) {
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        for (const p of coords) {
-          if (p[0] < minX) minX = p[0];
-          if (p[1] < minY) minY = p[1];
-          if (p[0] > maxX) maxX = p[0];
-          if (p[1] > maxY) maxY = p[1];
-        }
-        feature.bbox = [minX, minY, maxX, maxY];
-      }
+      feature.bbox = computeBbox(geom);
     }
 
     if (feature.bbox) {
@@ -170,21 +183,31 @@ function findFeatureAt(latlng: { lat: number; lng: number }, geojson: any) {
       if (x < minX || x > maxX || y < minY || y > maxY) continue;
     }
 
-    if (geom.type === "Polygon") {
-      const outerRing = geom.coordinates[0];
-      if (pointInPolygon([x, y], outerRing)) {
-        return feature;
-      }
-    } else if (geom.type === "MultiPolygon") {
-      for (const polygon of geom.coordinates) {
-        const outerRing = polygon[0];
-        if (pointInPolygon([x, y], outerRing)) {
-          return feature;
-        }
-      }
+    if (checkGeomContainsPoint(geom, x, y)) {
+      return feature;
     }
   }
   return null;
+}
+
+function drawTileFeature(ctx: CanvasRenderingContext2D, feature: any, size: { x: number; y: number }) {
+  ctx.beginPath();
+  for (const ring of feature.geometry) {
+    for (let i = 0; i < ring.length; i++) {
+      const p = ring[i] as any;
+      const x = (p[0] / 4096) * size.x;
+      const y = (p[1] / 4096) * size.y;
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    if (feature.type === 3) {
+      ctx.closePath();
+    }
+  }
+  ctx.stroke();
 }
 
 function createVectorTileLayer(L: any, geojsonData: any, options: { color: string; weight: number }) {
@@ -218,23 +241,7 @@ function createVectorTileLayer(L: any, geojsonData: any, options: { color: strin
       ctx.lineWidth = options.weight;
 
       for (const feature of tileData.features) {
-        ctx.beginPath();
-        for (const ring of feature.geometry) {
-          for (let i = 0; i < ring.length; i++) {
-            const p = ring[i] as any;
-            const x = (p[0] / 4096) * size.x;
-            const y = (p[1] / 4096) * size.y;
-            if (i === 0) {
-              ctx.moveTo(x, y);
-            } else {
-              ctx.lineTo(x, y);
-            }
-          }
-          if (feature.type === 3) {
-            ctx.closePath();
-          }
-        }
-        ctx.stroke();
+        drawTileFeature(ctx, feature, size);
       }
 
       setTimeout(() => done(null, tile));
@@ -243,6 +250,60 @@ function createVectorTileLayer(L: any, geojsonData: any, options: { color: strin
   });
 
   return new CanvasGridLayer();
+}
+
+function getLayerWeight(layerId: string): number {
+  if (layerId === "batas_provinsi") return 3;
+  if (layerId === "batas_kabupaten") return 2;
+  return 1;
+}
+
+function getLayerZIndex(layerId: string): number {
+  if (layerId === "batas_provinsi") return 201;
+  if (layerId === "batas_kabupaten") return 200;
+  return 199;
+}
+
+function filterFeatureByScope(f: any, layerId: string, filters: Filters): boolean {
+  if (layerId !== "poi" && layerId !== "batas_kabupaten") return true;
+
+  const p = f.properties ?? {};
+  if (layerId === "batas_kabupaten") {
+    const kabName = p.WADMKK || p.NAMOBJ;
+    return filters.kabupaten === ALL || kabName === filters.kabupaten;
+  }
+
+  const matchDaerah = filters.daerah === ALL || p.nama_mada === filters.daerah;
+  const matchWilayah = filters.wilayah === ALL || p.mawil === filters.wilayah;
+  const matchKabupaten = filters.kabupaten === ALL || p.kabupaten === filters.kabupaten;
+  const matchDesa = filters.desa === ALL || p.desa === filters.desa;
+
+  return matchDaerah && matchWilayah && matchKabupaten && matchDesa;
+}
+
+function checkAnyPopupOpen(map: LeafletNamespace.Map): boolean {
+  let open = false;
+  map.eachLayer((layer: any) => {
+    if (layer.getPopup?.()?.isOpen()) {
+      open = true;
+    }
+  });
+  return open;
+}
+
+function getZoomLevelClass(zoom: number): string {
+  if (zoom < 8) return "map-zoom-low";
+  if (zoom <= 12) return "map-zoom-medium";
+  if (zoom <= 15) return "map-zoom-high";
+  return "map-zoom-very-high";
+}
+
+function applyZoomClassToContainer(container: HTMLElement, zoom: number) {
+  container.className = container.className
+    .split(" ")
+    .filter((c) => !c.startsWith("map-zoom-"))
+    .join(" ");
+  container.classList.add(getZoomLevelClass(zoom));
 }
 
 /* ─────────────── Komponen Utama MapView ─────────────── */
@@ -307,40 +368,20 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
         map.on("popupclose", () => {
           setTimeout(() => {
             if (cancelled || !mapRef.current) return;
-            let anyPopupOpen = false;
-            mapRef.current.eachLayer((layer: any) => {
-              if (layer.getPopup && layer.getPopup()?.isOpen()) {
-                anyPopupOpen = true;
-              }
-            });
-            if (!anyPopupOpen) {
+            if (!checkAnyPopupOpen(mapRef.current)) {
               onFeatureSelect?.(null, "");
             }
           }, 50);
         });
 
         const mapContainer = containerRef.current!;
-        const updateZoomClass = () => {
+        const handleZoomChange = () => {
           if (cancelled || !map) return;
-          const zoom = map.getZoom();
-          mapContainer.className = mapContainer.className
-            .split(" ")
-            .filter((c) => !c.startsWith("map-zoom-"))
-            .join(" ");
-
-          if (zoom < 8) {
-            mapContainer.classList.add("map-zoom-low");
-          } else if (zoom >= 8 && zoom <= 12) {
-            mapContainer.classList.add("map-zoom-medium");
-          } else if (zoom > 12 && zoom <= 15) {
-            mapContainer.classList.add("map-zoom-high");
-          } else {
-            mapContainer.classList.add("map-zoom-very-high");
-          }
+          applyZoomClassToContainer(mapContainer, map.getZoom());
         };
 
-        map.on("zoomend", updateZoomClass);
-        updateZoomClass();
+        map.on("zoomend", handleZoomChange);
+        handleZoomChange();
 
         mapRef.current = map;
         setMapReady(true);
@@ -354,7 +395,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [onFeatureSelect]);
 
   // ---------------------------------------------------------------- basemap
   useEffect(() => {
@@ -399,23 +440,12 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
         const data = dataCacheRef.current[layer.id];
         if (!data) continue;
 
-        const features = data.features.filter((f) => {
-          const p = f.properties ?? {};
-          if (layer.id === "batas_kabupaten") {
-            const kabName = p.WADMKK || p.NAMOBJ;
-            if (filters.kabupaten !== ALL && kabName !== filters.kabupaten) return false;
-          }
-          if (layer.id === "batas_provinsi") {
-            // Batas provinsi selalu diizinkan diklik secara utuh tanpa filter
-          }
-          return true;
-        });
+        const features = data.features.filter((f) => filterFeatureByScope(f, layer.id, filters));
 
         const clickedFeature = findFeatureAt(e.latlng, { type: "FeatureCollection", features });
         if (clickedFeature) {
           onFeatureSelect?.((clickedFeature.properties ?? {}) as Record<string, any>, layer.label);
 
-          // Gambar garis seleksi (highlight)
           if (highlightLayerRef.current) {
             map.removeLayer(highlightLayerRef.current);
           }
@@ -477,39 +507,21 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
         const data = dataCacheRef.current[layer.id];
         if (!data) continue;
 
-        const features = data.features.filter((f) => {
-          const p = f.properties ?? {};
-          if (layer.id === "poi") {
-            if (filters.daerah !== ALL && p.nama_mada !== filters.daerah) return false;
-            if (filters.wilayah !== ALL && p.mawil !== filters.wilayah) return false;
-            if (filters.kabupaten !== ALL && p.kabupaten !== filters.kabupaten) return false;
-            if (filters.desa !== ALL && p.desa !== filters.desa) return false;
-          }
-          if (layer.id === "batas_kabupaten") {
-            const kabName = p.WADMKK || p.NAMOBJ;
-            if (filters.kabupaten !== ALL) {
-              if (kabName !== filters.kabupaten) return false;
-            }
-          }
-          if (layer.id === "batas_provinsi") {
-            // Batas provinsi selalu ditampilkan secara utuh tanpa filter
-          }
-          return true;
-        });
+        const features = data.features.filter((f) => filterFeatureByScope(f, layer.id, filters));
 
         if (layer.kind === "polygon") {
-          // Canvas rendering berbasis geojson-vt agar super ringan di memori
-          const isProv = layer.id === "batas_provinsi";
-          const isKab = layer.id === "batas_kabupaten";
-          const vtLayer = createVectorTileLayer(L, { type: "FeatureCollection", features }, {
-            color: layer.color,
-            weight: isProv ? 3 : isKab ? 2 : 1,
-          });
-          vtLayer.setZIndex(isProv ? 201 : isKab ? 200 : 199);
+          const vtLayer = createVectorTileLayer(
+            L,
+            { type: "FeatureCollection", features },
+            {
+              color: layer.color,
+              weight: getLayerWeight(layer.id),
+            }
+          );
+          vtLayer.setZIndex(getLayerZIndex(layer.id));
           vtLayer.addTo(map);
           overlaysRef.current[layer.id] = vtLayer;
         } else {
-          // DivIcon standar untuk POI Gereja
           const gj = L.geoJSON(
             { type: "FeatureCollection", features } as GeoJSON.FeatureCollection,
             {
@@ -554,7 +566,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
       cancelled = true;
       map.off("click", onMapClick);
     };
-  }, [visibleLayers, filters, mapReady, onLoadingChange]);
+  }, [visibleLayers, filters, mapReady, onLoadingChange, onFeatureSelect]);
 
   // -------------------------------------------------------------- alat ukur
   useEffect(() => {
@@ -565,8 +577,8 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
       return;
     }
 
-    let points: LeafletNamespace.LatLng[] = [];
-    let markers: LeafletNamespace.Marker[] = [];
+    const points: LeafletNamespace.LatLng[] = [];
+    const markers: LeafletNamespace.Marker[] = [];
     let polyline: LeafletNamespace.Polyline | null = null;
     let polygon: LeafletNamespace.Polygon | null = null;
     let tempPolyline: LeafletNamespace.Polyline | null = null;
@@ -655,23 +667,21 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
       }
 
       const current = e.latlng;
+      const previewPoints = [...points, current];
 
-      // Draw/update dynamic preview line
       import("leaflet").then(({ default: L }) => {
-        const previewPoints = [...points, current];
         if (!tempPolyline) {
           tempPolyline = L.polyline(previewPoints, {
             color: "#3b82f6",
             weight: 2,
-            dashArray: "5, 5",
+            dashArray: "4, 4",
             opacity: 0.7,
           }).addTo(map);
         } else {
           tempPolyline.setLatLngs(previewPoints);
         }
 
-        // Draw/update dynamic preview polygon
-        if (points.length >= 2) {
+        if (previewPoints.length >= 3) {
           if (!tempPolygon) {
             tempPolygon = L.polygon(previewPoints, {
               color: "#3b82f6",
@@ -688,7 +698,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
         }
       });
 
-      const last = points[points.length - 1];
+      const last = points.at(-1)!;
       const dist = last.distanceTo(current);
 
       let totalDist = 0;
@@ -707,72 +717,80 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
     function onRightClick(e: LeafletNamespace.LeafletMouseEvent) {
       if (e.originalEvent) {
         e.originalEvent.preventDefault();
-        e.originalEvent.stopPropagation();
       }
 
       if (points.length === 0) return;
 
-      // Hapus titik terakhir
       points.pop();
-
-      // Hapus marker terakhir
-      const lastMarker = markers.pop();
-      if (lastMarker) {
-        map.removeLayer(lastMarker);
+      const removedMarker = markers.pop();
+      if (removedMarker) {
+        map.removeLayer(removedMarker);
       }
 
-      // Update polyline
-      if (polyline) {
-        if (points.length >= 2) {
-          polyline.setLatLngs(points);
-        } else {
-          map.removeLayer(polyline);
-          polyline = null;
-        }
+      if (points.length < 2 && polyline) {
+        map.removeLayer(polyline);
+        polyline = null;
+      } else if (polyline) {
+        polyline.setLatLngs(points);
       }
 
-      // Update polygon
-      if (polygon) {
-        if (points.length >= 3) {
-          polygon.setLatLngs(points);
-        } else {
-          map.removeLayer(polygon);
-          polygon = null;
-        }
+      if (points.length < 3 && polygon) {
+        map.removeLayer(polygon);
+        polygon = null;
+      } else if (polygon) {
+        polygon.setLatLngs(points);
       }
 
-      // Update stats
+      if (tempPolyline) {
+        map.removeLayer(tempPolyline);
+        tempPolyline = null;
+      }
+      if (tempPolygon) {
+        map.removeLayer(tempPolygon);
+        tempPolygon = null;
+      }
+
       updateStats();
 
-      // Trigger mousemove update to refresh tooltip text
-      onMouseMove(e);
+      if (overlay) {
+        if (points.length === 0) {
+          overlay.innerText = "Klik pada peta untuk mulai mengukur";
+        } else {
+          onMouseMove(e);
+        }
+      }
     }
 
     function updateStats() {
-      let distanceM = 0;
-      for (let i = 0; i < points.length - 1; i++) {
-        distanceM += points[i].distanceTo(points[i + 1]);
+      if (points.length < 2) {
+        onMeasureChange({ distanceM: 0, areaM2: 0, points: points.length });
+        return;
       }
-      const areaM2 = sphericalArea(points);
-      onMeasureChange({ distanceM, areaM2, points: points.length });
+      let dist = 0;
+      for (let i = 0; i < points.length - 1; i++) {
+        dist += points[i].distanceTo(points[i + 1]);
+      }
+      const area = sphericalArea(points);
+      onMeasureChange({ distanceM: dist, areaM2: area, points: points.length });
     }
 
     return () => {
       map.off("click", onClick);
       map.off("mousemove", onMouseMove);
       map.off("contextmenu", onRightClick);
+      overlay?.remove();
       markers.forEach((m) => map.removeLayer(m));
       if (polyline) map.removeLayer(polyline);
       if (polygon) map.removeLayer(polygon);
       if (tempPolyline) map.removeLayer(tempPolyline);
       if (tempPolygon) map.removeLayer(tempPolygon);
-      overlay?.remove();
       map.dragging.enable();
       container.classList.remove("tool-active");
+      onMeasureChange(null);
     };
   }, [activeTool, mapReady, onMeasureChange]);
 
-  // -------------------------------------------------------------- zoombox
+  // ------------------------------------------------------------ kotak perbesar
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
@@ -786,12 +804,16 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
     let overlay: HTMLDivElement | null = null;
 
     function onMouseDown(e: LeafletNamespace.LeafletMouseEvent) {
+      if (e.originalEvent.button !== 0) return;
       startPoint = map.mouseEventToContainerPoint(e.originalEvent);
       overlay = document.createElement("div");
       overlay.className = "zoombox-overlay";
       overlay.style.left = `${startPoint.x}px`;
       overlay.style.top = `${startPoint.y}px`;
+      overlay.style.width = "0px";
+      overlay.style.height = "0px";
       container.appendChild(overlay);
+
       map.on("mousemove", onMouseMove);
       map.on("mouseup", onMouseUp);
     }
@@ -826,7 +848,6 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
           ]);
         }
       }
-      // Clean up drag events and overlay div so it's ready for another draw
       map.off("mousemove", onMouseMove);
       map.off("mouseup", onMouseUp);
       if (overlay) {
@@ -849,12 +870,11 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
   }, [activeTool, mapReady, onToolFinished]);
 
   // -------------------------------------------------------------- handle
-  const fitTo = useCallback((filters: Filters) => {
+  const fitTo = useCallback((newFilters: Filters) => {
     const map = mapRef.current;
     if (!map) return;
 
-    // Bersihkan highlight lama jika filter direset
-    if (filters.daerah === ALL && filters.wilayah === ALL && filters.kabupaten === ALL && filters.desa === ALL) {
+    if (newFilters.daerah === ALL && newFilters.wilayah === ALL && newFilters.kabupaten === ALL && newFilters.desa === ALL) {
       if (highlightLayerRef.current) {
         map.removeLayer(highlightLayerRef.current);
         highlightLayerRef.current = null;
@@ -870,14 +890,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
     const data = dataCacheRef.current.poi;
     if (!data) return;
 
-    const matches = data.features.filter((f) => {
-      const p = f.properties ?? {};
-      if (filters.daerah !== ALL && p.nama_mada !== filters.daerah) return false;
-      if (filters.wilayah !== ALL && p.mawil !== filters.wilayah) return false;
-      if (filters.kabupaten !== ALL && p.kabupaten !== filters.kabupaten) return false;
-      if (filters.desa !== ALL && p.desa !== filters.desa) return false;
-      return true;
-    });
+    const matches = data.features.filter((f) => filterFeatureByScope(f, "poi", newFilters));
     if (matches.length === 0) return;
 
     import("leaflet").then(({ default: L }) => {
@@ -902,6 +915,30 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
           mapRef.current?.removeLayer(highlightLayerRef.current);
           highlightLayerRef.current = null;
         }
+      },
+      focusPOI: (latlng: [number, number], properties: any) => {
+        if (!mapRef.current) return;
+        
+        mapRef.current.closePopup();
+        if (highlightLayerRef.current) {
+          mapRef.current.removeLayer(highlightLayerRef.current);
+          highlightLayerRef.current = null;
+        }
+
+        mapRef.current.setView(latlng, 16);
+
+        import("leaflet").then(({ default: L }) => {
+          if (!mapRef.current) return;
+          const poiLayerDef = LAYERS.find((l) => l.id === "poi");
+          if (!poiLayerDef) return;
+          
+          L.popup({
+            maxWidth: 320,
+          })
+            .setLatLng(latlng)
+            .setContent(popupHtml(poiLayerDef, properties))
+            .openOn(mapRef.current);
+        });
       },
     }),
     [fitTo],
@@ -932,7 +969,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
         </div>
       ) : null}
 
-      <div className="pointer-events-none absolute bottom-3 right-3 z-[400] rounded-full bg-white/90 px-3 py-1.5 font-mono text-xs font-medium text-slate-700 shadow-sm shadow-blue-900/10">
+      <div className="pointer-events-none absolute bottom-3 right-3 z-400 rounded-full bg-white/90 px-3 py-1.5 font-mono text-xs font-medium text-slate-700 shadow-xs">
         {cursor ? `${cursor.lat.toFixed(5)}, ${cursor.lng.toFixed(5)}` : "Arahkan kursor ke peta"}
       </div>
     </div>

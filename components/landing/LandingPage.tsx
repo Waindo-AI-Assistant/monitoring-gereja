@@ -4,9 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-const GOOGLE_MAPS_URL = "#";
+const GOOGLE_MAPS_URL = "https://www.google.com/maps/search/?api=1&query=Jl.+Kramat+Pulo+no.+22B,+Jakarta+Pusat+10450";
 const INSTAGRAM_URL = "#";
-const WHATSAPP_URL = "#";
+const WHATSAPP_URL = "https://wa.me/6281322260088";
 
 
 /* ─────────────── Inline SVG Icon Components ─────────────── */
@@ -145,6 +145,9 @@ export default function LandingPage() {
             <Link href="/dashboard" className="landing-navbar__link">
               Dashboard
             </Link>
+            <Link href="/admin" className="landing-navbar__link">
+              Admin
+            </Link>
             <a href="#kontak" className="landing-navbar__link">
               Kontak
             </a>
@@ -190,18 +193,18 @@ export default function LandingPage() {
             {/* Stats Row */}
             <div className="landing-hero__stats">
               <div className="landing-hero__stat">
-                <span className="landing-hero__stat-value">16</span>
-                <span className="landing-hero__stat-label">Wilayah</span>
+                <span className="landing-hero__stat-value">20</span>
+                <span className="landing-hero__stat-label">Total Mada</span>
               </div>
               <div className="landing-hero__stat-divider" />
               <div className="landing-hero__stat">
-                <span className="landing-hero__stat-value">494</span>
-                <span className="landing-hero__stat-label">Jemaat/Gereja</span>
+                <span className="landing-hero__stat-value">63</span>
+                <span className="landing-hero__stat-label">Total Wilayah</span>
               </div>
               <div className="landing-hero__stat-divider" />
               <div className="landing-hero__stat">
-                <span className="landing-hero__stat-value">10+</span>
-                <span className="landing-hero__stat-label">Layer Data</span>
+                <span className="landing-hero__stat-value">579</span>
+                <span className="landing-hero__stat-label">Total Gereja</span>
               </div>
             </div>
           </div>
@@ -296,19 +299,8 @@ export default function LandingPage() {
                 >
                   <IconLocation className="landing-footer__svg-icon" />
                   <span>
-                    Jl. Jenderal Sudirman No. 12, Pusat Pelayanan Eklesia
+                    Jl. Kramat Pulo no. 22B, Jakarta Pusat 10450
                   </span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href={INSTAGRAM_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="landing-footer__link"
-                >
-                  <IconInstagram className="landing-footer__svg-icon" />
-                  <span>@monitoring.gereja</span>
                 </a>
               </li>
             </ul>
@@ -319,29 +311,18 @@ export default function LandingPage() {
             <h3 className="landing-footer__col-title">Hubungi Kami</h3>
             <ul className="landing-footer__list">
               <li>
-                <a href="tel:02112345678" className="landing-footer__link">
+                <a href="tel:0212128302" className="landing-footer__link">
                   <IconPhone className="landing-footer__svg-icon" />
-                  <span>021-12345678</span>
+                  <span>Telp: 021 2128302</span>
                 </a>
               </li>
               <li>
                 <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="landing-footer__link"
-                >
-                  <IconWhatsApp className="landing-footer__svg-icon" />
-                  <span>WhatsApp Sekretariat</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="mailto:info@monitoringgereja.org"
+                  href="mailto:sekretariatmajelispusat@gmail.com"
                   className="landing-footer__link"
                 >
                   <IconEmail className="landing-footer__svg-icon" />
-                  <span>info@monitoringgereja.org</span>
+                  <span>sekretariatmajelispusat@gmail.com</span>
                 </a>
               </li>
             </ul>

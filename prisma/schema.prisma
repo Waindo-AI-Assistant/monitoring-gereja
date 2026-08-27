@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  username     String   @unique
+  passwordHash String
+  salt         String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Church {
+  id              String   @id @default(cuid())
+  fid             Int?     @unique
+  name            String
+  namaPendeta     String?  @map("nama_pendeta")
+  noHpWa          String?  @map("no_hp_wa")
+  alamatGereja    String?  @map("alamat_gereja")
+  tahunBerdiri    String?  @map("tahun_berdiri")
+  jumlahJemaat    String?  @map("jumlah_jemaat")
+  jamOperasional  String?  @map("jam_operasional")
+  status          String?  @default("Milik Sendiri") // Milik Sendiri, Pinjam, Sewa, Nomaden
+  mawil           String?  // Majelis Wilayah
+  kodeMada        String?  @map("kode_mada")
+  namaMada        String?  @map("nama_mada")
+  no              Int?
+  x               Float?   @default(0) // Longitude
+  y               Float?   @default(0) // Latitude
+  foto            String?
+  foto2           String?  @map("foto_2")
+  fotoPendeta     String?  @map("foto_pendeta")
+  photos          String?  @default("[]") // JSON serialized array of photo URLs
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("churches")
+}

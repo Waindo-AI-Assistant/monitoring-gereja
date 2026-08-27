@@ -83,17 +83,6 @@ export type LayerDef = {
 // Batas wilayah nasional yang relevan dengan plotting gereja.
 export const LAYERS: LayerDef[] = [
   {
-    id: "batas_kabupaten",
-    label: "Batas Wilayah",
-    file: "/data/Batas_Kabupaten_simplified.geojson",
-    kind: "polygon",
-    year: null,
-    color: "#4f46e5",
-    defaultVisible: false,
-    coverage: "kabupaten",
-    note: "Batas wilayah seluruh kabupaten/kota Indonesia (Simplified)",
-  },
-  {
     id: "batas_provinsi",
     label: "Batas Mada",
     file: "/data/Batas_Provinsi_simplified.geojson",
@@ -103,6 +92,17 @@ export const LAYERS: LayerDef[] = [
     defaultVisible: false,
     coverage: "kabupaten",
     note: "Batas wilayah seluruh provinsi Indonesia (Simplified)",
+  },
+  {
+    id: "batas_kabupaten",
+    label: "Batas Wilayah",
+    file: "/data/Batas_Kabupaten_simplified.geojson",
+    kind: "polygon",
+    year: null,
+    color: "#4f46e5",
+    defaultVisible: false,
+    coverage: "kabupaten",
+    note: "Batas wilayah seluruh kabupaten/kota Indonesia (Simplified)",
   },
   {
     id: "poi",
@@ -267,12 +267,77 @@ export const GEREJA_ORDERED_FIELDS = [
   "status"
 ];
 
-/** Formats values nicely, parsing scientific notation strings and rounding to at most 2 decimal places */
-export function formatValue(v: unknown): string {
-  if (v === null || v === undefined || String(v).trim() === "") {
+/** Formats values nicely, standardizing phone numbers, preserving years/IDs, and converting scientific notations */
+export function formatValue(v: unknown, fieldKey?: string): string {
+  if (v === null || v === undefined) {
     return "-";
   }
   
+  const strVal = String(v).trim();
+  if (strVal === "") {
+    return "-";
+  }
+
+  const keyLower = (fieldKey || "").toLowerCase();
+
+  // 1. Khusus field nomor HP / WhatsApp / Telepon
+  if (
+    keyLower.includes("hp") ||
+    keyLower.includes("wa") ||
+    keyLower.includes("telp") ||
+    keyLower.includes("telepon") ||
+    keyLower.includes("phone")
+  ) {
+    // Bersihkan karakter non-digit
+    let digits = strVal.replace(/\D/g, "");
+    if (!digits) return "-";
+
+    // Standarisasi awalan 0 (misal '81284418277' -> '081284418277' atau '6281284418277' -> '081284418277')
+    if (digits.startsWith("628")) {
+      digits = "08" + digits.slice(3);
+    } else if (digits.startsWith("8") && digits.length >= 9 && digits.length <= 13) {
+      digits = "0" + digits;
+    }
+
+    // Format dengan spasi yang mudah dibaca: misal 0813 1601 0980 atau 0812 8441 8277
+    if (digits.startsWith("08") && digits.length >= 10) {
+      if (digits.length === 10) {
+        return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+      } else if (digits.length === 11) {
+        return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+      } else if (digits.length === 12) {
+        return `${digits.slice(0, 4)} ${digits.slice(4, 8)} ${digits.slice(8)}`;
+      } else if (digits.length >= 13) {
+        return `${digits.slice(0, 4)} ${digits.slice(4, 8)} ${digits.slice(8)}`;
+      }
+    }
+
+    return digits;
+  }
+
+  // 2. Khusus field tahun / kode / id yang tidak boleh diformat dengan pemisah ribuan
+  if (
+    keyLower.includes("tahun") ||
+    keyLower.includes("year") ||
+    keyLower.includes("kode") ||
+    keyLower.includes("fid") ||
+    keyLower === "no" ||
+    keyLower.includes("kd_") ||
+    keyLower.includes("kategori")
+  ) {
+    return strVal;
+  }
+
+  // 3. Khusus koordinat x dan y (longitude & latitude)
+  if (keyLower === "x" || keyLower === "y" || keyLower.includes("lat") || keyLower.includes("long")) {
+    const num = Number(strVal);
+    if (!Number.isNaN(num) && num !== 0) {
+      return num.toFixed(6);
+    }
+    return strVal;
+  }
+
+  // 4. Jika murni angka bertipe number
   if (typeof v === "number") {
     if (Number.isNaN(v)) return "-";
     return new Intl.NumberFormat("id-ID", {
@@ -281,15 +346,33 @@ export function formatValue(v: unknown): string {
     }).format(v);
   }
   
-  const strVal = String(v).trim();
-  const num = Number(strVal);
-  
-  // Periksa apakah berupa format angka biasa atau scientific notation (e.g. 3.8609e+03)
-  if (!Number.isNaN(num) && strVal !== "" && /^-?\d+(\.\d+)?(e[+-]?\d+)?$/i.test(strVal)) {
-    return new Intl.NumberFormat("id-ID", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(num);
+  // 5. Cek apakah string numerik dengan notasi ilmiah (misal 3.8609e+03)
+  if (/^-?\d+(\.\d+)?e[+-]?\d+$/i.test(strVal)) {
+    const num = Number(strVal);
+    if (!Number.isNaN(num)) {
+      return new Intl.NumberFormat("id-ID", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }).format(num);
+    }
+  }
+
+  // 6. Jika field adalah kuantitatif (jumlah_jemaat / luas / area / panjang), format dengan pemisah ribuan jika murni angka
+  if (
+    keyLower.includes("jumlah") ||
+    keyLower.includes("luas") ||
+    keyLower.includes("area") ||
+    keyLower.includes("leng") ||
+    keyLower.includes("populasi") ||
+    keyLower.includes("kapasitas")
+  ) {
+    const num = Number(strVal);
+    if (!Number.isNaN(num) && /^-?\d+(\.\d+)?$/.test(strVal)) {
+      return new Intl.NumberFormat("id-ID", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }).format(num);
+    }
   }
   
   return strVal;

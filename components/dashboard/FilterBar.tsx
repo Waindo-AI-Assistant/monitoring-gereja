@@ -1,14 +1,15 @@
 "use client";
 
 import { ALL, type Filters } from "@/lib/stats";
+import SearchBox from "./SearchBox";
 
 type FilterBarProps = {
   filters: Filters;
   onChange: (filters: Filters) => void;
   daerahList: string[];
   wilayahList: string[];
-  kabupatenList: string[];
-  desaList: string[];
+  pois: any[];
+  onSelectPOI: (latlng: [number, number], properties: any) => void;
 };
 
 const fieldClass =
@@ -22,11 +23,14 @@ export default function FilterBar({
   onChange,
   daerahList,
   wilayahList,
-  kabupatenList,
-  desaList,
+  pois,
+  onSelectPOI,
 }: FilterBarProps) {
   return (
     <>
+      {/* Pencarian Nama Jemaah */}
+      <SearchBox pois={pois} onSelectPOI={onSelectPOI} />
+
       {/* Filter Daerah / Mada */}
       <div className={fieldClass}>
         <label htmlFor="filter-daerah" className={labelClass}>
@@ -77,52 +81,6 @@ export default function FilterBar({
           {wilayahList.map((w) => (
             <option key={w} value={w}>
               {w}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Filter Kabupaten */}
-      <div className={fieldClass}>
-        <label htmlFor="filter-kabupaten" className={labelClass}>
-          Kabupaten
-        </label>
-        <select
-          id="filter-kabupaten"
-          className={selectClass}
-          value={filters.kabupaten}
-          onChange={(e) => 
-            onChange({ 
-              ...filters, 
-              kabupaten: e.target.value,
-              desa: ALL
-            })
-          }
-        >
-          <option value={ALL}>Semua Kabupaten</option>
-          {kabupatenList.map((k) => (
-            <option key={k} value={k}>
-              {k}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Filter Desa */}
-      <div className={fieldClass}>
-        <label htmlFor="filter-desa" className={labelClass}>
-          Desa
-        </label>
-        <select
-          id="filter-desa"
-          className={selectClass}
-          value={filters.desa}
-          onChange={(e) => onChange({ ...filters, desa: e.target.value })}
-        >
-          <option value={ALL}>Semua Desa</option>
-          {desaList.map((d) => (
-            <option key={d} value={d}>
-              {d}
             </option>
           ))}
         </select>

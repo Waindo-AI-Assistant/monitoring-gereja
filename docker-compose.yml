@@ -1,13 +1,43 @@
-version: "3.9"
-
 services:
-  app:
+  # Database PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: ggp_monitoring_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-monitoring_gereja}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-monitoring_gereja}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Aplikasi Web Next.js
+  web:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: ggp_monitoring_web
+    restart: always
     ports:
-      - "3007:3007"
+      - "${PORT:-3000}:3000"
     environment:
-      NODE_ENV: production
-      PORT: 3007
-    restart: unless-stopped
+      DATABASE_URL: ${DATABASE_URL}
+      AUTH_SECRET: ${AUTH_SECRET}
+      NODE_ENV: "production"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+      - ./public/data:/app/public/data
+
+volumes:
+  pgdata:
+    driver: local

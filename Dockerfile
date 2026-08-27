@@ -1,37 +1,54 @@
-# syntax=docker/dockerfile:1
+# -------------------------------------------------------------
+# Dockerfile Multi-Stage untuk Next.js + Prisma ORM
+# -------------------------------------------------------------
 
-FROM node:20-slim AS base
+FROM node:20-alpine AS base
+
+# 1. Install dependencies
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies only when needed
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma/
 
-FROM node:20-slim AS builder
-WORKDIR /app
-COPY package.json package-lock.json ./
 RUN npm ci
+RUN npx prisma generate
+
+# 2. Rebuild source code
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
 RUN npm run build
 
-FROM node:20-slim AS runner
+# 3. Production runner
+FROM base AS runner
 WORKDIR /app
+
 ENV NODE_ENV=production
-ENV PORT=3007
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/package-lock.json ./
-COPY --from=builder /app/.next ./.next
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.ts ./next.config.ts
-COPY --from=builder /app/next-env.d.ts ./next-env.d.ts
-COPY --from=builder /app/tsconfig.json ./tsconfig.json
-COPY --from=builder /app/app ./app
-COPY --from=builder /app/components ./components
-COPY --from=builder /app/config ./config
-COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/prisma ./prisma
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
 
-RUN npm ci --omit=dev
+# Buat direktori data untuk persistensi lokal jika diperlukan
+RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data /app/public
 
-EXPOSE 3006
-CMD ["npm", "run", "start"]
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["npx", "next", "start"]
