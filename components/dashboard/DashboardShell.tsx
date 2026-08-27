@@ -666,10 +666,58 @@ export default function DashboardShell() {
   const [routeTargetName, setRouteTargetName] = useState("");
   const [routingToast, setRoutingToast] = useState<string | null>(null);
 
+  // State untuk Lokasi GPS Pengguna Aktif di Peta
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+
   const showRoutingToast = useCallback((msg: string) => {
     setRoutingToast(msg);
     setTimeout(() => setRoutingToast(null), 4000);
   }, []);
+
+  // Deteksi lokasi pengguna saat dashboard dibuka
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation([pos.coords.latitude, pos.coords.longitude]);
+        },
+        () => {},
+        { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 }
+      );
+    }
+  }, []);
+
+  const handleLocateUser = useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      showRoutingToast("Perangkat atau browser Anda tidak mendukung GPS Geolocation.");
+      return;
+    }
+
+    if (userLocation) {
+      mapRef.current?.flyToCoords(userLocation, 16);
+      showRoutingToast("Memusatkan tampilan peta ke posisi Anda.");
+      return;
+    }
+
+    setIsLocating(true);
+    showRoutingToast("Mendeteksi koordinat GPS Anda...");
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        setUserLocation(coords);
+        setIsLocating(false);
+        mapRef.current?.flyToCoords(coords, 16);
+        showRoutingToast("Lokasi Anda berhasil ditemukan!");
+      },
+      () => {
+        setIsLocating(false);
+        showRoutingToast("Akses lokasi GPS ditolak atau tidak tersedia di browser.");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }, [userLocation, showRoutingToast]);
 
   const handleGetDirections = useCallback((props: any) => {
     const lat = Number(props.y || props.lat || props.latitude);
@@ -695,6 +743,7 @@ export default function DashboardShell() {
       async (pos) => {
         const userLat = pos.coords.latitude;
         const userLng = pos.coords.longitude;
+        setUserLocation([userLat, userLng]);
 
         try {
           showRoutingToast("Mengalkulasi rute jalan tercepat...");
@@ -702,24 +751,29 @@ export default function DashboardShell() {
           setRouteResult(result);
           setIsRoutingLoading(false);
           setRoutingToast(null);
-          // Tutup drawer agar peta dan rute terlihat jelas
+          // Tutup drawer agar peta dan rute terlihat jelas di layar
           setSelectedFeature(null);
         } catch (err: any) {
           setIsRoutingLoading(false);
-          showRoutingToast(err.message || "Gagal mengalkulasi rute. Membuka Google Maps...");
-          setTimeout(() => {
-            window.open(getGoogleMapsDirectionsUrl(lat, lng, userLat, userLng), "_blank");
-          }, 1500);
+          showRoutingToast(err.message || "Gagal mengalkulasi rute jalan.");
         }
       },
-      (geoError) => {
-        setIsRoutingLoading(false);
-        showRoutingToast("Izin GPS tidak diberikan. Membuka Google Maps...");
-        setTimeout(() => {
-          window.open(getGoogleMapsDirectionsUrl(lat, lng), "_blank");
-        }, 1500);
+      async (geoError) => {
+        // Jika izin lokasi GPS tidak aktif / ditolak browser, gunakan titik pusat default (Kramat Pulo / Monas) sebagai simulasi demo rute di web
+        try {
+          showRoutingToast("GPS browser nonaktif. Menampilkan simulasi rute dari Sekretariat Jakarta Pusat...");
+          const defaultStart: [number, number] = [-6.1843, 106.8456]; // Kramat Pulo, Jakarta Pusat
+          const result = await calculateRoute(defaultStart, [lat, lng]);
+          setRouteResult(result);
+          setIsRoutingLoading(false);
+          setRoutingToast(null);
+          setSelectedFeature(null);
+        } catch (err) {
+          setIsRoutingLoading(false);
+          showRoutingToast("Gagal mengalkulasi rute. Pastikan izin lokasi GPS diaktifkan.");
+        }
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
     );
   }, [showRoutingToast]);
 
@@ -915,6 +969,7 @@ export default function DashboardShell() {
             filters={filters}
             activeTool={activeTool}
             routeResult={routeResult}
+            userLocation={userLocation}
             onToolFinished={handleToolFinished}
             onMeasureChange={setMeasure}
             onLoadingChange={setLayerLoading}
@@ -944,6 +999,9 @@ export default function DashboardShell() {
                 onReset={handleReset}
                 activeTool={activeTool}
                 onToolChange={setActiveTool}
+                onLocateUser={handleLocateUser}
+                isLocating={isLocating}
+                userLocation={userLocation}
               />
             </div>
 

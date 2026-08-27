@@ -39,6 +39,7 @@ export type MapHandle = {
   fitTo: (filters: Filters) => void;
   closePopup: () => void;
   focusPOI: (latlng: [number, number], properties: any) => void;
+  flyToCoords: (coords: [number, number], zoom?: number) => void;
   invalidateSize: () => void;
 };
 
@@ -48,6 +49,7 @@ type MapViewProps = {
   filters: Filters;
   activeTool: MapTool;
   routeResult?: RouteResult | null;
+  userLocation?: [number, number] | null;
   /** Dipanggil saat alat selesai sendiri (zoom box otomatis mati setelah dipakai). */
   onToolFinished: () => void;
   onMeasureChange: (result: MeasureResult) => void;
@@ -318,6 +320,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
     filters,
     activeTool,
     routeResult,
+    userLocation,
     onToolFinished,
     onMeasureChange,
     onLoadingChange,
@@ -329,6 +332,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
   const mapRef = useRef<LeafletNamespace.Map | null>(null);
   const basemapLayerRef = useRef<LeafletNamespace.TileLayer | null>(null);
   const routeLayerRef = useRef<any>(null);
+  const userLocationMarkerRef = useRef<any>(null);
   const overlaysRef = useRef<Partial<Record<LayerId, any>>>({});
   const dataCacheRef = useRef<Partial<Record<LayerId, GeoJSON.FeatureCollection>>>({});
   const highlightLayerRef = useRef<any>(null);
@@ -487,6 +491,45 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
       map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
     })();
   }, [routeResult, mapReady]);
+
+  // ---------------------------------------------------------------- render lokasi pengguna GPS (Live Marker)
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return;
+    const map = mapRef.current;
+
+    (async () => {
+      const L = (await import("leaflet")).default;
+
+      if (userLocationMarkerRef.current) {
+        map.removeLayer(userLocationMarkerRef.current);
+        userLocationMarkerRef.current = null;
+      }
+
+      if (!userLocation) return;
+
+      const userMarkerHtml = `
+        <div style="position:relative; width:28px; height:28px; display:flex; align-items:center; justify-content:center;">
+          <span style="position:absolute; width:28px; height:28px; border-radius:50%; background:rgba(37,99,235,0.35); animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></span>
+          <span style="position:relative; width:16px; height:16px; border-radius:50%; background:#2563eb; border:3px solid #ffffff; box-shadow:0 2px 6px rgba(0,0,0,0.4);"></span>
+        </div>
+      `;
+      const userIcon = L.divIcon({
+        html: userMarkerHtml,
+        className: "custom-user-gps-marker",
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+
+      const marker = L.marker(userLocation, {
+        icon: userIcon,
+        title: "Lokasi Anda Saat Ini",
+        zIndexOffset: 1000,
+      }).bindPopup("<b>📍 Lokasi Anda Saat Ini</b><br><span style='font-size:11px;color:#64748b;'>Posisi GPS Langsung Terdeteksi</span>");
+
+      marker.addTo(map);
+      userLocationMarkerRef.current = marker;
+    })();
+  }, [userLocation, mapReady]);
 
   // ---------------------------------------------------------------- basemap
   useEffect(() => {
@@ -1030,6 +1073,9 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
             .setContent(popupHtml(poiLayerDef, properties))
             .openOn(mapRef.current);
         });
+      },
+      flyToCoords: (coords: [number, number], zoom = 15) => {
+        mapRef.current?.flyTo(coords, zoom, { duration: 1.2 });
       },
       invalidateSize: () => {
         mapRef.current?.invalidateSize({ debounceMoveend: true });

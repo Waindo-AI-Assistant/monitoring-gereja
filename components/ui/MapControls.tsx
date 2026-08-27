@@ -8,6 +8,9 @@ type MapControlsProps = {
   onReset: () => void;
   activeTool: MapTool;
   onToolChange: (tool: MapTool) => void;
+  onLocateUser?: () => void;
+  isLocating?: boolean;
+  userLocation?: [number, number] | null;
 };
 
 const iconButtonBase =
@@ -20,6 +23,9 @@ export default function MapControls({
   onReset,
   activeTool,
   onToolChange,
+  onLocateUser,
+  isLocating,
+  userLocation,
 }: MapControlsProps) {
   /** Klik alat yang sedang aktif akan mematikannya. */
   const toggle = (tool: Exclude<MapTool, null>) =>
@@ -42,6 +48,28 @@ export default function MapControls({
       </button>
 
       <div className="h-px bg-slate-100" />
+
+      {/* Tombol Lokasi Saya (GPS Live Tracker) */}
+      {onLocateUser && (
+        <>
+          <button
+            type="button"
+            onClick={onLocateUser}
+            title={userLocation ? "Fokus ke lokasi saya saat ini" : "Aktifkan deteksi lokasi saya (GPS)"}
+            aria-label="Lokasi Saya"
+            className={`${iconButtonBase} ${userLocation ? "text-blue-600 hover:bg-blue-50" : ""} ${
+              isLocating ? "animate-pulse bg-blue-50 text-blue-600" : ""
+            }`}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="h-5 w-5">
+              <circle cx="12" cy="12" r="3" fill={userLocation ? "currentColor" : "none"} />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 2v3m0 14v3M2 12h3m14 0h3" />
+              <circle cx="12" cy="12" r="7" />
+            </svg>
+          </button>
+          <div className="h-px bg-slate-100" />
+        </>
+      )}
 
       <button
         type="button"
@@ -82,8 +110,6 @@ export default function MapControls({
         aria-label="Reset tampilan peta"
         className={iconButtonBase}
       >
-        {/* Dua busur bercelah dengan mata panah — sengaja bukan lingkaran penuh
-            supaya terbaca sebagai "putar ulang", bukan sekadar bulatan. */}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="h-5 w-5">
           <path
             strokeLinecap="round"
@@ -93,21 +119,6 @@ export default function MapControls({
           <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 19.5v-5h5M20.5 4.5v5h-5" />
         </svg>
       </button>
-
-      <div className="h-px bg-slate-100" />
-{/* 
-      <a
-        href="https://ion.cesium.com/stories/viewer/?id=3025c507-3cfe-4a47-a866-8e2f21bfe02e"
-        target="_blank"
-        rel="noopener noreferrer"
-        title="Buka Peta 3D (Web 3D Viewer)"
-        aria-label="Buka Peta 3D"
-        className={`${iconButtonBase} text-blue-600 hover:bg-blue-50 font-bold`}
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="h-5 w-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
-        </svg>
-      </a> */}
     </div>
   );
 }
