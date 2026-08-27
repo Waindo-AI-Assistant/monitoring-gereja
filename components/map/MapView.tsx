@@ -25,6 +25,7 @@ import {
   type LayerId,
 } from "@/config/dashboard";
 import { ALL, DEFAULT_FILTERS, type Filters } from "@/lib/stats";
+import type { RouteResult } from "@/lib/routing";
 
 /** Alat peta yang aktif — hanya satu yang boleh hidup pada satu waktu. */
 export type MapTool = "measure" | "zoombox" | null;
@@ -46,6 +47,7 @@ type MapViewProps = {
   visibleLayers: Record<LayerId, boolean>;
   filters: Filters;
   activeTool: MapTool;
+  routeResult?: RouteResult | null;
   /** Dipanggil saat alat selesai sendiri (zoom box otomatis mati setelah dipakai). */
   onToolFinished: () => void;
   onMeasureChange: (result: MeasureResult) => void;
@@ -315,6 +317,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
     visibleLayers,
     filters,
     activeTool,
+    routeResult,
     onToolFinished,
     onMeasureChange,
     onLoadingChange,
@@ -325,6 +328,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletNamespace.Map | null>(null);
   const basemapLayerRef = useRef<LeafletNamespace.TileLayer | null>(null);
+  const routeLayerRef = useRef<any>(null);
   const overlaysRef = useRef<Partial<Record<LayerId, any>>>({});
   const dataCacheRef = useRef<Partial<Record<LayerId, GeoJSON.FeatureCollection>>>({});
   const highlightLayerRef = useRef<any>(null);
@@ -415,6 +419,74 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
       ro.disconnect();
     };
   }, [mapReady]);
+
+  // ---------------------------------------------------------------- render rute navigasi
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return;
+    const map = mapRef.current;
+
+    (async () => {
+      const L = (await import("leaflet")).default;
+
+      // Hapus layer rute sebelumnya jika ada
+      if (routeLayerRef.current) {
+        map.removeLayer(routeLayerRef.current);
+        routeLayerRef.current = null;
+      }
+
+      if (!routeResult || routeResult.coordinates.length === 0) return;
+
+      const group = L.layerGroup();
+
+      // Outer casing line untuk kontras kontur jalan
+      const outerPolyline = L.polyline(routeResult.coordinates, {
+        color: "#1e3a8a",
+        weight: 8,
+        opacity: 0.7,
+        lineCap: "round",
+        lineJoin: "round",
+      });
+
+      // Inner polyline rute utama
+      const innerPolyline = L.polyline(routeResult.coordinates, {
+        color: "#2563eb",
+        weight: 5,
+        opacity: 0.95,
+        lineCap: "round",
+        lineJoin: "round",
+      });
+
+      outerPolyline.addTo(group);
+      innerPolyline.addTo(group);
+
+      // Start Marker (Posisi Pengguna Live GPS)
+      const userMarkerHtml = `
+        <div style="position:relative; width:28px; height:28px; display:flex; align-items:center; justify-content:center;">
+          <span style="position:absolute; width:28px; height:28px; border-radius:50%; background:rgba(37,99,235,0.3); animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></span>
+          <span style="position:relative; width:16px; height:16px; border-radius:50%; background:#2563eb; border:3px solid #ffffff; box-shadow:0 2px 6px rgba(0,0,0,0.4);"></span>
+        </div>
+      `;
+      const userIcon = L.divIcon({
+        html: userMarkerHtml,
+        className: "custom-user-gps-marker",
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+
+      const startMarker = L.marker(routeResult.startCoords, {
+        icon: userIcon,
+        title: "Lokasi Anda",
+      }).bindPopup("<b>📍 Lokasi Anda</b><br><span style='font-size:11px;color:#64748b;'>Titik Awal Keberangkatan</span>");
+
+      startMarker.addTo(group);
+      group.addTo(map);
+      routeLayerRef.current = group;
+
+      // Fit bounds ke seluruh panjang rute
+      const bounds = L.latLngBounds(routeResult.coordinates);
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
+    })();
+  }, [routeResult, mapReady]);
 
   // ---------------------------------------------------------------- basemap
   useEffect(() => {

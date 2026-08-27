@@ -12,9 +12,11 @@ import {
 } from "@/lib/stats";
 import type { MapHandle, MapTool, MeasureResult } from "@/components/map/MapView";
 import MapControls from "@/components/ui/MapControls";
+import { calculateRoute, getGoogleMapsDirectionsUrl, type RouteResult } from "@/lib/routing";
 import SummaryCards from "./SummaryCards";
 import FilterBar from "./FilterBar";
 import LayerControl from "./LayerControl";
+import RouteInfoCard from "./RouteInfoCard";
 
 // Leaflet menyentuh `window` saat modul dievaluasi, jadi peta tidak boleh
 // ikut render di server.
@@ -298,6 +300,8 @@ interface ChurchDetailDrawerProps {
   readonly setCoverIndex: React.Dispatch<React.SetStateAction<number>>;
   readonly onClose: () => void;
   readonly onOpenPhotoModal: (urls: string[], index: number) => void;
+  readonly onGetRoute?: (props: any) => void;
+  readonly isRoutingLoading?: boolean;
 }
 
 function ChurchDetailDrawer({
@@ -306,6 +310,8 @@ function ChurchDetailDrawer({
   setCoverIndex,
   onClose,
   onOpenPhotoModal,
+  onGetRoute,
+  isRoutingLoading,
 }: ChurchDetailDrawerProps) {
   const pastorNameKey = selectedFeature
     ? Object.keys(selectedFeature.properties).find((k) =>
@@ -354,6 +360,30 @@ function ChurchDetailDrawer({
 
           {/* Konten Detail */}
           <div className="flex-1 overflow-y-auto p-4 pt-16 space-y-4 thin-scroll">
+            {/* Tombol Rute Tercepat / Petunjuk Arah */}
+            {onGetRoute && (selectedFeature.layerLabel === "Titik Gereja" || selectedFeature.properties.name) ? (
+              <button
+                type="button"
+                onClick={() => onGetRoute(selectedFeature.properties)}
+                disabled={isRoutingLoading}
+                className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-blue-600 px-4 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition-all cursor-pointer disabled:opacity-60"
+              >
+                {isRoutingLoading ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    <span>Mencari Rute Tercepat...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+                    </svg>
+                    <span>Petunjuk Arah & Rute Tercepat</span>
+                  </>
+                )}
+              </button>
+            ) : null}
+
             {pastorName ? (
               <div className="border-b border-slate-100 pb-3">
                 <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">
@@ -630,6 +660,69 @@ export default function DashboardShell() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [coverIndex, setCoverIndex] = useState(0);
 
+  // State untuk Rute Tercepat & Navigasi
+  const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
+  const [isRoutingLoading, setIsRoutingLoading] = useState(false);
+  const [routeTargetName, setRouteTargetName] = useState("");
+  const [routingToast, setRoutingToast] = useState<string | null>(null);
+
+  const showRoutingToast = useCallback((msg: string) => {
+    setRoutingToast(msg);
+    setTimeout(() => setRoutingToast(null), 4000);
+  }, []);
+
+  const handleGetDirections = useCallback((props: any) => {
+    const lat = Number(props.y || props.lat || props.latitude);
+    const lng = Number(props.x || props.lng || props.longitude);
+
+    if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+      showRoutingToast("Koordinat lokasi gereja ini belum valid.");
+      return;
+    }
+
+    const churchName = props.name || props.nama || "Gereja Tujuan";
+    setRouteTargetName(churchName);
+
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      window.open(getGoogleMapsDirectionsUrl(lat, lng), "_blank");
+      return;
+    }
+
+    setIsRoutingLoading(true);
+    showRoutingToast("Mendeteksi lokasi GPS Anda...");
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const userLat = pos.coords.latitude;
+        const userLng = pos.coords.longitude;
+
+        try {
+          showRoutingToast("Mengalkulasi rute jalan tercepat...");
+          const result = await calculateRoute([userLat, userLng], [lat, lng]);
+          setRouteResult(result);
+          setIsRoutingLoading(false);
+          setRoutingToast(null);
+          // Tutup drawer agar peta dan rute terlihat jelas
+          setSelectedFeature(null);
+        } catch (err: any) {
+          setIsRoutingLoading(false);
+          showRoutingToast(err.message || "Gagal mengalkulasi rute. Membuka Google Maps...");
+          setTimeout(() => {
+            window.open(getGoogleMapsDirectionsUrl(lat, lng, userLat, userLng), "_blank");
+          }, 1500);
+        }
+      },
+      (geoError) => {
+        setIsRoutingLoading(false);
+        showRoutingToast("Izin GPS tidak diberikan. Membuka Google Maps...");
+        setTimeout(() => {
+          window.open(getGoogleMapsDirectionsUrl(lat, lng), "_blank");
+        }, 1500);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }, [showRoutingToast]);
+
   const isWideScreen = useIsWideScreen();
   const sidebarOpen = sidebarToggled ?? isWideScreen;
 
@@ -821,6 +914,7 @@ export default function DashboardShell() {
             visibleLayers={effectiveLayers}
             filters={filters}
             activeTool={activeTool}
+            routeResult={routeResult}
             onToolFinished={handleToolFinished}
             onMeasureChange={setMeasure}
             onLoadingChange={setLayerLoading}
@@ -860,6 +954,15 @@ export default function DashboardShell() {
               poiError={poiError}
               onCloseTool={() => setActiveTool(null)}
             />
+
+            {/* Kartu Informasi Rute Tercepat */}
+            {routeResult && (
+              <RouteInfoCard
+                route={routeResult}
+                churchName={routeTargetName}
+                onClose={() => setRouteResult(null)}
+              />
+            )}
           </div>
         </main>
 
@@ -885,8 +988,20 @@ export default function DashboardShell() {
             setActivePhotoModal({ urls, currentIndex: index });
             setIsPlaying(true);
           }}
+          onGetRoute={handleGetDirections}
+          isRoutingLoading={isRoutingLoading}
         />
       </div>
+
+      {/* Toast Notifikasi Routing */}
+      {routingToast && (
+        <div className="fixed top-20 right-6 z-1300 rounded-2xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white shadow-xl flex items-center gap-2 animate-bounce">
+          <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0">
+            <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.74-5.25Z" clipRule="evenodd" />
+          </svg>
+          <span>{routingToast}</span>
+        </div>
+      )}
 
       {/* ------------------------------------------------------------- MODAL LIGHTBOX FOTO */}
       <PhotoLightboxModal
