@@ -16,7 +16,7 @@ async function main() {
 
   // 1. Seed Master Admin User
   const existingAdmin = await prisma.user.findUnique({
-    where: { username: "admin" },
+    where: { username: "superadmin" },
   });
 
   if (!existingAdmin) {
@@ -30,9 +30,9 @@ async function main() {
         role: "superadmin",
       },
     });
-    console.log("✅ User admin default berhasil dibuat: username: admin / password: admin123");
+    console.log("✅ User superadmin default berhasil dibuat: username: superadmin / password: waindospecterra");
   } else {
-    console.log("ℹ️ User admin sudah ada di database.");
+    console.log("ℹ️ User superadmin sudah ada di database.");
   }
 
   // 2. Seed Churches from poi.geojson

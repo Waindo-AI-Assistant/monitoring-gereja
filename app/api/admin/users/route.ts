@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUsers, saveUsers, hashPassword, verifySessionToken, User, SafeUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 
 function getAuthenticatedAdmin(req: NextRequest): SafeUser | null {
@@ -92,6 +93,29 @@ export async function POST(req: NextRequest) {
     users.push(newUser);
     await saveUsers(users);
 
+    // Sinkronisasi ke PostgreSQL jika database aktif
+    try {
+      await prisma.user.upsert({
+        where: { username: newUser.username },
+        update: {
+          name: newUser.name,
+          passwordHash: newUser.passwordHash,
+          salt: newUser.salt,
+          role: newUser.role,
+        },
+        create: {
+          id: newUser.id,
+          name: newUser.name,
+          username: newUser.username,
+          passwordHash: newUser.passwordHash,
+          salt: newUser.salt,
+          role: newUser.role,
+        },
+      });
+    } catch (e) {
+      console.warn("Prisma user sync warning:", e);
+    }
+
     const safeUser: SafeUser = {
       id: newUser.id,
       name: newUser.name,
@@ -152,9 +176,20 @@ export async function DELETE(req: NextRequest) {
     users.splice(userIndex, 1);
     await saveUsers(users);
 
+    // Sinkronisasi hapus di PostgreSQL
+    try {
+      await prisma.user.deleteMany({
+        where: {
+          OR: [{ id: targetId }, { username: deletedUser.username }],
+        },
+      });
+    } catch (e) {
+      console.warn("Prisma user delete sync warning:", e);
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Akun pengguna "${deletedUser.username}" (${deletedUser.name}) berhasil dihapus.`,
+      message: `Pengguna "${deletedUser.name}" (@${deletedUser.username}) berhasil dihapus.`,
     });
   } catch (error: any) {
     console.error("DELETE user error:", error);

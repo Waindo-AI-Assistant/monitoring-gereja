@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
+import { prisma } from "@/lib/prisma";
 
 export interface User {
   id: string;
@@ -130,8 +131,29 @@ export function verifySessionToken(token: string): SafeUser | null {
   };
 }
 
-/** Ensure users data file exists and return user list */
+/** Ensure users data exists and return user list from PostgreSQL or JSON fallback */
 export async function getUsers(): Promise<User[]> {
+  try {
+    // 1. Coba baca dari PostgreSQL via Prisma
+    const dbUsers = await prisma.user.findMany({
+      orderBy: { createdAt: "asc" },
+    });
+
+    if (dbUsers && dbUsers.length > 0) {
+      return dbUsers.map((u) => ({
+        id: u.id,
+        name: u.name,
+        username: u.username,
+        passwordHash: u.passwordHash,
+        salt: u.salt,
+        role: u.role as "admin" | "superadmin",
+        createdAt: u.createdAt.toISOString(),
+      }));
+    }
+  } catch (dbErr) {
+    // Database error / not connected, fallback to JSON
+  }
+
   try {
     const dir = path.dirname(USERS_FILE_PATH);
     await fs.mkdir(dir, { recursive: true });
@@ -140,13 +162,13 @@ export async function getUsers(): Promise<User[]> {
       const content = await fs.readFile(USERS_FILE_PATH, "utf-8");
       return JSON.parse(content);
     } catch {
-      // Initialize with default admin account: admin / admin123
-      const { hash, salt } = hashPassword("admin123");
+      // Default fallback account: superadmin / waindospecterra
+      const { hash, salt } = hashPassword("waindospecterra");
       const defaultUsers: User[] = [
         {
-          id: "admin-default-1",
+          id: "superadmin-default-1",
           name: "Administrator Majelis Pusat",
-          username: "admin",
+          username: "superadmin",
           passwordHash: hash,
           salt,
           role: "superadmin",
@@ -163,7 +185,7 @@ export async function getUsers(): Promise<User[]> {
   }
 }
 
-/** Save users to file */
+/** Save users to database and file */
 export async function saveUsers(users: User[]): Promise<void> {
   const dir = path.dirname(USERS_FILE_PATH);
   await fs.mkdir(dir, { recursive: true });
