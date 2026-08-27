@@ -108,11 +108,56 @@ const FEATURES = [
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
+  const [stats, setStats] = useState({
+    totalMada: 20,
+    totalWilayah: 63,
+    totalGereja: 579,
+  });
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadStats() {
+      try {
+        const res = await fetch("/data/poi.geojson");
+        if (!res.ok) return;
+        const data = await res.json();
+        const features = data.features || [];
+
+        const madaSet = new Set<string>();
+        const mawilSet = new Set<string>();
+
+        features.forEach((f: any) => {
+          const p = f.properties || {};
+          if (p.nama_mada && String(p.nama_mada).trim() !== "") {
+            madaSet.add(String(p.nama_mada).trim());
+          }
+          if (p.mawil && String(p.mawil).trim() !== "") {
+            mawilSet.add(String(p.mawil).trim());
+          }
+        });
+
+        if (!cancelled && features.length > 0) {
+          setStats({
+            totalMada: madaSet.size,
+            totalWilayah: mawilSet.size,
+            totalGereja: features.length,
+          });
+        }
+      } catch (err) {
+        console.error("Gagal memuat statistik dinamis:", err);
+      }
+    }
+
+    loadStats();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -124,7 +169,7 @@ export default function LandingPage() {
         <div className="landing-navbar__inner">
           <Link href="/" className="landing-navbar__brand flex items-center gap-3">
             <img
-              src="/images/Logo GGP2.png?v=2"
+              src="/images/Logo GGP2.png"
               alt="Logo GGP"
               className="h-10 w-auto object-contain shrink-0"
             />
@@ -144,9 +189,6 @@ export default function LandingPage() {
             </Link>
             <Link href="/dashboard" className="landing-navbar__link">
               Dashboard
-            </Link>
-            <Link href="/admin" className="landing-navbar__link">
-              Admin
             </Link>
             <a href="#kontak" className="landing-navbar__link">
               Kontak
@@ -193,17 +235,17 @@ export default function LandingPage() {
             {/* Stats Row */}
             <div className="landing-hero__stats">
               <div className="landing-hero__stat">
-                <span className="landing-hero__stat-value">20</span>
+                <span className="landing-hero__stat-value">{stats.totalMada}</span>
                 <span className="landing-hero__stat-label">Total Mada</span>
               </div>
               <div className="landing-hero__stat-divider" />
               <div className="landing-hero__stat">
-                <span className="landing-hero__stat-value">63</span>
+                <span className="landing-hero__stat-value">{stats.totalWilayah}</span>
                 <span className="landing-hero__stat-label">Total Wilayah</span>
               </div>
               <div className="landing-hero__stat-divider" />
               <div className="landing-hero__stat">
-                <span className="landing-hero__stat-value">579</span>
+                <span className="landing-hero__stat-value">{stats.totalGereja}</span>
                 <span className="landing-hero__stat-label">Total Gereja</span>
               </div>
             </div>

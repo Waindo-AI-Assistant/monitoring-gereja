@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { formatValue } from "@/config/dashboard";
 import EditChurchModal from "@/components/dashboard/EditChurchModal";
+import { exportGeoJSON, exportCSV } from "@/lib/export";
 
 type SafeUser = {
   id: string;
@@ -530,88 +531,100 @@ export default function AdminPage() {
       )}
 
       {/* Top Navbar */}
-      <header className="h-16 shrink-0 bg-white border-b border-slate-200 px-6 flex items-center justify-between shadow-xs sticky top-0 z-30">
+      <header className="h-[72px] shrink-0 bg-[#0f1d3d] px-6 flex items-center justify-between shadow-md sticky top-0 z-30">
         <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative h-10 w-10">
+          <Link href="/" className="landing-navbar__brand">
+            <div className="landing-navbar__logo-wrap">
               <img
                 src="/images/Logo GGP2.png"
                 alt="Logo GGP"
-                className="w-full h-full object-contain"
+                className="h-10 w-auto object-contain shrink-0"
               />
             </div>
-            <div>
+            <div className="landing-navbar__text">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-black text-blue-950 tracking-tight">PANEL ADMIN GGP</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-blue-50 text-blue-700 border border-blue-200">
+                <span className="landing-navbar__title">
+                  Gereja Gerakan Pentakosta
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-white/10 text-blue-200 border border-white/20">
                   {currentUser.role}
                 </span>
               </div>
-              <p className="text-[10px] text-slate-500 font-medium">Sistem Monitoring Persebaran Gereja</p>
+              <span className="landing-navbar__subtitle">
+                Dashboard Pemetaan Sebaran Data Gereja
+              </span>
             </div>
           </Link>
         </div>
 
         {/* Tab Navigation & User Controls */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* Main Page Links */}
+          <div className="landing-navbar__links hidden md:flex">
+            <Link href="/" className="landing-navbar__link">
+              Home
+            </Link>
+            <Link href="/dashboard" className="landing-navbar__link">
+              Dashboard
+            </Link>
+            <Link href="/admin" className="landing-navbar__link landing-navbar__link--active">
+              Admin
+            </Link>
+          </div>
+
+          <div className="h-6 w-px bg-white/20 hidden md:block" />
+
+          {/* Admin Tabs Switch */}
+          <div className="flex items-center bg-white/10 p-1 rounded-xl border border-white/15">
             <button
               type="button"
               onClick={() => setActiveTab("churches")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === "churches"
-                  ? "bg-white text-blue-900 shadow-xs border border-slate-200/60"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-white/70 hover:text-white hover:bg-white/10"
               }`}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.333A1.5 1.5 0 0018 9H6a1.5 1.5 0 00-1.5 1.5V21" />
               </svg>
-              <span>Master Data Gereja</span>
+              <span>Master Data</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab("users")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === "users"
-                  ? "bg-white text-blue-900 shadow-xs border border-slate-200/60"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-white/70 hover:text-white hover:bg-white/10"
               }`}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
               </svg>
-              <span>Manajemen Pengguna</span>
+              <span>Pengguna</span>
             </button>
           </div>
 
-          <div className="h-6 w-px bg-slate-200" />
+          <div className="h-6 w-px bg-white/20" />
 
+          {/* User Profile */}
           <div className="text-right hidden sm:block">
-            <p className="text-xs font-bold text-slate-800">{currentUser.name}</p>
-            <p className="text-[10px] text-slate-500">@{currentUser.username}</p>
+            <p className="text-xs font-bold text-white leading-tight">{currentUser.name}</p>
+            <p className="text-[10px] text-slate-300 font-mono">@{currentUser.username}</p>
           </div>
 
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-xs transition-colors"
-          >
-            <span>Buka Peta</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-            </svg>
-          </Link>
-
+          {/* Logout Button */}
           <button
             type="button"
             onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-xs font-semibold text-rose-200 hover:bg-rose-600 hover:text-white transition-colors cursor-pointer"
           >
+            <span>Keluar</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
             </svg>
-            <span>Keluar</span>
           </button>
         </div>
       </header>
@@ -731,17 +744,49 @@ export default function AdminPage() {
                 )}
               </div>
 
-              {/* Action: Tambah Gereja Baru */}
-              <button
-                type="button"
-                onClick={() => setIsAddModalOpen(true)}
-                className="h-9 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm hover:bg-blue-700 flex items-center gap-1.5 transition-all cursor-pointer"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                <span>Tambah Gereja Baru</span>
-              </button>
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    exportGeoJSON(filteredChurches);
+                    showToast(`Berhasil mengunduh ${filteredChurches.length} data dalam format GeoJSON.`);
+                  }}
+                  title="Unduh data tabel saat ini sebagai file GeoJSON"
+                  className="h-9 px-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 font-bold text-xs shadow-xs hover:bg-emerald-600 hover:text-white flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  <span>GeoJSON</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    exportCSV(filteredChurches);
+                    showToast(`Berhasil mengunduh ${filteredChurches.length} data dalam format CSV.`);
+                  }}
+                  title="Unduh data tabel saat ini sebagai file CSV / Excel"
+                  className="h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-bold text-xs shadow-xs hover:bg-slate-100 flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                  </svg>
+                  <span>CSV</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="h-9 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm hover:bg-blue-700 flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  <span>Tambah Gereja Baru</span>
+                </button>
+              </div>
             </div>
 
             {/* Master Data Table */}

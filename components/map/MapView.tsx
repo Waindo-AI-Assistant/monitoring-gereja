@@ -38,6 +38,7 @@ export type MapHandle = {
   fitTo: (filters: Filters) => void;
   closePopup: () => void;
   focusPOI: (latlng: [number, number], properties: any) => void;
+  invalidateSize: () => void;
 };
 
 type MapViewProps = {
@@ -396,6 +397,24 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
       cancelled = true;
     };
   }, [onFeatureSelect]);
+
+  // ---------------------------------------------------------------- resize observer
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !containerRef.current) return;
+    const map = mapRef.current;
+    const container = containerRef.current;
+
+    const ro = new ResizeObserver(() => {
+      // Invalidate map size so Leaflet recalculates dimensions immediately
+      map.invalidateSize({ debounceMoveend: true });
+    });
+
+    ro.observe(container);
+
+    return () => {
+      ro.disconnect();
+    };
+  }, [mapReady]);
 
   // ---------------------------------------------------------------- basemap
   useEffect(() => {
@@ -939,6 +958,9 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
             .setContent(popupHtml(poiLayerDef, properties))
             .openOn(mapRef.current);
         });
+      },
+      invalidateSize: () => {
+        mapRef.current?.invalidateSize({ debounceMoveend: true });
       },
     }),
     [fitTo],

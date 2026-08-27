@@ -3,7 +3,7 @@
 import { formatInt, type Summary } from "@/lib/stats";
 
 type SummaryCardsProps = {
-  summary: Summary;
+  readonly summary: Summary;
 };
 
 type Card = {
@@ -37,25 +37,21 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
   ];
 
   return (
-    <>
+    <div className="flex items-center gap-2 shrink-0">
       {cards.map((card) => (
         <div
           key={card.label}
           title={card.hint}
-          className="flex h-9 w-auto shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 shadow-sm shadow-blue-900/10 transition-opacity"
+          className="flex h-9 w-auto shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 shadow-xs"
         >
-          <div className="leading-tight">
-            <p className="flex items-center gap-1">
-              <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-                {card.label}
-              </span>
-            </p>
-            <p className="flex items-baseline gap-1">
-              <span className="whitespace-nowrap text-xs font-bold text-blue-950">{card.value}</span>
-            </p>
-          </div>
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+            {card.label}:
+          </span>
+          <span className="text-xs font-black text-blue-950 font-mono">
+            {card.value}
+          </span>
         </div>
       ))}
-    </>
+    </div>
   );
 }

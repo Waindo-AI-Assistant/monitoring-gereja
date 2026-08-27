@@ -20,11 +20,11 @@ async function main() {
   });
 
   if (!existingAdmin) {
-    const { hash, salt } = hashPassword("admin123");
+    const { hash, salt } = hashPassword("waindospecterra");
     await prisma.user.create({
       data: {
         name: "Administrator Majelis Pusat",
-        username: "admin",
+        username: "superadmin",
         passwordHash: hash,
         salt,
         role: "superadmin",

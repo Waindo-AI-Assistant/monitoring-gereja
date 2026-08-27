@@ -4,11 +4,11 @@ import { BASEMAPS, LAYERS, type LayerId } from "@/config/dashboard";
 import { ALL, type Filters } from "@/lib/stats";
 
 type LayerControlProps = {
-  visibleLayers: Record<LayerId, boolean>;
-  onToggleLayer: (id: LayerId, visible: boolean) => void;
-  basemapId: string;
-  onBasemapChange: (id: string) => void;
-  filters: Filters;
+  readonly visibleLayers: Record<LayerId, boolean>;
+  readonly onToggleLayer: (id: LayerId, visible: boolean) => void;
+  readonly basemapId: string;
+  readonly onBasemapChange: (id: string) => void;
+  readonly filters: Filters;
 };
 
 export default function LayerControl({

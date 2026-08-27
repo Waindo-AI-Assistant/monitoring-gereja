@@ -48,15 +48,24 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Update properti
-    const existingProps = geojsonData.features[foundIndex].properties;
+    const existingProps = geojsonData.features[foundIndex].properties || {};
     const mergedProps = {
       ...existingProps,
       ...updatedProperties,
-      // Pastikan fid tidak hilang
+      // Pastikan fid dan no tidak hilang
       fid: existingProps.fid ?? fid,
+      no: existingProps.no ?? existingProps.fid ?? fid,
     };
 
     geojsonData.features[foundIndex].properties = mergedProps;
+
+    // Sinkronisasi geometri koordinat jika x dan y tersedia
+    if (mergedProps.x && mergedProps.y && Number(mergedProps.x) !== 0 && Number(mergedProps.y) !== 0) {
+      geojsonData.features[foundIndex].geometry = {
+        type: "Point",
+        coordinates: [Number(mergedProps.x), Number(mergedProps.y)],
+      };
+    }
 
     // 5. Tulis kembali ke file
     await fs.writeFile(filePath, JSON.stringify(geojsonData, null, 2), "utf-8");
