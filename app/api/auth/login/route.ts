@@ -41,10 +41,10 @@ export async function POST(req: NextRequest) {
       token,
     });
 
-    // Set HTTP-only session cookie
+    // Set HTTP-only session cookie (works seamlessly on HTTP IP and HTTPS domain)
     response.cookies.set("admin_session", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: false,
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: "/",

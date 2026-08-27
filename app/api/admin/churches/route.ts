@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 import { verifySessionToken } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 function authenticateAdmin(req: NextRequest) {
   const cookieToken = req.cookies.get("admin_session")?.value;
@@ -21,6 +22,62 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 401 });
     }
 
+    // 1. Coba baca dari PostgreSQL via Prisma
+    try {
+      const dbChurches = await prisma.church.findMany({
+        orderBy: { fid: "asc" },
+      });
+
+      if (dbChurches && dbChurches.length > 0) {
+        const features = dbChurches.map((c) => {
+          let parsedPhotos: string[] = [];
+          try {
+            parsedPhotos = typeof c.photos === "string" ? JSON.parse(c.photos || "[]") : (c.photos || []);
+          } catch {}
+
+          return {
+            type: "Feature",
+            properties: {
+              fid: c.fid,
+              name: c.name,
+              nama_pendeta: c.namaPendeta || "",
+              no_hp_wa: c.noHpWa || "",
+              alamat_gereja: c.alamatGereja || "",
+              tahun_berdiri: c.tahunBerdiri || "",
+              jumlah_jemaat: c.jumlahJemaat || "",
+              jam_operasional: c.jamOperasional || "",
+              status: c.status || "Milik Sendiri",
+              mawil: c.mawil || "",
+              kode_mada: c.kodeMada || "",
+              nama_mada: c.namaMada || "",
+              no: c.no || c.fid,
+              x: c.x || 0,
+              y: c.y || 0,
+              foto: c.foto || "",
+              foto_2: c.foto2 || "",
+              foto_pendeta: c.fotoPendeta || "",
+              photos: parsedPhotos,
+            },
+            geometry:
+              c.x && c.y && Number(c.x) !== 0 && Number(c.y) !== 0
+                ? {
+                    type: "Point",
+                    coordinates: [Number(c.x), Number(c.y)],
+                  }
+                : null,
+          };
+        });
+
+        return NextResponse.json({
+          success: true,
+          features,
+        });
+      }
+    } catch (dbErr) {
+      // Fallback ke file poi.geojson jika DB kosong/error
+    }
+
+    // 2. Fallback baca dari poi.geojson
     const content = await fs.readFile(GEOJSON_PATH, "utf-8");
     const data = JSON.parse(content);
 

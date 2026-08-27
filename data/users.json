@@ -1,10 +1,10 @@
 [
   {
-    "id": "admin-default-1",
+    "id": "superadmin-default-1",
     "name": "Administrator Majelis Pusat",
-    "username": "admin",
-    "passwordHash": "d15510dae626ba17606cdcf83452cec9edcc72a7203fcf76e39b73628b2fcc834f23fb6ea72871d2f2a182616ea9ce24362240ca0de41421dac6505246aed4b3",
-    "salt": "6792fe10b05e6b10c73a7e90b6026938",
+    "username": "superadmin",
+    "passwordHash": "5170cf8a3c5a6ba09a6ca260840cf098481231f49ae6dfd90a98f1aa8fbb4b553e1a66ec2412e8250fcba50ebba5e3cb7be1f07fcf8326db1946fe7ae9c1cf25",
+    "salt": "e1f8a29b4c6d0e3f7a1b5c8d2e4f6a8b",
     "role": "superadmin",
     "createdAt": "2026-08-27T03:47:00.884Z"
   }
