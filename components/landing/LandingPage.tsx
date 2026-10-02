@@ -213,7 +213,7 @@ export default function LandingPage() {
             </div> */}
 
             <h1 className="landing-hero__heading">
-              Gereja Gerakan Pentakosta{" "}
+              Gereja Gerakan Pentakosta{" "}<br></br>
               <span className="landing-hero__heading-accent">
                 Sebaran Data Gereja
               </span>
