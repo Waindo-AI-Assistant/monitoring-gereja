@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buku Panduan Pengguna - Sistem Monitoring Gereja Gerakan Pentakosta (GGP)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    :root {
+      --primary: #1e3a8a;
+      --primary-dark: #0f172a;
+      --primary-light: #3b82f6;
+      --accent: #d97706;
+      --success: #059669;
+      --danger: #dc2626;
+      --surface: #ffffff;
+      --bg: #f8fafc;
+      --border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-main);
+      background-color: var(--bg);
+      line-height: 1.6;
+      font-size: 13.5px;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 15mm 15mm 20mm 15mm;
+      @bottom-right {
+        content: "Halaman " counter(page);
+        font-size: 10px;
+        color: #94a3b8;
+      }
+    }
+
+    @media print {
+      body { background-color: #ffffff; }
+      .no-print { display: none !important; }
+      .page-break { page-break-before: always; }
+      .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+      .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    /* Cover Page */
+    .cover-page {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #172554 100%);
+      color: white;
+      border-radius: 20px;
+      padding: 50px 36px;
+      margin-bottom: 30px;
+      box-shadow: 0 15px 35px rgba(15, 23, 42, 0.2);
+    }
+
+    .cover-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .cover-title {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    .cover-subtitle {
+      font-size: 14.5px;
+      color: #cbd5e1;
+      max-width: 700px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .cover-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      padding-top: 20px;
+    }
+
+    .meta-item h4 {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #93c5fd;
+      margin-bottom: 3px;
+    }
+
+    .meta-item p {
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    /* Print Toolbar */
+    .toolbar-banner {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .btn-print {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-download-pdf {
+      background: #059669;
+      color: white;
+      text-decoration: none;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Section Card */
+    .section-card {
+      background: white;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 26px;
+      margin-bottom: 26px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.02);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid #f1f5f9;
+    }
+
+    .section-num {
+      width: 36px;
+      height: 36px;
+      background: #eff6ff;
+      color: #2563eb;
+      border: 2px solid #bfdbfe;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 15px;
+      shrink: 0;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary-dark);
+      letter-spacing: -0.3px;
+    }
+
+    .section-desc { color: var(--text-muted); font-size: 12px; }
+
+    .step-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .step-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .step-tag {
+      background: #2563eb;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+
+    .step-instruction {
+      font-size: 12.5px;
+      color: #334155;
+      margin-bottom: 14px;
+      line-height: 1.6;
+    }
+
+    /* Real Screenshot Display */
+    .real-screenshot-container {
+      background: #0f172a;
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 14px 0;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    }
+
+    .screenshot-header {
+      background: #0f172a;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #94a3b8;
+      font-size: 10.5px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .screenshot-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .s-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-r { background: #ef4444; }
+    .dot-y { background: #eab308; }
+    .dot-g { background: #22c55e; }
+
+    .real-screenshot-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-top: 1px solid #1e293b;
+    }
+
+    .screenshot-caption {
+      padding: 8px 12px;
+      background: #ffffff;
+      color: #475569;
+      font-size: 11px;
+      font-weight: 600;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .callout {
+      border-left: 4px solid #2563eb;
+      background: #eff6ff;
+      padding: 12px 16px;
+      border-radius: 0 10px 10px 0;
+      font-size: 12px;
+      margin: 12px 0;
+      color: #1e3a8a;
+    }
+
+    .callout.tip {
+      border-left-color: #10b981;
+      background: #ecfdf5;
+      color: #065f46;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- TOOLBAR ATAS -->
+    <div class="toolbar-banner no-print">
+      <div>
+        <h3 style="font-size: 13.5px; font-weight: 800; color: #0f172a;">Dokumen Panduan Resmi GGP (WebGIS 2026)</h3>
+        <p style="font-size: 11.5px; color: #64748b;">Dokumen ini dilengkapi tangkapan layar asli (real screenshots) langsung dari sistem live server.</p>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <a href="/PANDUAN_PENGGUNA_SISTEM_MONITORING_GGP.pdf" download class="btn-download-pdf">
+          📥 Unduh Berkas PDF
+        </a>
+        <button class="btn-print" onclick="window.print()">
+          🖨️ Cetak / Print
+        </button>
+      </div>
+    </div>
+
+    <!-- COVER DOKUMEN -->
+    <div class="cover-page avoid-break">
+      <div class="cover-badge">Buku Panduan Pengguna Resmi</div>
+      <h1 class="cover-title">SISTEM INFORMASI GEOGRAFIS & MONITORING GEREJA</h1>
+      <p class="cover-subtitle">
+        Panduan komprehensif berbasis alur pengguna (user journey) dengan tangkapan layar nyata: eksplorasi 579 titik jemaat, filter multi-kriteria, navigasi rute jalan tercepat, pengukuran spasial, serta manajemen master data dan akun pengguna.
+      </p>
+
+      <div class="cover-meta">
+        <div class="meta-item">
+          <h4>Platform Aplikasi</h4>
+          <p>WebGIS GGP Production</p>
+        </div>
+        <div class="meta-item">
+          <h4>Versi Sistem</h4>
+          <p>v2.4 (Enterprise Dual-DB)</p>
+        </div>
+        <div class="meta-item">
+          <h4>Akses Portal</h4>
+          <p>http://191.101.190.174:3007</p>
+        </div>
+        <div class="meta-item">
+          <h4>Hak Cipta</h4>
+          <p>&copy; 2026 Majelis Pusat GGP</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- BAB 1: BERANDA -->
+    <div class="section-card avoid-break">
+      <div class="section-header">
+        <div class="section-num">1</div>
+        <div>
+          <h2 class="section-title">Halaman Beranda & Statistik Nasional</h2>
+          <p class="section-desc">Pintu masuk utama publik menampilkan ringkasan data 579 gereja nasional</p>
+        </div>
+      </div>
+
+      <div class="step-box">
+        <div class="step-title">
+          <span class="step-tag">Alur 1</span>
+          <span>Akses Beranda & Membaca Kartu Statistik</span>
+        </div>
+        <p class="step-instruction">
+          Buka <code>http://191.101.190.174:3007/</code> di browser Anda. Halaman Beranda menyajikan ringkasan data resmi Sinode: <strong>20 Majelis Daerah (Mada)</strong>, <strong>63 Majelis Wilayah</strong>, dan <strong>579 Titik Gereja</strong> yang dihitung secara dinamis dari database.
+        </p>
+
+        <div class="real-screenshot-container">
+          <div class="screenshot-header">
+            <div class="screenshot-dots"><span class="s-dot dot-r"></span><span class="s-dot dot-y"></span><span class="s-dot dot-g"></span></div>
+            <span>http://191.101.190.174:3007/ — Halaman Beranda (Landing Page)</span>
+          </div>
+          <img class="real-screenshot-img" src="/manual_screens/01_beranda.png" alt="Screenshot Beranda GGP" />
+          <div class="screenshot-caption">
+            📸 <strong>Gambar 1:</strong> Tampilan Halaman Beranda dengan kartu KPI Dinamis (20 Mada, 63 Wilayah, 579 Gereja) dan tombol "Buka Dashboard".
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BAB 2: DASHBOARD PETA GIS -->
+    <div class="section-card page-break">
+      <div class="section-header">
+        <div class="section-num">2</div>
+        <div>
+          <h2 class="section-title">Dashboard Peta GIS & Filter Wilayah</h2>
+          <p class="section-desc">Pemetaan sebaran 579 gereja di seluruh kepulauan Indonesia dengan citra satelit</p>
+        </div>
+      </div>
+
+      <div class="step-box">
+        <div class="step-title">
+          <span class="step-tag">Alur 2</span>
+          <span>Eksplorasi Peta & Filter Multi-Kriteria</span>
+        </div>
+        <p class="step-instruction">
+          Klik tombol <strong>"Buka Dashboard"</strong> atau menu <strong>"Dashboard"</strong> di navigasi atas. Peta interaktif akan menampilkan sebaran seluruh titik gereja GGP di atas citra satelit resolusi tinggi.
+        </p>
+        <ul style="padding-left: 20px; font-size: 12px; color: #475569; margin-bottom: 12px;">
+          <li><strong>Pencarian Cepat:</strong> Ketik nama gereja pada kotak <em>"Cari Nama Gereja..."</em> di FilterBar.</li>
+          <li><strong>Filter Mada & Wilayah:</strong> Pilih dropdown Daerah atau Wilayah untuk fokus ke provinsi/kabupaten tertentu.</li>
+          <li><strong>Layer Control:</strong> Di sisi kiri, Anda dapat mengaktifkan/menonaktifkan layer Batas Mada, Batas Wilayah, dan Titik Gereja.</li>
+          <li><strong>Pelacak Koordinat:</strong> Di pojok kanan bawah, koordinat <code>Lat / Long</code> kursor bergerak secara real-time.</li>
+        </ul>
+
+        <div class="real-screenshot-container">
+          <div class="screenshot-header">
+            <div class="screenshot-dots"><span class="s-dot dot-r"></span><span class="s-dot dot-y"></span><span class="s-dot dot-g"></span></div>
+            <span>http://191.101.190.174:3007/dashboard — Peta GIS Sebaran 579 Titik Gereja</span>
+          </div>
+          <img class="real-screenshot-img" src="/manual_screens/02_peta_interaktif.png" alt="Screenshot Dashboard Peta" />
+          <div class="screenshot-caption">
+            📸 <strong>Gambar 2:</strong> Tampilan Peta Nasional WebGIS dengan sebaran pin gereja resmi GGP, FilterBar, dan kontrol layer.
+          </div>
+        </div>
+
+        <div class="real-screenshot-container" style="margin-top: 16px;">
+          <div class="screenshot-header">
+            <div class="screenshot-dots"><span class="s-dot dot-r"></span><span class="s-dot dot-y"></span><span class="s-dot dot-g"></span></div>
+            <span>Fitur Pencarian Spesifik & Zoom Wilayah</span>
+          </div>
+          <img class="real-screenshot-img" src="/manual_screens/05_detail_drawer.png" alt="Pencarian Gereja Kramat Pulo" />
+          <div class="screenshot-caption">
+            📸 <strong>Gambar 3:</strong> Contoh pencarian gereja "KRAMAT PULO" di FilterBar dengan batas wilayah administratif aktif.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BAB 3: NAVIGASI RUTE & DETAIL GEREJA -->
+    <div class="section-card page-break">
+      <div class="section-header">
+        <div class="section-num">3</div>
+        <div>
+          <h2 class="section-title">Detail Gereja, Live GPS & Rute Tercepat</h2>
+          <p class="section-desc">Membaca informasi lengkap gereja dan menggunakan sistem navigasi jalan raya OSRM</p>
+        </div>
+      </div>
+
+      <div class="step-box">
+        <div class="step-title">
+          <span class="step-tag">Alur 3</span>
+          <span>Membuka Drawer Informasi & Navigasi Turn-by-Turn</span>
+        </div>
+        <p class="step-instruction">
+          Ketika Anda mengklik salah satu pin gereja di peta:
+        </p>
+        <ol style="padding-left: 20px; font-size: 12px; color: #475569; margin-bottom: 12px;">
+          <li><strong>Drawer Detail Terbuka:</strong> Menampilkan nama gereja, foto bangunan, nama pendeta, alamat lengkap, dan nomor kontak WhatsApp.</li>
+          <li><strong>Hubungi WhatsApp:</strong> Klik nomor telepon/WA untuk langsung terhubung ke aplikasi WhatsApp pendeta/gembala sidang.</li>
+          <li><strong>Tombol "Lokasi Saya":</strong> Klik tombol 📍 di toolbar peta untuk mendeteksi posisi GPS perangkat Anda secara langsung.</li>
+          <li><strong>Tombol "🚗 Petunjuk Arah & Rute Tercepat":</strong> Klik tombol ini di drawer detail. Sistem akan otomatis menghitung rute berkendara tercepat dari lokasi Anda ke gereja target, menggambar garis rute biru di peta, dan menampilkan panduan belokan jalan (turn-by-turn guidance) dalam Bahasa Indonesia.</li>
+        </ol>
+
+        <div class="callout tip">
+          <strong>💡 Keunggulan Rute In-App:</strong> Panduan rute jalan ditampilkan 100% langsung di atas peta website tanpa perlu membuka aplikasi pihak ketiga. Tersedia juga tombol cadangan untuk membuka Google Maps bagi pengguna ponsel.
+        </div>
+      </div>
+    </div>
+
+    <!-- BAB 4: LOGIN ADMINISTRATOR -->
+    <div class="section-card avoid-break">
+      <div class="section-header">
+        <div class="section-num">4</div>
+        <div>
+          <h2 class="section-title">Login Administrator & Hak Akses</h2>
+          <p class="section-desc">Gerbang keamanan akses portal manajemen data dengan HTTP-Only Cookie</p>
+        </div>
+      </div>
+
+      <div class="step-box">
+        <div class="step-title">
+          <span class="step-tag">Alur 4</span>
+          <span>Masuk ke Panel Admin (/admin)</span>
+        </div>
+        <p class="step-instruction">
+          Kunjungi URL <code>http://191.101.190.174:3007/admin</code>:
+        </p>
+        <ul style="padding-left: 20px; font-size: 12px; color: #475569; margin-bottom: 12px;">
+          <li>Masukkan <strong>Username:</strong> <code>superadmin</code></li>
+          <li>Masukkan <strong>Password:</strong> <code>waindospecterra</code></li>
+          <li>Klik tombol <strong>"Masuk ke Panel →"</strong>.</li>
+          <li>Sesi login dilindungi token terenkripsi dalam <em>HTTP-Only Session Cookie</em> selama 7 hari penuh.</li>
+        </ul>
+
+        <div class="real-screenshot-container">
+          <div class="screenshot-header">
+            <div class="screenshot-dots"><span class="s-dot dot-r"></span><span class="s-dot dot-y"></span><span class="s-dot dot-g"></span></div>
+            <span>http://191.101.190.174:3007/admin — Formulir Login Administrator</span>
+          </div>
+          <img class="real-screenshot-img" src="/manual_screens/03_login_admin.png" alt="Screenshot Login Admin" />
+          <div class="screenshot-caption">
+            📸 <strong>Gambar 4:</strong> Halaman autentikasi administrator dengan form kredensial aman.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BAB 5: MASTER DATA GEREJA & EKSPOR -->
+    <div class="section-card page-break">
+      <div class="section-header">
+        <div class="section-num">5</div>
+        <div>
+          <h2 class="section-title">Manajemen Master Data Gereja & Ekspor</h2>
+          <p class="section-desc">Pengelolaan 579 data gereja di PostgreSQL dan ekspor berkas GeoJSON / CSV</p>
+        </div>
+      </div>
+
+      <div class="step-box">
+        <div class="step-title">
+          <span class="step-tag">Alur 5</span>
+          <span>Tab Master Data: Tambah, Edit, Hapus, dan Ekspor</span>
+        </div>
+        <p class="step-instruction">
+          Setelah berhasil login, Anda akan langsung disambut oleh halaman <strong>Master Data</strong>:
+        </p>
+        <ul style="padding-left: 20px; font-size: 12px; color: #475569; margin-bottom: 12px;">
+          <li><strong>Ringkasan KPI Admin:</strong> Menampilkan Total Gereja (579), Total Mada (20), Total Mawil (63), dan Baris Terfilter.</li>
+          <li><strong>Pencarian & Filter Cepat:</strong> Cari gereja berdasarkan nama jemaat, nama pendeta, atau alamat.</li>
+          <li><strong>Tombol "+ Tambah Gereja Baru":</strong> Membuka formulir untuk mendaftarkan gereja baru lengkap dengan koordinat spasial X dan Y.</li>
+          <li><strong>Tombol Ekspor (GeoJSON & CSV):</strong>
+            <ul style="padding-left: 16px; margin-top: 4px;">
+              <li>Tombol hijau <code>📥 GeoJSON</code>: Mengunduh data spasial untuk software SIG (QGIS/ArcGIS).</li>
+              <li>Tombol putih <code>📥 CSV</code>: Mengunduh tabel spreadsheet siap buka di Microsoft Excel.</li>
+            </ul>
+          </li>
+          <li><strong>Kolom Aksi (Edit & Hapus):</strong> Klik ikon pensil untuk mengubah data, atau ikon tong sampah untuk menghapus data dari database.</li>
+        </ul>
+
+        <div class="real-screenshot-container">
+          <div class="screenshot-header">
+            <div class="screenshot-dots"><span class="s-dot dot-r"></span><span class="s-dot dot-y"></span><span class="s-dot dot-g"></span></div>
+            <span>http://191.101.190.174:3007/admin — Panel Master Data 579 Gereja GGP</span>
+          </div>
+          <img class="real-screenshot-img" src="/manual_screens/04_master_data.png" alt="Screenshot Master Data" />
+          <div class="screenshot-caption">
+            📸 <strong>Gambar 5:</strong> Tabel Master Data Gereja dengan kartu statistik, fitur pencarian, tombol ekspor GeoJSON/CSV, dan aksi edit/hapus.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BAB 6: MANAJEMEN PENGGUNA & EDIT USER -->
+    <div class="section-card page-break">
+      <div class="section-header">
+        <div class="section-num">6</div>
+        <div>
+          <h2 class="section-title">Manajemen Akun Pengguna & Fitur Edit</h2>
+          <p class="section-desc">Pengelolaan akun admin, pembagian peran hak akses, dan pembaruan kata sandi</p>
+        </div>
+      </div>
+
+      <div class="step-box">
+        <div class="step-title">
+          <span class="step-tag">Alur 6A</span>
+          <span>Melihat Daftar Akun di Tab "Pengguna"</span>
+        </div>
+        <p class="step-instruction">
+          Klik tombol navigasi <strong>"👥 Pengguna"</strong> di bagian atas panel admin. Tabel daftar akun menampilkan nama pengguna, username, peran (Super Admin atau Administrator), tanggal dibuat, serta tombol aksi.
+        </p>
+
+        <div class="real-screenshot-container">
+          <div class="screenshot-header">
+            <div class="screenshot-dots"><span class="s-dot dot-r"></span><span class="s-dot dot-y"></span><span class="s-dot dot-g"></span></div>
+            <span>Tab Pengguna — Manajemen Akun Administrator Sistem</span>
+          </div>
+          <img class="real-screenshot-img" src="/manual_screens/06_manajemen_pengguna.png" alt="Screenshot Tab Pengguna" />
+          <div class="screenshot-caption">
+            📸 <strong>Gambar 6:</strong> Daftar akun pengguna sistem dengan tombol Edit dan Hapus pada setiap baris akun.
+          </div>
+        </div>
+      </div>
+
+      <div class="step-box avoid-break">
+        <div class="step-title">
+          <span class="step-tag">Alur 6B</span>
+          <span>Mengedit Profil Pengguna & Mengganti Password Akun</span>
+        </div>
+        <p class="step-instruction">
+          Untuk memperbarui data akun atau me-reset kata sandi pengguna:
+        </p>
+        <ol style="padding-left: 20px; font-size: 12px; color: #475569; margin-bottom: 12px;">
+          <li>Pada baris akun yang ingin diubah, klik tombol berwarna biru <strong>"Edit"</strong>.</li>
+          <li>Modal interaktif <strong>"Edit Data Pengguna"</strong> akan muncul di layar.</li>
+          <li>Ubah <strong>Nama Lengkap</strong> atau <strong>Username</strong> jika diperlukan.</li>
+          <li><strong>Password Baru:</strong> Masukkan password baru (minimal 5 karakter) jika ingin mengganti kata sandi. <em>Jika tidak ingin mengubah password, biarkan kolom ini kosong.</em></li>
+          <li><strong>Peran / Role:</strong> Pilih apakah akun memiliki hak akses <em>Administrator</em> (hanya master data) atau <em>Super Administrator</em> (akses penuh termasuk kelola user).</li>
+          <li>Klik tombol biru <strong>"Simpan Perubahan"</strong>. Data akan langsung ter-update di database PostgreSQL!</li>
+        </ol>
+
+        <div class="real-screenshot-container">
+          <div class="screenshot-header">
+            <div class="screenshot-dots"><span class="s-dot dot-r"></span><span class="s-dot dot-y"></span><span class="s-dot dot-g"></span></div>
+            <span>Modal Edit Data Pengguna & Ubah Password</span>
+          </div>
+          <img class="real-screenshot-img" src="/manual_screens/07_modal_edit_pengguna.png" alt="Screenshot Modal Edit Pengguna" />
+          <div class="screenshot-caption">
+            📸 <strong>Gambar 7:</strong> Modal interaktif Edit Pengguna untuk mengubah nama, username, password baru, dan hak akses peran.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER RESMI -->
+    <div style="text-align: center; padding: 24px 0; color: #94a3b8; font-size: 11px; border-top: 1px solid #e2e8f0; margin-top: 30px;">
+      <p><strong>Sistem Informasi Geografis Monitoring Gereja Gerakan Pentakosta (GGP)</strong></p>
+      <p>Sekretariat Majelis Pusat GGP: Jl. Kramat Pulo 22B, Kramat, Senen, Jakarta Pusat 10450</p>
+      <p>Buku panduan ini diterbitkan resmi untuk mendampingi implementasi sistem di seluruh Majelis Daerah Sinode GGP.</p>
+    </div>
+
+  </div>
+
+</body>
+</html>
