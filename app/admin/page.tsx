@@ -75,6 +75,17 @@ export default function AdminPage() {
   const [addUserLoading, setAddUserLoading] = useState(false);
   const [addUserError, setAddUserError] = useState("");
 
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<{
+    id: string;
+    name: string;
+    username: string;
+    role: "admin" | "superadmin";
+    password: string;
+  } | null>(null);
+  const [editUserLoading, setEditUserLoading] = useState(false);
+  const [editUserError, setEditUserError] = useState("");
+
   // ------------------------------------------------------------- INITIAL AUTH CHECK
   useEffect(() => {
     async function checkSession() {
@@ -322,6 +333,53 @@ export default function AdminPage() {
       showToast(`Akun "${username}" berhasil dihapus.`);
     } catch (err: any) {
       alert(err.message);
+    }
+  };
+
+  const handleOpenEditUser = (u: SafeUser) => {
+    setEditingUser({
+      id: u.id,
+      name: u.name,
+      username: u.username,
+      role: u.role as "admin" | "superadmin",
+      password: "",
+    });
+    setEditUserError("");
+    setIsEditUserModalOpen(true);
+  };
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setEditUserError("");
+    setEditUserLoading(true);
+
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingUser),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Gagal memperbarui data pengguna.");
+      }
+
+      setUsersList((prev) =>
+        prev.map((u) => (u.id === editingUser.id ? data.user : u))
+      );
+      if (currentUser?.id === editingUser.id) {
+        setCurrentUser(data.user);
+      }
+
+      setIsEditUserModalOpen(false);
+      setEditingUser(null);
+      showToast(data.message || "Data pengguna berhasil diperbarui!");
+    } catch (err: any) {
+      setEditUserError(err.message);
+    } finally {
+      setEditUserLoading(false);
     }
   };
 
@@ -979,7 +1037,7 @@ export default function AdminPage() {
                     ) : (
                       usersList.map((u) => {
                         const isSelf = u.id === currentUser.id;
-                        const isPrimarySuperadmin = u.username === "admin" && u.role === "superadmin";
+                        const isPrimarySuperadmin = (u.username === "superadmin" || u.username === "admin") && u.role === "superadmin";
 
                         return (
                           <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
@@ -1021,23 +1079,33 @@ export default function AdminPage() {
                               }) : "-"}
                             </td>
                             <td className="py-3.5 px-4 text-right">
-                              {isSelf || isPrimarySuperadmin ? (
-                                <span className="text-[11px] font-medium text-slate-400 italic">
-                                  {isSelf ? "Akun Anda" : "Akun Utama"}
-                                </span>
-                              ) : (
+                              <div className="flex items-center justify-end gap-1.5">
                                 <button
                                   type="button"
-                                  onClick={() => handleDeleteUser(u.id, u.username)}
-                                  className="px-2.5 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 font-semibold text-xs transition-colors inline-flex items-center gap-1"
-                                  title="Hapus Akun Pengguna"
+                                  onClick={() => handleOpenEditUser(u)}
+                                  className="px-2.5 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                  title="Edit Data Pengguna"
                                 >
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                   </svg>
-                                  <span>Hapus</span>
+                                  <span>Edit</span>
                                 </button>
-                              )}
+
+                                {isSelf || isPrimarySuperadmin ? null : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteUser(u.id, u.username)}
+                                    className="px-2.5 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 font-semibold text-xs transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                    title="Hapus Akun Pengguna"
+                                  >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                    </svg>
+                                    <span>Hapus</span>
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
@@ -1312,6 +1380,111 @@ export default function AdminPage() {
                   className="px-5 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-600/25 hover:bg-blue-700 disabled:opacity-50"
                 >
                   {addUserLoading ? "Membuat..." : "Buat Pengguna"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: EDIT PENGGUNA
+      ========================================================================= */}
+      {isEditUserModalOpen && editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-md border border-slate-200 shadow-2xl p-6 my-8">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Edit Data Pengguna</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Ubah profil atau perbarui password akun.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditUserModalOpen(false);
+                  setEditingUser(null);
+                }}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {editUserError && (
+              <div className="mt-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+                {editUserError}
+              </div>
+            )}
+
+            <form onSubmit={handleEditUser} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingUser.name}
+                  onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                  placeholder="Nama Lengkap"
+                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Username *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingUser.username}
+                  onChange={(e) => setEditingUser({ ...editingUser, username: e.target.value.toLowerCase().trim() })}
+                  placeholder="username"
+                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">
+                  Password Baru <span className="text-slate-400 font-normal">(Kosongkan jika tidak ingin diubah)</span>
+                </label>
+                <input
+                  type="password"
+                  value={editingUser.password}
+                  onChange={(e) => setEditingUser({ ...editingUser, password: e.target.value })}
+                  placeholder="Minimal 5 karakter (opsional)"
+                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Peran / Role *</label>
+                <select
+                  value={editingUser.role}
+                  onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value as any })}
+                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
+                >
+                  <option value="admin">Administrator (Kelola Data Gereja)</option>
+                  <option value="superadmin">Super Administrator (Akses Penuh)</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditUserModalOpen(false);
+                    setEditingUser(null);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={editUserLoading}
+                  className="px-5 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-600/25 hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
+                >
+                  {editUserLoading ? "Menyimpan..." : "Simpan Perubahan"}
                 </button>
               </div>
             </form>

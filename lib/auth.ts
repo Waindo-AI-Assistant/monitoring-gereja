@@ -187,7 +187,11 @@ export async function getUsers(): Promise<User[]> {
 
 /** Save users to database and file */
 export async function saveUsers(users: User[]): Promise<void> {
-  const dir = path.dirname(USERS_FILE_PATH);
-  await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(USERS_FILE_PATH, JSON.stringify(users, null, 2), "utf-8");
+  try {
+    const dir = path.dirname(USERS_FILE_PATH);
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(USERS_FILE_PATH, JSON.stringify(users, null, 2), "utf-8");
+  } catch (err) {
+    console.warn("Warning: Could not write users.json file (using PostgreSQL directly):", err);
+  }
 }

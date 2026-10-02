@@ -85,7 +85,7 @@ export default function SearchBox({ pois, onSelectPOI }: SearchBoxProps) {
         </svg>
         <input
           type="text"
-          placeholder="CARI NAMA JEMAAH..."
+          placeholder="CARI NAMA GEREJA..."
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);

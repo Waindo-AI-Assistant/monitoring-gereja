@@ -131,7 +131,7 @@ export default function EditChurchModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {/* Nama Jemaah */}
             <div className="md:col-span-2 space-y-1">
-              <label className="text-[11px] font-semibold text-slate-700">Nama Jemaah</label>
+              <label className="text-[11px] font-semibold text-slate-700">Nama Gereja</label>
               <input
                 type="text"
                 name="name"

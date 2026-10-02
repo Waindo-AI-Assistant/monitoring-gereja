@@ -213,7 +213,7 @@ export default function LandingPage() {
             </div> */}
 
             <h1 className="landing-hero__heading">
-              Pentakosta Geo{" "}
+              Gereja Gerakan Pentakosta{" "}
               <span className="landing-hero__heading-accent">
                 Sebaran Data Gereja
               </span>
@@ -315,7 +315,7 @@ export default function LandingPage() {
               />
               <div>
                 <p className="landing-footer__brand-name">
-                  PENTAKOSTA GEO
+                  Gereja Gerakan Pentakosta
                 </p>
                 <p className="landing-footer__brand-sub">
                   Sistem Informasi Spasial
@@ -374,7 +374,7 @@ export default function LandingPage() {
         {/* Copyright bar */}
         <div className="landing-footer__copy">
           <p>
-            &copy; {new Date().getFullYear()} PENTAKOSTA GEO.
+            &copy; {new Date().getFullYear()} PENTAKOSTA.
           </p>
         </div>
       </footer>

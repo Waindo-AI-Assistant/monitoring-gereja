@@ -196,3 +196,98 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Terjadi kesalahan saat menghapus pengguna." }, { status: 500 });
   }
 }
+
+export async function PUT(req: NextRequest) {
+  try {
+    const admin = getAuthenticatedAdmin(req);
+    if (!admin) {
+      return NextResponse.json({ error: "Akses ditolak. Sesi tidak valid." }, { status: 401 });
+    }
+
+    const { id, name, username, password, role } = await req.json();
+
+    if (!id) {
+      return NextResponse.json({ error: "ID pengguna wajib disertakan." }, { status: 400 });
+    }
+
+    const users = await getUsers();
+    const userIndex = users.findIndex((u) => u.id === id);
+
+    if (userIndex === -1) {
+      return NextResponse.json({ error: "Pengguna tidak ditemukan." }, { status: 404 });
+    }
+
+    const targetUser = users[userIndex];
+
+    // Check if new username is already used by another account
+    if (username && username.trim().toLowerCase() !== targetUser.username.toLowerCase()) {
+      const duplicate = users.find(
+        (u) => u.id !== id && u.username.toLowerCase() === username.trim().toLowerCase()
+      );
+      if (duplicate) {
+        return NextResponse.json(
+          { error: "Username tersebut sudah digunakan oleh akun lain." },
+          { status: 400 }
+        );
+      }
+      targetUser.username = username.trim().toLowerCase();
+    }
+
+    if (name && name.trim()) {
+      targetUser.name = name.trim();
+    }
+
+    if (role && (role === "admin" || role === "superadmin")) {
+      targetUser.role = role;
+    }
+
+    // If new password provided, rehash
+    let passwordUpdated = false;
+    if (password && password.trim()) {
+      if (password.length < 5) {
+        return NextResponse.json({ error: "Password baru minimal 5 karakter." }, { status: 400 });
+      }
+      const { hash, salt } = hashPassword(password);
+      targetUser.passwordHash = hash;
+      targetUser.salt = salt;
+      passwordUpdated = true;
+    }
+
+    users[userIndex] = targetUser;
+    await saveUsers(users);
+
+    // Sync update to PostgreSQL
+    try {
+      await prisma.user.updateMany({
+        where: {
+          OR: [{ id }, { username: targetUser.username }],
+        },
+        data: {
+          name: targetUser.name,
+          username: targetUser.username,
+          role: targetUser.role,
+          ...(passwordUpdated ? { passwordHash: targetUser.passwordHash, salt: targetUser.salt } : {}),
+        },
+      });
+    } catch (e) {
+      console.warn("Prisma user update sync warning:", e);
+    }
+
+    const safeUser: SafeUser = {
+      id: targetUser.id,
+      name: targetUser.name,
+      username: targetUser.username,
+      role: targetUser.role,
+      createdAt: targetUser.createdAt,
+    };
+
+    return NextResponse.json({
+      success: true,
+      message: `Data pengguna "${safeUser.name}" (@${safeUser.username}) berhasil diperbarui.`,
+      user: safeUser,
+    });
+  } catch (error: any) {
+    console.error("PUT user error:", error);
+    return NextResponse.json({ error: "Terjadi kesalahan saat memperbarui pengguna." }, { status: 500 });
+  }
+}
