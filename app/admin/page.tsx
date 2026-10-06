@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatValue } from "@/config/dashboard";
 import EditChurchModal from "@/components/dashboard/EditChurchModal";
 import CoordinatePickerModal from "@/components/map/CoordinatePickerModal";
+import ImageUploadInput from "@/components/ui/ImageUploadInput";
 import { exportGeoJSON, exportCSV } from "@/lib/export";
 
 type SafeUser = {
@@ -44,6 +45,7 @@ export default function AdminPage() {
   const [editingChurch, setEditingChurch] = useState<any | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAddMapPickerOpen, setIsAddMapPickerOpen] = useState(false);
+  const [previewModalImage, setPreviewModalImage] = useState<{ url: string; name: string } | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // New Church Form State
@@ -865,7 +867,8 @@ export default function AdminPage() {
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                      <th className="py-3.5 px-4">No</th>
+                      <th className="py-3.5 px-3 text-center">No</th>
+                      <th className="py-3.5 px-3 text-center">Foto</th>
                       <th className="py-3.5 px-4">Nama Gereja / Pos PI</th>
                       <th className="py-3.5 px-4">Gembala Sidang</th>
                       <th className="py-3.5 px-4">Mada / Mawil</th>
@@ -878,7 +881,7 @@ export default function AdminPage() {
                   <tbody className="divide-y divide-slate-100">
                     {loadingData ? (
                       <tr>
-                        <td colSpan={8} className="py-12 text-center text-slate-500">
+                        <td colSpan={9} className="py-12 text-center text-slate-500">
                           <div className="flex flex-col items-center gap-2">
                             <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
                             <span>Memuat data gereja...</span>
@@ -887,7 +890,7 @@ export default function AdminPage() {
                       </tr>
                     ) : paginatedChurches.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="py-12 text-center text-slate-500">
+                        <td colSpan={9} className="py-12 text-center text-slate-500">
                           Tidak ada data gereja yang sesuai dengan kriteria pencarian.
                         </td>
                       </tr>
@@ -898,7 +901,32 @@ export default function AdminPage() {
 
                         return (
                           <tr key={p.fid || p.name || idx} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="py-3 px-4 font-mono text-slate-400 font-semibold">{rowNumber}</td>
+                            <td className="py-3 px-3 text-center font-mono text-slate-400 font-semibold">{rowNumber}</td>
+                            <td className="py-2.5 px-3 text-center">
+                              {p.foto ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewModalImage({ url: p.foto, name: p.name || p.nama || "Foto Gereja" })}
+                                  className="group relative inline-block rounded-lg overflow-hidden border border-slate-200 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer bg-slate-50"
+                                  title="Klik untuk melihat foto"
+                                >
+                                  <img
+                                    src={p.foto}
+                                    alt={p.name || "Foto"}
+                                    className="w-10 h-10 object-cover group-hover:scale-105 transition-transform"
+                                    onError={(e) => {
+                                      (e.target as HTMLElement).style.display = "none";
+                                    }}
+                                  />
+                                </button>
+                              ) : (
+                                <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 text-slate-400 border border-slate-200/60" title="Belum ada foto">
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                  </svg>
+                                </span>
+                              )}
+                            </td>
                             <td className="py-3 px-4 font-bold text-blue-950">
                               {p.name || p.nama || "-"}
                             </td>
@@ -1335,36 +1363,42 @@ export default function AdminPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Foto Utama Gedung (URL)</label>
-                    <input
-                      type="text"
-                      value={newChurch.foto}
-                      onChange={(e) => setNewChurch({ ...newChurch, foto: e.target.value })}
-                      placeholder="https://... atau /images/..."
-                      className="w-full h-9 px-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-blue-600 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Foto Gedung 2 (URL)</label>
-                    <input
-                      type="text"
-                      value={newChurch.foto_2}
-                      onChange={(e) => setNewChurch({ ...newChurch, foto_2: e.target.value })}
-                      placeholder="https://... atau /images/..."
-                      className="w-full h-9 px-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-blue-600 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Foto Gembala (URL)</label>
-                    <input
-                      type="text"
-                      value={newChurch.foto_pendeta}
-                      onChange={(e) => setNewChurch({ ...newChurch, foto_pendeta: e.target.value })}
-                      placeholder="https://... atau /images/..."
-                      className="w-full h-9 px-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-blue-600 outline-none"
-                    />
-                  </div>
+                  <ImageUploadInput
+                    label="Foto Utama Gedung"
+                    value={newChurch.foto}
+                    onChange={(url) => {
+                      setNewChurch((prev) => ({
+                        ...prev,
+                        foto: url,
+                        ATTACH: url || prev.foto_2 || prev.foto_pendeta ? "Ada" : prev.ATTACH,
+                      }));
+                    }}
+                    helperText="Tampak depan gereja"
+                  />
+                  <ImageUploadInput
+                    label="Foto Gedung 2"
+                    value={newChurch.foto_2}
+                    onChange={(url) => {
+                      setNewChurch((prev) => ({
+                        ...prev,
+                        foto_2: url,
+                        ATTACH: prev.foto || url || prev.foto_pendeta ? "Ada" : prev.ATTACH,
+                      }));
+                    }}
+                    helperText="Ruang ibadah / samping"
+                  />
+                  <ImageUploadInput
+                    label="Foto Gembala"
+                    value={newChurch.foto_pendeta}
+                    onChange={(url) => {
+                      setNewChurch((prev) => ({
+                        ...prev,
+                        foto_pendeta: url,
+                        ATTACH: prev.foto || prev.foto_2 || url ? "Ada" : prev.ATTACH,
+                      }));
+                    }}
+                    helperText="Profil pendeta jemaat"
+                  />
                 </div>
               </div>
 
@@ -1604,6 +1638,59 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Preview Foto */}
+      {previewModalImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => setPreviewModalImage(null)}
+        >
+          <div
+            className="relative bg-white rounded-2xl max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
+              <span className="font-bold text-xs text-slate-800 truncate pr-4">{previewModalImage.name}</span>
+              <button
+                type="button"
+                onClick={() => setPreviewModalImage(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-2 flex items-center justify-center bg-slate-900 overflow-auto">
+              <img
+                src={previewModalImage.url}
+                alt={previewModalImage.name}
+                className="max-h-[75vh] w-auto object-contain rounded-lg shadow-sm"
+              />
+            </div>
+            <div className="px-4 py-2.5 bg-white border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+              <a
+                href={previewModalImage.url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-600 hover:underline flex items-center gap-1 font-semibold"
+              >
+                Buka di tab baru
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3 h-3">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                </svg>
+              </a>
+              <button
+                type="button"
+                onClick={() => setPreviewModalImage(null)}
+                className="px-3 py-1 rounded-lg bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200 cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
           </div>
         </div>
       )}

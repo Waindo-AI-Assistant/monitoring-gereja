@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import CoordinatePickerModal from "@/components/map/CoordinatePickerModal";
+import ImageUploadInput from "@/components/ui/ImageUploadInput";
 
 type EditChurchModalProps = {
   isOpen: boolean;
@@ -360,40 +361,43 @@ export default function EditChurchModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-                <div>
-                  <label className="text-[10px] font-semibold text-slate-600 block mb-1">Foto Utama Gedung (URL)</label>
-                  <input
-                    type="text"
-                    name="foto"
-                    value={formData.foto}
-                    onChange={handleChange}
-                    placeholder="https://... atau /images/..."
-                    className="w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-blue-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-semibold text-slate-600 block mb-1">Foto Gedung 2 (URL)</label>
-                  <input
-                    type="text"
-                    name="foto_2"
-                    value={formData.foto_2}
-                    onChange={handleChange}
-                    placeholder="https://... atau /images/..."
-                    className="w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-blue-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-semibold text-slate-600 block mb-1">Foto Gembala (URL)</label>
-                  <input
-                    type="text"
-                    name="foto_pendeta"
-                    value={formData.foto_pendeta}
-                    onChange={handleChange}
-                    placeholder="https://... atau /images/..."
-                    className="w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-blue-500 outline-none"
-                  />
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <ImageUploadInput
+                  label="Foto Utama Gedung"
+                  value={formData.foto}
+                  onChange={(url) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      foto: url,
+                      ATTACH: url || prev.foto_2 || prev.foto_pendeta ? "Ada" : prev.ATTACH,
+                    }))
+                  }
+                  helperText="Tampak depan gereja"
+                />
+                <ImageUploadInput
+                  label="Foto Gedung 2"
+                  value={formData.foto_2}
+                  onChange={(url) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      foto_2: url,
+                      ATTACH: prev.foto || url || prev.foto_pendeta ? "Ada" : prev.ATTACH,
+                    }))
+                  }
+                  helperText="Ruang ibadah / samping"
+                />
+                <ImageUploadInput
+                  label="Foto Gembala"
+                  value={formData.foto_pendeta}
+                  onChange={(url) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      foto_pendeta: url,
+                      ATTACH: prev.foto || prev.foto_2 || url ? "Ada" : prev.ATTACH,
+                    }))
+                  }
+                  helperText="Profil pendeta jemaat"
+                />
               </div>
             </div>
           </div>
