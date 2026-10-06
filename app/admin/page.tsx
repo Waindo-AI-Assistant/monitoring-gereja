@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { formatValue } from "@/config/dashboard";
 import EditChurchModal from "@/components/dashboard/EditChurchModal";
+import CoordinatePickerModal from "@/components/map/CoordinatePickerModal";
 import { exportGeoJSON, exportCSV } from "@/lib/export";
 
 type SafeUser = {
@@ -42,6 +43,7 @@ export default function AdminPage() {
   // Modals & Action States
   const [editingChurch, setEditingChurch] = useState<any | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddMapPickerOpen, setIsAddMapPickerOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // New Church Form State
@@ -56,8 +58,13 @@ export default function AdminPage() {
     status: "Milik Sendiri",
     mawil: "",
     nama_mada: "",
+    kode_mada: "",
     x: "",
     y: "",
+    foto: "",
+    foto_2: "",
+    foto_pendeta: "",
+    ATTACH: "Tidak",
   });
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState("");
@@ -227,8 +234,13 @@ export default function AdminPage() {
         status: "Milik Sendiri",
         mawil: "",
         nama_mada: "",
+        kode_mada: "",
         x: "",
         y: "",
+        foto: "",
+        foto_2: "",
+        foto_pendeta: "",
+        ATTACH: "Tidak",
       });
       showToast("Data gereja baru berhasil ditambahkan ke database!");
     } catch (err: any) {
@@ -1197,6 +1209,17 @@ export default function AdminPage() {
                 </div>
 
                 <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Kode Mada (Singkatan)</label>
+                  <input
+                    type="text"
+                    value={newChurch.kode_mada}
+                    onChange={(e) => setNewChurch({ ...newChurch, kode_mada: e.target.value })}
+                    placeholder="Contoh: JABAR"
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none uppercase"
+                  />
+                </div>
+
+                <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Wilayah (Mawil)</label>
                   <input
                     type="text"
@@ -1232,28 +1255,51 @@ export default function AdminPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Koordinat Longitude (X) *</label>
-                  <input
-                    type="text"
-                    required
-                    value={newChurch.x}
-                    onChange={(e) => setNewChurch({ ...newChurch, x: e.target.value })}
-                    placeholder="Contoh: 107.6191"
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
-                  />
-                </div>
+                {/* Koordinat & Pilih dari Peta */}
+                <div className="sm:col-span-2 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-slate-800">Titik Koordinat Lokasi Gereja *</span>
+                      <p className="text-[10px] text-slate-500">Longitude (X) dan Latitude (Y) peta</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddMapPickerOpen(true)}
+                      className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                      title="Pilih titik koordinat di peta secara visual"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5 text-blue-600">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                      </svg>
+                      <span>Pilih dari Peta (Select by Map)</span>
+                    </button>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Koordinat Latitude (Y) *</label>
-                  <input
-                    type="text"
-                    required
-                    value={newChurch.y}
-                    onChange={(e) => setNewChurch({ ...newChurch, y: e.target.value })}
-                    placeholder="Contoh: -6.9175"
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
-                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">Longitude (X) *</label>
+                      <input
+                        type="text"
+                        required
+                        value={newChurch.x}
+                        onChange={(e) => setNewChurch({ ...newChurch, x: e.target.value })}
+                        placeholder="Contoh: 107.6191"
+                        className="w-full h-9 px-3 bg-white border border-slate-200 rounded-xl text-xs font-mono font-semibold text-slate-900 focus:border-blue-600 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">Latitude (Y) *</label>
+                      <input
+                        type="text"
+                        required
+                        value={newChurch.y}
+                        onChange={(e) => setNewChurch({ ...newChurch, y: e.target.value })}
+                        placeholder="Contoh: -6.9175"
+                        className="w-full h-9 px-3 bg-white border border-slate-200 rounded-xl text-xs font-mono font-semibold text-slate-900 focus:border-blue-600 outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1266,6 +1312,60 @@ export default function AdminPage() {
                   placeholder="Jl. Nama Jalan No. XX, Kelurahan, Kecamatan..."
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
                 />
+              </div>
+
+              {/* Dokumentasi Foto & Lampiran */}
+              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-800">Dokumentasi Foto & Lampiran</span>
+                    <p className="text-[10px] text-slate-500">Tautan gambar gedung gereja & profil gembala</p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-semibold text-slate-500">Status Lampiran:</span>
+                    <select
+                      value={newChurch.ATTACH}
+                      onChange={(e) => setNewChurch({ ...newChurch, ATTACH: e.target.value })}
+                      className="rounded-lg border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold text-slate-700 outline-none"
+                    >
+                      <option value="Ada">Ada</option>
+                      <option value="Tidak">Tidak</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Foto Utama Gedung (URL)</label>
+                    <input
+                      type="text"
+                      value={newChurch.foto}
+                      onChange={(e) => setNewChurch({ ...newChurch, foto: e.target.value })}
+                      placeholder="https://... atau /images/..."
+                      className="w-full h-9 px-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-blue-600 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Foto Gedung 2 (URL)</label>
+                    <input
+                      type="text"
+                      value={newChurch.foto_2}
+                      onChange={(e) => setNewChurch({ ...newChurch, foto_2: e.target.value })}
+                      placeholder="https://... atau /images/..."
+                      className="w-full h-9 px-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-blue-600 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Foto Gembala (URL)</label>
+                    <input
+                      type="text"
+                      value={newChurch.foto_pendeta}
+                      onChange={(e) => setNewChurch({ ...newChurch, foto_pendeta: e.target.value })}
+                      placeholder="https://... atau /images/..."
+                      className="w-full h-9 px-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:border-blue-600 outline-none"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
@@ -1285,6 +1385,22 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+
+            {/* Modal Pemilih Koordinat Peta untuk Tambah Gereja */}
+            <CoordinatePickerModal
+              isOpen={isAddMapPickerOpen}
+              onClose={() => setIsAddMapPickerOpen(false)}
+              churchName={newChurch.name || "Gereja Baru"}
+              initialLat={newChurch.y}
+              initialLng={newChurch.x}
+              onSelect={(coords) => {
+                setNewChurch((prev) => ({
+                  ...prev,
+                  y: String(coords.lat),
+                  x: String(coords.lng),
+                }));
+              }}
+            />
           </div>
         </div>
       )}

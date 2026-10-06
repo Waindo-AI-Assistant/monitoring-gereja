@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import CoordinatePickerModal from "@/components/map/CoordinatePickerModal";
 
 type EditChurchModalProps = {
   isOpen: boolean;
@@ -26,8 +27,16 @@ export default function EditChurchModal({
     status: "Milik Sendiri",
     mawil: "",
     nama_mada: "",
+    kode_mada: "",
+    x: "",
+    y: "",
+    foto: "",
+    foto_2: "",
+    foto_pendeta: "",
+    ATTACH: "Tidak",
   });
 
+  const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -44,6 +53,13 @@ export default function EditChurchModal({
         status: churchData.status ? String(churchData.status).trim() : "Milik Sendiri",
         mawil: churchData.mawil ? String(churchData.mawil).trim() : "",
         nama_mada: churchData.nama_mada ? String(churchData.nama_mada).trim() : "",
+        kode_mada: churchData.kode_mada ? String(churchData.kode_mada).trim() : "",
+        x: churchData.x !== undefined && churchData.x !== null ? String(churchData.x).trim() : "",
+        y: churchData.y !== undefined && churchData.y !== null ? String(churchData.y).trim() : "",
+        foto: churchData.foto ? String(churchData.foto).trim() : "",
+        foto_2: churchData.foto_2 ? String(churchData.foto_2).trim() : "",
+        foto_pendeta: churchData.foto_pendeta ? String(churchData.foto_pendeta).trim() : "",
+        ATTACH: churchData.ATTACH ? String(churchData.ATTACH).trim() : "Tidak",
       });
       setErrorMsg("");
     }
@@ -251,6 +267,7 @@ export default function EditChurchModal({
             </div>
 
             {/* Majelis Daerah */}
+            {/* Majelis Daerah & Kode Mada */}
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-slate-700">Majelis Daerah (Mada)</label>
               <input
@@ -261,6 +278,123 @@ export default function EditChurchModal({
                 className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 placeholder="Contoh: SUMUT"
               />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-700">Kode Mada (Singkatan)</label>
+              <input
+                type="text"
+                name="kode_mada"
+                value={formData.kode_mada}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 uppercase"
+                placeholder="Contoh: SUMUT"
+              />
+            </div>
+
+            {/* Koordinat & Pilih dari Peta */}
+            <div className="md:col-span-2 p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-slate-800">Koordinat Geografis (Peta)</span>
+                  <p className="text-[10px] text-slate-500">Longitude (X) dan Latitude (Y)</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMapPickerOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 font-bold text-[11px] inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  title="Pilih titik koordinat di peta secara visual"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5 text-blue-600">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                  </svg>
+                  <span>Pilih dari Peta (Select by Map)</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-600 block mb-1">Longitude (X)</label>
+                  <input
+                    type="text"
+                    name="x"
+                    value={formData.x}
+                    onChange={handleChange}
+                    placeholder="Contoh: 106.8456"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-mono text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-600 block mb-1">Latitude (Y)</label>
+                  <input
+                    type="text"
+                    name="y"
+                    value={formData.y}
+                    onChange={handleChange}
+                    placeholder="Contoh: -6.1843"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-mono text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Dokumentasi Foto & Lampiran */}
+            <div className="md:col-span-2 p-3 bg-slate-50/70 rounded-2xl border border-slate-200 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-slate-800">Dokumentasi Foto & Lampiran</span>
+                  <p className="text-[10px] text-slate-500">Tautan gambar gedung gereja & profil gembala</p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-semibold text-slate-500">Status Lampiran:</span>
+                  <select
+                    name="ATTACH"
+                    value={formData.ATTACH}
+                    onChange={handleChange}
+                    className="rounded-lg border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold text-slate-700 outline-none"
+                  >
+                    <option value="Ada">Ada</option>
+                    <option value="Tidak">Tidak</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-600 block mb-1">Foto Utama Gedung (URL)</label>
+                  <input
+                    type="text"
+                    name="foto"
+                    value={formData.foto}
+                    onChange={handleChange}
+                    placeholder="https://... atau /images/..."
+                    className="w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-blue-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-600 block mb-1">Foto Gedung 2 (URL)</label>
+                  <input
+                    type="text"
+                    name="foto_2"
+                    value={formData.foto_2}
+                    onChange={handleChange}
+                    placeholder="https://... atau /images/..."
+                    className="w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-blue-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-600 block mb-1">Foto Gembala (URL)</label>
+                  <input
+                    type="text"
+                    name="foto_pendeta"
+                    value={formData.foto_pendeta}
+                    onChange={handleChange}
+                    placeholder="https://... atau /images/..."
+                    className="w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-blue-500 outline-none"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -298,6 +432,22 @@ export default function EditChurchModal({
             </button>
           </div>
         </form>
+
+        {/* Modal Pemilih Koordinat Peta */}
+        <CoordinatePickerModal
+          isOpen={isMapPickerOpen}
+          onClose={() => setIsMapPickerOpen(false)}
+          churchName={formData.name || churchData?.name}
+          initialLat={formData.y}
+          initialLng={formData.x}
+          onSelect={(coords) => {
+            setFormData((prev) => ({
+              ...prev,
+              y: String(coords.lat),
+              x: String(coords.lng),
+            }));
+          }}
+        />
       </div>
     </div>
   );

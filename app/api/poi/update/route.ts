@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
@@ -67,8 +68,58 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // 5. Tulis kembali ke file
+    // 5. Tulis kembali ke file GeoJSON
     await fs.writeFile(filePath, JSON.stringify(geojsonData, null, 2), "utf-8");
+
+    // 6. Sinkronisasi ke PostgreSQL via Prisma jika terhubung
+    try {
+      const fidNum = fid !== undefined && fid !== null ? Number(fid) : undefined;
+      const xVal = mergedProps.x !== undefined && mergedProps.x !== "" ? Number(mergedProps.x) : undefined;
+      const yVal = mergedProps.y !== undefined && mergedProps.y !== "" ? Number(mergedProps.y) : undefined;
+
+      if (mergedProps.foto || mergedProps.foto_2 || mergedProps.foto_pendeta) {
+        if (!mergedProps.ATTACH || mergedProps.ATTACH === "Tidak") {
+          mergedProps.ATTACH = "Ada";
+        }
+      }
+
+      const updatePayload: any = {
+        name: String(mergedProps.name).trim(),
+        namaPendeta: mergedProps.nama_pendeta ? String(mergedProps.nama_pendeta).trim() : null,
+        noHpWa: mergedProps.no_hp_wa ? String(mergedProps.no_hp_wa).trim() : null,
+        alamatGereja: mergedProps.alamat_gereja ? String(mergedProps.alamat_gereja).trim() : null,
+        tahunBerdiri: mergedProps.tahun_berdiri ? String(mergedProps.tahun_berdiri).trim() : null,
+        jumlahJemaat: mergedProps.jumlah_jemaat ? String(mergedProps.jumlah_jemaat).trim() : null,
+        jamOperasional: mergedProps.jam_operasional ? String(mergedProps.jam_operasional).trim() : null,
+        status: mergedProps.status ? String(mergedProps.status).trim() : "Milik Sendiri",
+        mawil: mergedProps.mawil ? String(mergedProps.mawil).trim() : null,
+        kodeMada: mergedProps.kode_mada ? String(mergedProps.kode_mada).trim() : null,
+        namaMada: mergedProps.nama_mada ? String(mergedProps.nama_mada).trim() : null,
+        foto: mergedProps.foto ? String(mergedProps.foto).trim() : null,
+        foto2: mergedProps.foto_2 ? String(mergedProps.foto_2).trim() : null,
+        fotoPendeta: mergedProps.foto_pendeta ? String(mergedProps.foto_pendeta).trim() : null,
+        photos: mergedProps.photos
+          ? (typeof mergedProps.photos === "string" ? mergedProps.photos : JSON.stringify(mergedProps.photos))
+          : JSON.stringify([mergedProps.foto, mergedProps.foto_2].filter(Boolean)),
+      };
+
+      if (xVal !== undefined && !isNaN(xVal)) updatePayload.x = xVal;
+      if (yVal !== undefined && !isNaN(yVal)) updatePayload.y = yVal;
+
+      if (fidNum) {
+        await prisma.church.updateMany({
+          where: { fid: fidNum },
+          data: updatePayload,
+        });
+      } else if (name) {
+        await prisma.church.updateMany({
+          where: { name: String(name).trim() },
+          data: updatePayload,
+        });
+      }
+    } catch (prismaErr) {
+      console.warn("Sinkronisasi database Prisma dilewati:", prismaErr);
+    }
 
     return NextResponse.json({
       success: true,

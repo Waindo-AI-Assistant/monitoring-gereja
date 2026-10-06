@@ -110,11 +110,16 @@ export async function POST(req: NextRequest) {
     const maxFid = geojson.features.reduce((max: number, f: any) => Math.max(max, f.properties?.fid || 0), 0);
     const newFid = maxFid + 1;
 
+    const attachStatus = churchData.ATTACH || (churchData.foto || churchData.foto_2 || churchData.foto_pendeta ? "Ada" : "Tidak");
+    const photoList = Array.isArray(churchData.photos)
+      ? churchData.photos
+      : [churchData.foto, churchData.foto_2].filter(Boolean);
+
     const newFeature = {
       type: "Feature",
       properties: {
         fid: newFid,
-        ATTACH: "Tidak",
+        ATTACH: attachStatus,
         name: churchData.name,
         nama_pendeta: churchData.nama_pendeta || "",
         no_hp_wa: churchData.no_hp_wa || "",
@@ -129,10 +134,10 @@ export async function POST(req: NextRequest) {
         no: newFid,
         x: Number(churchData.x) || 0,
         y: Number(churchData.y) || 0,
-        foto: "",
-        foto_2: "",
-        photos: [],
-        foto_pendeta: "",
+        foto: churchData.foto || "",
+        foto_2: churchData.foto_2 || "",
+        foto_pendeta: churchData.foto_pendeta || "",
+        photos: photoList,
       },
       geometry:
         churchData.x && churchData.y && Number(churchData.x) !== 0 && Number(churchData.y) !== 0
@@ -146,10 +151,146 @@ export async function POST(req: NextRequest) {
     geojson.features.unshift(newFeature);
     await fs.writeFile(GEOJSON_PATH, JSON.stringify(geojson, null, 2), "utf-8");
 
+    // Sinkronisasi insert ke PostgreSQL via Prisma jika aktif
+    try {
+      await prisma.church.create({
+        data: {
+          fid: newFid,
+          no: newFid,
+          name: String(newFeature.properties.name).trim(),
+          namaPendeta: newFeature.properties.nama_pendeta ? String(newFeature.properties.nama_pendeta).trim() : null,
+          noHpWa: newFeature.properties.no_hp_wa ? String(newFeature.properties.no_hp_wa).trim() : null,
+          alamatGereja: newFeature.properties.alamat_gereja ? String(newFeature.properties.alamat_gereja).trim() : null,
+          tahunBerdiri: newFeature.properties.tahun_berdiri ? String(newFeature.properties.tahun_berdiri).trim() : null,
+          jumlahJemaat: newFeature.properties.jumlah_jemaat ? String(newFeature.properties.jumlah_jemaat).trim() : null,
+          jamOperasional: newFeature.properties.jam_operasional ? String(newFeature.properties.jam_operasional).trim() : null,
+          status: newFeature.properties.status ? String(newFeature.properties.status).trim() : "Milik Sendiri",
+          mawil: newFeature.properties.mawil ? String(newFeature.properties.mawil).trim() : null,
+          kodeMada: newFeature.properties.kode_mada ? String(newFeature.properties.kode_mada).trim() : null,
+          namaMada: newFeature.properties.nama_mada ? String(newFeature.properties.nama_mada).trim() : null,
+          x: newFeature.properties.x || 0,
+          y: newFeature.properties.y || 0,
+          foto: newFeature.properties.foto ? String(newFeature.properties.foto).trim() : null,
+          foto2: newFeature.properties.foto_2 ? String(newFeature.properties.foto_2).trim() : null,
+          fotoPendeta: newFeature.properties.foto_pendeta ? String(newFeature.properties.foto_pendeta).trim() : null,
+          photos: JSON.stringify(newFeature.properties.photos || []),
+        },
+      });
+    } catch (prismaErr) {
+      console.warn("Prisma insert church skipped:", prismaErr);
+    }
+
     return NextResponse.json({
       success: true,
       message: "Data gereja baru berhasil ditambahkan.",
       feature: newFeature,
+    });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+// PUT: Update an existing church record
+export async function PUT(req: NextRequest) {
+  try {
+    const admin = authenticateAdmin(req);
+    if (!admin) {
+      return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 401 });
+    }
+
+    const { fid, name, updatedProperties } = await req.json();
+    if (!updatedProperties) {
+      return NextResponse.json({ error: "Data pembaruan tidak ditemukan." }, { status: 400 });
+    }
+
+    const content = await fs.readFile(GEOJSON_PATH, "utf-8");
+    const geojson = JSON.parse(content);
+
+    let foundIndex = -1;
+    if (fid !== undefined && fid !== null) {
+      foundIndex = geojson.features.findIndex((f: any) => f.properties?.fid === fid);
+    }
+    if (foundIndex === -1 && name) {
+      foundIndex = geojson.features.findIndex((f: any) => f.properties?.name === name);
+    }
+
+    if (foundIndex === -1) {
+      return NextResponse.json({ error: "Data gereja tidak ditemukan." }, { status: 404 });
+    }
+
+    const existingProps = geojson.features[foundIndex].properties || {};
+    const mergedProps = {
+      ...existingProps,
+      ...updatedProperties,
+      fid: existingProps.fid ?? fid,
+      no: existingProps.no ?? existingProps.fid ?? fid,
+    };
+
+    geojson.features[foundIndex].properties = mergedProps;
+    if (mergedProps.x && mergedProps.y && Number(mergedProps.x) !== 0 && Number(mergedProps.y) !== 0) {
+      geojson.features[foundIndex].geometry = {
+        type: "Point",
+        coordinates: [Number(mergedProps.x), Number(mergedProps.y)],
+      };
+    }
+
+    await fs.writeFile(GEOJSON_PATH, JSON.stringify(geojson, null, 2), "utf-8");
+
+    // Sinkronisasi ke PostgreSQL via Prisma jika aktif
+    try {
+      const fidNum = fid !== undefined && fid !== null ? Number(fid) : undefined;
+      const xVal = mergedProps.x !== undefined && mergedProps.x !== "" ? Number(mergedProps.x) : undefined;
+      const yVal = mergedProps.y !== undefined && mergedProps.y !== "" ? Number(mergedProps.y) : undefined;
+
+      if (mergedProps.foto || mergedProps.foto_2 || mergedProps.foto_pendeta) {
+        if (!mergedProps.ATTACH || mergedProps.ATTACH === "Tidak") {
+          mergedProps.ATTACH = "Ada";
+        }
+      }
+
+      const updatePayload: any = {
+        name: String(mergedProps.name).trim(),
+        namaPendeta: mergedProps.nama_pendeta ? String(mergedProps.nama_pendeta).trim() : null,
+        noHpWa: mergedProps.no_hp_wa ? String(mergedProps.no_hp_wa).trim() : null,
+        alamatGereja: mergedProps.alamat_gereja ? String(mergedProps.alamat_gereja).trim() : null,
+        tahunBerdiri: mergedProps.tahun_berdiri ? String(mergedProps.tahun_berdiri).trim() : null,
+        jumlahJemaat: mergedProps.jumlah_jemaat ? String(mergedProps.jumlah_jemaat).trim() : null,
+        jamOperasional: mergedProps.jam_operasional ? String(mergedProps.jam_operasional).trim() : null,
+        status: mergedProps.status ? String(mergedProps.status).trim() : "Milik Sendiri",
+        mawil: mergedProps.mawil ? String(mergedProps.mawil).trim() : null,
+        kodeMada: mergedProps.kode_mada ? String(mergedProps.kode_mada).trim() : null,
+        namaMada: mergedProps.nama_mada ? String(mergedProps.nama_mada).trim() : null,
+        foto: mergedProps.foto ? String(mergedProps.foto).trim() : null,
+        foto2: mergedProps.foto_2 ? String(mergedProps.foto_2).trim() : null,
+        fotoPendeta: mergedProps.foto_pendeta ? String(mergedProps.foto_pendeta).trim() : null,
+        photos: mergedProps.photos
+          ? (typeof mergedProps.photos === "string" ? mergedProps.photos : JSON.stringify(mergedProps.photos))
+          : JSON.stringify([mergedProps.foto, mergedProps.foto_2].filter(Boolean)),
+      };
+
+      if (xVal !== undefined && !isNaN(xVal)) updatePayload.x = xVal;
+      if (yVal !== undefined && !isNaN(yVal)) updatePayload.y = yVal;
+
+      if (fidNum) {
+        await prisma.church.updateMany({
+          where: { fid: fidNum },
+          data: updatePayload,
+        });
+      } else if (name) {
+        await prisma.church.updateMany({
+          where: { name: String(name).trim() },
+          data: updatePayload,
+        });
+      }
+    } catch (prismaErr) {
+      console.warn("Prisma update church skipped:", prismaErr);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Data gereja berhasil diperbarui.",
+      feature: geojson.features[foundIndex],
+      properties: mergedProps,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -184,6 +325,17 @@ export async function DELETE(req: NextRequest) {
     }
 
     await fs.writeFile(GEOJSON_PATH, JSON.stringify(geojson, null, 2), "utf-8");
+
+    // Sinkronisasi delete ke PostgreSQL via Prisma jika aktif
+    try {
+      if (fid !== undefined && fid !== null) {
+        await prisma.church.deleteMany({ where: { fid: Number(fid) } });
+      } else if (name) {
+        await prisma.church.deleteMany({ where: { name: String(name).trim() } });
+      }
+    } catch (prismaErr) {
+      console.warn("Prisma delete church skipped:", prismaErr);
+    }
 
     return NextResponse.json({
       success: true,

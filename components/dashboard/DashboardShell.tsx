@@ -689,6 +689,11 @@ export default function DashboardShell() {
   }, []);
 
   const handleLocateUser = useCallback(() => {
+    if (typeof window !== "undefined" && !window.isSecureContext && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+      showRoutingToast("Fitur GPS browser mewajibkan koneksi HTTPS (SSL) untuk mengakses lokasi perangkat pada IP publik.");
+      return;
+    }
+
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       showRoutingToast("Perangkat atau browser Anda tidak mendukung GPS Geolocation.");
       return;
@@ -711,9 +716,13 @@ export default function DashboardShell() {
         mapRef.current?.flyToCoords(coords, 16);
         showRoutingToast("Lokasi Anda berhasil ditemukan!");
       },
-      () => {
+      (err) => {
         setIsLocating(false);
-        showRoutingToast("Akses lokasi GPS ditolak atau tidak tersedia di browser.");
+        if (err.code === 1) {
+          showRoutingToast("Izin lokasi GPS ditolak oleh browser atau memerlukan protokol HTTPS.");
+        } else {
+          showRoutingToast("Gagal mendeteksi lokasi GPS perangkat Anda.");
+        }
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
@@ -759,9 +768,9 @@ export default function DashboardShell() {
         }
       },
       async (geoError) => {
-        // Jika izin lokasi GPS tidak aktif / ditolak browser, gunakan titik pusat default (Kramat Pulo / Monas) sebagai simulasi demo rute di web
+        // Jika izin lokasi GPS tidak aktif / ditolak browser karena HTTP, coba simulasi dari Jakarta atau buka Google Maps
         try {
-          showRoutingToast("GPS browser nonaktif. Menampilkan simulasi rute dari Sekretariat Jakarta Pusat...");
+          showRoutingToast("GPS browser nonaktif / butuh HTTPS. Menghitung rute alternatif...");
           const defaultStart: [number, number] = [-6.1843, 106.8456]; // Kramat Pulo, Jakarta Pusat
           const result = await calculateRoute(defaultStart, [lat, lng]);
           setRouteResult(result);
@@ -770,7 +779,8 @@ export default function DashboardShell() {
           setSelectedFeature(null);
         } catch (err) {
           setIsRoutingLoading(false);
-          showRoutingToast("Gagal mengalkulasi rute. Pastikan izin lokasi GPS diaktifkan.");
+          showRoutingToast("Membuka petunjuk arah di Google Maps...");
+          window.open(getGoogleMapsDirectionsUrl(lat, lng), "_blank");
         }
       },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
