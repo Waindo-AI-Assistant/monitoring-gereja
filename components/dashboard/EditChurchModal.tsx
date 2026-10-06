@@ -79,13 +79,19 @@ export default function EditChurchModal({
     setErrorMsg("");
 
     try {
+      const hasPhoto = Boolean(formData.foto || formData.foto_2 || formData.foto_pendeta);
+      const updatedProperties = {
+        ...formData,
+        ATTACH: hasPhoto ? "Ada" : "Tidak",
+      };
+
       const res = await fetch("/api/poi/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fid: churchData.fid,
           name: churchData.name,
-          updatedProperties: formData,
+          updatedProperties,
         }),
       });
 
@@ -340,25 +346,11 @@ export default function EditChurchModal({
               </div>
             </div>
 
-            {/* Dokumentasi Foto & Lampiran */}
+            {/* Dokumentasi Foto Gedung & Profil Gembala */}
             <div className="md:col-span-2 p-3 bg-slate-50/70 rounded-2xl border border-slate-200 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] font-bold text-slate-800">Dokumentasi Foto & Lampiran</span>
-                  <p className="text-[10px] text-slate-500">Tautan gambar gedung gereja & profil gembala</p>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-semibold text-slate-500">Status Lampiran:</span>
-                  <select
-                    name="ATTACH"
-                    value={formData.ATTACH}
-                    onChange={handleChange}
-                    className="rounded-lg border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold text-slate-700 outline-none"
-                  >
-                    <option value="Ada">Ada</option>
-                    <option value="Tidak">Tidak</option>
-                  </select>
-                </div>
+              <div>
+                <span className="text-[11px] font-bold text-slate-800">Dokumentasi Foto Gedung & Profil Gembala</span>
+                <p className="text-[10px] text-slate-500">Upload foto gedung gereja dan profil pendeta jemaat</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
