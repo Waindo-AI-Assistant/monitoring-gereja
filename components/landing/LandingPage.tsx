@@ -236,17 +236,17 @@ export default function LandingPage() {
             <div className="landing-hero__stats">
               <div className="landing-hero__stat">
                 <span className="landing-hero__stat-value">{stats.totalMada}</span>
-                <span className="landing-hero__stat-label">Total Mada</span>
+                <span className="landing-hero__stat-label">Majelis Daerah</span>
               </div>
               <div className="landing-hero__stat-divider" />
               <div className="landing-hero__stat">
                 <span className="landing-hero__stat-value">{stats.totalWilayah}</span>
-                <span className="landing-hero__stat-label">Total Wilayah</span>
+                <span className="landing-hero__stat-label">Majelis Wilayah</span>
               </div>
               <div className="landing-hero__stat-divider" />
               <div className="landing-hero__stat">
                 <span className="landing-hero__stat-value">{stats.totalGereja}</span>
-                <span className="landing-hero__stat-label">Total Gereja</span>
+                <span className="landing-hero__stat-label">Gereja/Jemaat</span>
               </div>
             </div>
           </div>
