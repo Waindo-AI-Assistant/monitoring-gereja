@@ -106,7 +106,7 @@ export default function EditChurchModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-fade-in">
-      <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-5 py-4">
           <div className="flex items-center gap-2.5">
@@ -117,7 +117,7 @@ export default function EditChurchModal({
             </div>
             <div>
               <h2 className="text-sm font-bold text-slate-800">Lengkapi / Edit Data Gereja</h2>
-              <p className="text-[10px] text-slate-500 truncate max-w-[280px]">
+              <p className="text-[10px] text-slate-500 truncate max-w-md">
                 {churchData.name || "Detail Data Gereja"}
               </p>
             </div>
