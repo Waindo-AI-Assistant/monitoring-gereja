@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 interface ImageUploadInputProps {
   label: string;
@@ -18,7 +18,13 @@ export default function ImageUploadInput({
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [isUrlMode, setIsUrlMode] = useState(false);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [value, localPreview]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -29,6 +35,10 @@ export default function ImageUploadInput({
       return;
     }
 
+    // Set preview lokal seketika dari browser
+    const blobUrl = URL.createObjectURL(file);
+    setLocalPreview(blobUrl);
+    setImgError(false);
     setUploading(true);
     setErrorMsg("");
 
@@ -49,6 +59,7 @@ export default function ImageUploadInput({
       onChange(data.url);
     } catch (err: any) {
       setErrorMsg(err.message || "Terjadi kesalahan upload.");
+      setLocalPreview(null);
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -59,9 +70,13 @@ export default function ImageUploadInput({
 
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
+    setLocalPreview(null);
+    setImgError(false);
     onChange("");
     setErrorMsg("");
   };
+
+  const displayImage = localPreview || value;
 
   return (
     <div className="space-y-1.5">
@@ -70,7 +85,7 @@ export default function ImageUploadInput({
         <button
           type="button"
           onClick={() => setIsUrlMode(!isUrlMode)}
-          className="text-[10px] text-blue-600 hover:text-blue-800 font-medium underline"
+          className="text-[10px] text-blue-600 hover:text-blue-800 font-medium underline cursor-pointer"
         >
           {isUrlMode ? "Mode Upload File" : "Atau Tautan URL"}
         </button>
@@ -81,8 +96,11 @@ export default function ImageUploadInput({
           <input
             type="text"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="https://... atau /images/..."
+            onChange={(e) => {
+              setLocalPreview(null);
+              onChange(e.target.value);
+            }}
+            placeholder="https://... atau /uploads/..."
             className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
           />
         </div>
@@ -96,30 +114,41 @@ export default function ImageUploadInput({
             className="hidden"
           />
 
-          {value ? (
+          {displayImage ? (
             /* Uploaded Preview State */
             <div className="relative group rounded-xl border border-slate-200 bg-slate-50 p-2 flex items-center gap-3">
-              <div className="relative h-14 w-14 rounded-lg overflow-hidden border border-slate-200 bg-white shrink-0">
-                <img
-                  src={value}
-                  alt={label}
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    // Fallback on broken URL
-                    (e.target as HTMLImageElement).src = "/images/pin gereja.png";
-                  }}
-                />
+              <div className="relative h-14 w-14 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shrink-0 flex items-center justify-center">
+                {imgError ? (
+                  <div className="flex flex-col items-center justify-center text-slate-400 p-1 text-center">
+                    <svg className="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                    </svg>
+                    <span className="text-[8px] leading-tight">Error</span>
+                  </div>
+                ) : (
+                  <img
+                    src={displayImage}
+                    alt={label}
+                    className="h-full w-full object-cover"
+                    onError={() => setImgError(true)}
+                  />
+                )}
+                {uploading && (
+                  <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                  </div>
+                )}
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-semibold text-slate-800 truncate" title={value}>
-                  {value.startsWith("/uploads/") ? value.replace("/uploads/", "") : value}
+                <p className="text-[11px] font-semibold text-slate-800 truncate" title={displayImage}>
+                  {displayImage.startsWith("/uploads/") ? displayImage.replace("/uploads/", "") : displayImage.startsWith("blob:") ? "Foto Baru Dipilih" : displayImage}
                 </p>
                 <p className="text-[10px] text-emerald-600 font-medium flex items-center gap-1 mt-0.5">
                   <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
                   </svg>
-                  <span>Foto Terpasang</span>
+                  <span>{uploading ? "Sedang Mengunggah..." : "Foto Terpasang"}</span>
                 </p>
               </div>
 
