@@ -1,10 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Gereja Gerakan Pentakosta",
   description:
     "Platform pemantauan dan analisis data spasial untuk mendukung pemetaan, pemantauan jemaat, dan sebaran lokasi gereja secara terpadu.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#0f1d3d",
 };
 
 export default function RootLayout({

@@ -49,6 +49,7 @@ export default function AdminPage() {
   const [isAddMapPickerOpen, setIsAddMapPickerOpen] = useState(false);
   const [previewModalImage, setPreviewModalImage] = useState<{ url: string; name: string } | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   // New Church Form State
   const [newChurch, setNewChurch] = useState({
@@ -523,6 +524,15 @@ export default function AdminPage() {
   }, [churches, filterMada, filterMawil, filterWilayahKhusus, filterMadaKhusus, filterStatus, searchQuery]);
 
   const totalPages = Math.ceil(filteredChurches.length / itemsPerPage) || 1;
+  const activeAdminFilterCount = useMemo(() => {
+    return [
+      filterMada !== "ALL",
+      filterMawil !== "ALL",
+      filterWilayahKhusus !== "ALL",
+      filterMadaKhusus !== "ALL",
+      filterStatus !== "ALL",
+    ].filter(Boolean).length;
+  }, [filterMada, filterMawil, filterWilayahKhusus, filterMadaKhusus, filterStatus]);
   const paginatedChurches = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredChurches.slice(start, start + itemsPerPage);
@@ -692,26 +702,26 @@ export default function AdminPage() {
       )}
 
       {/* Top Navbar */}
-      <header className="h-[72px] shrink-0 bg-[#0f1d3d] px-6 flex items-center justify-between shadow-md sticky top-0 z-30">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="landing-navbar__brand">
-            <div className="landing-navbar__logo-wrap">
+      <header className="h-16 sm:h-[72px] shrink-0 bg-[#0f1d3d] px-3 sm:px-6 flex items-center justify-between shadow-md sticky top-0 z-30">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <Link href="/" className="landing-navbar__brand min-w-0">
+            <div className="landing-navbar__logo-wrap h-8 w-8 sm:h-10 sm:w-10">
               <img
                 src="/images/Logo GGP2.png"
                 alt="Logo GGP"
-                className="h-10 w-auto object-contain shrink-0"
+                className="h-8 sm:h-10 w-auto object-contain shrink-0"
               />
             </div>
-            <div className="landing-navbar__text">
-              <div className="flex items-center gap-2">
-                <span className="landing-navbar__title">
+            <div className="landing-navbar__text min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="landing-navbar__title text-xs sm:text-base truncate">
                   Gereja Gerakan Pentakosta
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-white/10 text-blue-200 border border-white/20">
+                <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase bg-white/10 text-blue-200 border border-white/20 shrink-0">
                   {currentUser.role}
                 </span>
               </div>
-              <span className="landing-navbar__subtitle">
+              <span className="landing-navbar__subtitle hidden sm:block text-[10px]">
                 Dashboard Pemetaan Sebaran Data Gereja
               </span>
             </div>
@@ -719,59 +729,61 @@ export default function AdminPage() {
         </div>
 
         {/* Tab Navigation & User Controls */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Main Page Links */}
-          <div className="landing-navbar__links hidden md:flex">
-            <Link href="/" className="landing-navbar__link">
+          <div className="landing-navbar__links hidden lg:flex">
+            <Link href="/" className="landing-navbar__link text-xs px-3 py-1.5">
               Home
             </Link>
-            <Link href="/dashboard" className="landing-navbar__link">
+            <Link href="/dashboard" className="landing-navbar__link text-xs px-3 py-1.5">
               Dashboard
             </Link>
-            <Link href="/admin" className="landing-navbar__link landing-navbar__link--active">
+            <Link href="/admin" className="landing-navbar__link landing-navbar__link--active text-xs px-3 py-1.5">
               Admin
             </Link>
           </div>
 
-          <div className="h-6 w-px bg-white/20 hidden md:block" />
+          <div className="h-6 w-px bg-white/20 hidden lg:block" />
 
           {/* Admin Tabs Switch */}
-          <div className="flex items-center bg-white/10 p-1 rounded-xl border border-white/15">
+          <div className="flex items-center bg-white/10 p-0.5 sm:p-1 rounded-xl border border-white/15">
             <button
               type="button"
               onClick={() => setActiveTab("churches")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer ${
                 activeTab === "churches"
                   ? "bg-blue-600 text-white shadow-xs"
                   : "text-white/70 hover:text-white hover:bg-white/10"
               }`}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5 shrink-0">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.333A1.5 1.5 0 0018 9H6a1.5 1.5 0 00-1.5 1.5V21" />
               </svg>
-              <span>Master Data</span>
+              <span className="hidden xs:inline">Master Data</span>
+              <span className="xs:hidden">Data</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab("users")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer ${
                 activeTab === "users"
                   ? "bg-blue-600 text-white shadow-xs"
                   : "text-white/70 hover:text-white hover:bg-white/10"
               }`}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5 shrink-0">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
               </svg>
-              <span>Pengguna</span>
+              <span className="hidden xs:inline">Pengguna</span>
+              <span className="xs:hidden">User</span>
             </button>
           </div>
 
-          <div className="h-6 w-px bg-white/20" />
+          <div className="h-6 w-px bg-white/20 hidden md:block" />
 
           {/* User Profile */}
-          <div className="text-right hidden sm:block">
+          <div className="text-right hidden md:block">
             <p className="text-xs font-bold text-white leading-tight">{currentUser.name}</p>
             <p className="text-[10px] text-slate-300 font-mono">@{currentUser.username}</p>
           </div>
@@ -780,9 +792,9 @@ export default function AdminPage() {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-xs font-semibold text-rose-200 hover:bg-rose-600 hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-xs font-semibold text-rose-200 hover:bg-rose-600 hover:text-white transition-colors cursor-pointer"
           >
-            <span>Keluar</span>
+            <span className="hidden xs:inline">Keluar</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
             </svg>
@@ -791,84 +803,85 @@ export default function AdminPage() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-3.5 sm:p-6 max-w-7xl w-full mx-auto space-y-4 sm:space-y-6">
         {/* =========================================================================
             TAB 1: MASTER DATA GEREJA
         ========================================================================= */}
         {activeTab === "churches" && (
           <>
             {/* KPI Cards Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
+              <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
                 <div>
-                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Gereja</p>
-                  <p className="text-2xl font-black text-blue-950 mt-1">{churches.length}</p>
+                  <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider truncate">Total Gereja</p>
+                  <p className="text-xl sm:text-2xl font-black text-blue-950 mt-1">{churches.length}</p>
                 </div>
-                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block border border-emerald-200 w-fit">
+                <span className="text-[9px] sm:text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded-full mt-2 inline-block border border-emerald-200 w-fit truncate">
                   Database Aktif
                 </span>
               </div>
 
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+              <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
                 <div>
-                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Wilayah Biasa</p>
-                  <p className="text-2xl font-black text-blue-950 mt-1">{statsWilayahBiasaCount}</p>
+                  <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider truncate">Wilayah Biasa</p>
+                  <p className="text-xl sm:text-2xl font-black text-blue-950 mt-1">{statsWilayahBiasaCount}</p>
                 </div>
-                <span className="text-[10px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded-full mt-2 inline-block border border-blue-200 w-fit">
+                <span className="text-[9px] sm:text-[10px] text-blue-700 font-bold bg-blue-50 px-1.5 sm:px-2 py-0.5 rounded-full mt-2 inline-block border border-blue-200 w-fit truncate">
                   {madaList.length} Mada Terdata
                 </span>
               </div>
 
               {/* Mada Khusus (Daerah Khusus - KIRI) */}
-              <div className="bg-white p-4 rounded-2xl border border-amber-300 shadow-xs relative overflow-hidden flex flex-col justify-between">
+              <div className="bg-white p-3 sm:p-4 rounded-2xl border border-amber-300 shadow-xs relative overflow-hidden flex flex-col justify-between">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500" />
                 <div>
-                  <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Mada Khusus</p>
-                  <p className="text-2xl font-black text-amber-950 mt-1">{madaKhususList.length}</p>
+                  <p className="text-[10px] sm:text-[11px] font-bold text-amber-800 uppercase tracking-wider truncate">Mada Khusus</p>
+                  <p className="text-xl sm:text-2xl font-black text-amber-950 mt-1">{madaKhususList.length}</p>
                 </div>
-                <span className="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-full mt-2 inline-block border border-amber-200 w-fit">
+                <span className="text-[9px] sm:text-[10px] text-amber-800 font-bold bg-amber-50 px-1.5 sm:px-2 py-0.5 rounded-full mt-2 inline-block border border-amber-200 w-fit truncate">
                   {madaKhususList.length} Mada Khusus
                 </span>
               </div>
 
               {/* Mawil Khusus (Wilayah Khusus - KANAN) */}
-              <div className="bg-white p-4 rounded-2xl border border-amber-300 shadow-xs relative overflow-hidden flex flex-col justify-between">
+              <div className="bg-white p-3 sm:p-4 rounded-2xl border border-amber-300 shadow-xs relative overflow-hidden flex flex-col justify-between">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500" />
                 <div>
-                  <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Mawil Khusus</p>
-                  <p className="text-2xl font-black text-amber-950 mt-1">{statsWilayahKhususCount}</p>
+                  <p className="text-[10px] sm:text-[11px] font-bold text-amber-800 uppercase tracking-wider truncate">Mawil Khusus</p>
+                  <p className="text-xl sm:text-2xl font-black text-amber-950 mt-1">{statsWilayahKhususCount}</p>
                 </div>
-                <span className="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-full mt-2 inline-block border border-amber-200 w-fit">
+                <span className="text-[9px] sm:text-[10px] text-amber-800 font-bold bg-amber-50 px-1.5 sm:px-2 py-0.5 rounded-full mt-2 inline-block border border-amber-200 w-fit truncate">
                   {wilayahKhususList.length} Mawil Khusus
                 </span>
               </div>
 
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+              <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
                 <div>
-                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Mawil</p>
-                  <p className="text-2xl font-black text-blue-950 mt-1">{mawilList.length}</p>
+                  <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider truncate">Total Mawil</p>
+                  <p className="text-xl sm:text-2xl font-black text-blue-950 mt-1">{mawilList.length}</p>
                 </div>
-                <span className="text-[10px] text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded-full mt-2 inline-block border border-indigo-200 w-fit">
+                <span className="text-[9px] sm:text-[10px] text-indigo-700 font-bold bg-indigo-50 px-1.5 sm:px-2 py-0.5 rounded-full mt-2 inline-block border border-indigo-200 w-fit truncate">
                   Majelis Wilayah
                 </span>
               </div>
 
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+              <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
                 <div>
-                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Hasil Filter</p>
-                  <p className="text-2xl font-black text-blue-950 mt-1">{filteredChurches.length}</p>
+                  <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider truncate">Hasil Filter</p>
+                  <p className="text-xl sm:text-2xl font-black text-blue-950 mt-1">{filteredChurches.length}</p>
                 </div>
-                <span className="text-[10px] text-slate-600 font-bold bg-slate-100 px-2 py-0.5 rounded-full mt-2 inline-block border border-slate-200 w-fit">
+                <span className="text-[9px] sm:text-[10px] text-slate-600 font-bold bg-slate-100 px-1.5 sm:px-2 py-0.5 rounded-full mt-2 inline-block border border-slate-200 w-fit truncate">
                   Baris Ditampilkan
                 </span>
               </div>
             </div>
 
             {/* Filter & Action Toolbar */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-0">
+            <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+              {/* Row 1: Search Bar & Primary Actions */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
                 {/* Search Bar */}
-                <div className="relative min-w-[200px] max-w-sm flex-1">
+                <div className="relative flex-1">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                   </svg>
@@ -881,6 +894,75 @@ export default function AdminPage() {
                   />
                 </div>
 
+                {/* Mobile Filter Toggle & Action Buttons */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Mobile Filter Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+                    className={`sm:hidden h-9 px-3 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      activeAdminFilterCount > 0 || isMobileFilterOpen
+                        ? "border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500/20"
+                        : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
+                    </svg>
+                    <span>Filter</span>
+                    {activeAdminFilterCount > 0 && (
+                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
+                        {activeAdminFilterCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      exportGeoJSON(filteredChurches);
+                      showToast(`Berhasil mengunduh ${filteredChurches.length} data dalam format GeoJSON.`);
+                    }}
+                    title="Unduh GeoJSON"
+                    className="h-9 px-2.5 sm:px-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 font-bold text-xs shadow-xs hover:bg-emerald-600 hover:text-white flex items-center gap-1 transition-all cursor-pointer"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    <span className="hidden xs:inline">GeoJSON</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      exportCSV(filteredChurches);
+                      showToast(`Berhasil mengunduh ${filteredChurches.length} data dalam format CSV.`);
+                    }}
+                    title="Unduh CSV"
+                    className="h-9 px-2.5 sm:px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-bold text-xs shadow-xs hover:bg-slate-100 flex items-center gap-1 transition-all cursor-pointer"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                    </svg>
+                    <span className="hidden xs:inline">CSV</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="h-9 px-3 sm:px-4 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm hover:bg-blue-700 flex items-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    <span className="hidden sm:inline">Tambah Gereja Baru</span>
+                    <span className="sm:hidden">Tambah</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Row 2: Dropdown Filters (Collapsible on Mobile, Inline on Desktop) */}
+              <div className={`${isMobileFilterOpen ? "flex" : "hidden"} sm:flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 sm:border-0 sm:pt-0`}>
                 {/* Filter Mada (Biasa) */}
                 <select
                   value={filterMada}
@@ -893,7 +975,7 @@ export default function AdminPage() {
                       setFilterMadaKhusus("ALL");
                     }
                   }}
-                  className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:border-blue-600 outline-none cursor-pointer"
+                  className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:border-blue-600 outline-none cursor-pointer flex-1 sm:flex-initial"
                 >
                   <option value="ALL">Semua Mada (Daerah)</option>
                   {madaList.map((m) => (
@@ -912,7 +994,7 @@ export default function AdminPage() {
                       setFilterMadaKhusus("ALL");
                     }
                   }}
-                  className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:border-blue-600 outline-none cursor-pointer"
+                  className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:border-blue-600 outline-none cursor-pointer flex-1 sm:flex-initial"
                 >
                   <option value="ALL">Semua Mawil</option>
                   {mawilList.map((w) => (
@@ -933,7 +1015,7 @@ export default function AdminPage() {
                       setFilterMawil("ALL");
                     }
                   }}
-                  className="h-9 px-3 bg-amber-50/70 border border-amber-300 text-amber-950 font-bold rounded-xl text-xs focus:bg-white focus:border-amber-600 outline-none cursor-pointer"
+                  className="h-9 px-3 bg-amber-50/70 border border-amber-300 text-amber-950 font-bold rounded-xl text-xs focus:bg-white focus:border-amber-600 outline-none cursor-pointer flex-1 sm:flex-initial"
                 >
                   <option value="ALL">Semua Mada Khusus</option>
                   {madaKhususList.map((mk) => (
@@ -952,7 +1034,7 @@ export default function AdminPage() {
                       setFilterMawil("ALL");
                     }
                   }}
-                  className="h-9 px-3 bg-amber-50/70 border border-amber-300 text-amber-950 font-bold rounded-xl text-xs focus:bg-white focus:border-amber-600 outline-none cursor-pointer"
+                  className="h-9 px-3 bg-amber-50/70 border border-amber-300 text-amber-950 font-bold rounded-xl text-xs focus:bg-white focus:border-amber-600 outline-none cursor-pointer flex-1 sm:flex-initial"
                 >
                   <option value="ALL">Semua Mawil Khusus</option>
                   {wilayahKhususList.map((wk) => (
@@ -966,7 +1048,7 @@ export default function AdminPage() {
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:border-blue-600 outline-none cursor-pointer"
+                  className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:border-blue-600 outline-none cursor-pointer flex-1 sm:flex-initial"
                 >
                   <option value="ALL">Semua Status</option>
                   <option value="Milik Sendiri">Milik Sendiri</option>
@@ -986,61 +1068,132 @@ export default function AdminPage() {
                       setFilterMadaKhusus("ALL");
                       setFilterStatus("ALL");
                     }}
-                    className="h-9 px-3 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                    className="h-9 px-3 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer w-full sm:w-auto text-center"
                   >
                     Reset Filter
                   </button>
                 )}
               </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    exportGeoJSON(filteredChurches);
-                    showToast(`Berhasil mengunduh ${filteredChurches.length} data dalam format GeoJSON.`);
-                  }}
-                  title="Unduh data tabel saat ini sebagai file GeoJSON"
-                  className="h-9 px-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 font-bold text-xs shadow-xs hover:bg-emerald-600 hover:text-white flex items-center gap-1.5 transition-all cursor-pointer"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                  </svg>
-                  <span>GeoJSON</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    exportCSV(filteredChurches);
-                    showToast(`Berhasil mengunduh ${filteredChurches.length} data dalam format CSV.`);
-                  }}
-                  title="Unduh data tabel saat ini sebagai file CSV / Excel"
-                  className="h-9 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-bold text-xs shadow-xs hover:bg-slate-100 flex items-center gap-1.5 transition-all cursor-pointer"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                  </svg>
-                  <span>CSV</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="h-9 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm hover:bg-blue-700 flex items-center gap-1.5 transition-all cursor-pointer"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                  </svg>
-                  <span>Tambah Gereja Baru</span>
-                </button>
-              </div>
             </div>
 
-            {/* Master Data Table */}
+            {/* Master Data Container (Responsive Table on Desktop, Card List on Mobile) */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-              <div className="overflow-x-auto">
+              {/* ======================================== MOBILE CARD LIST (< md) */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {loadingData ? (
+                  <div className="py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
+                      <span>Memuat data gereja...</span>
+                    </div>
+                  </div>
+                ) : paginatedChurches.length === 0 ? (
+                  <div className="py-12 text-center text-slate-500">
+                    Tidak ada data gereja yang sesuai dengan kriteria pencarian.
+                  </div>
+                ) : (
+                  paginatedChurches.map((feature, idx) => {
+                    const p = feature.properties || {};
+                    const rowNumber = (currentPage - 1) * itemsPerPage + idx + 1;
+                    const isKhusus = p.tipe_wilayah === "Wilayah Khusus" || p.daerah_khusus || p.wilayah_khusus || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
+
+                    return (
+                      <div key={p.fid || p.name || idx} className="p-4 space-y-3 hover:bg-slate-50/60 transition-colors">
+                        <div className="flex items-start gap-3">
+                          <span className="font-mono text-xs text-slate-400 font-bold shrink-0 mt-0.5">#{rowNumber}</span>
+                          {p.foto ? (
+                            <button
+                              type="button"
+                              onClick={() => setPreviewModalImage({ url: p.foto, name: p.name || p.nama || "Foto Gereja" })}
+                              className="w-14 h-14 rounded-xl overflow-hidden border border-slate-200 shrink-0 bg-slate-50 cursor-pointer"
+                            >
+                              <img src={p.foto} alt={p.name || "Foto"} className="w-full h-full object-cover" />
+                            </button>
+                          ) : (
+                            <div className="w-14 h-14 rounded-xl bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center shrink-0">
+                              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                              </svg>
+                            </div>
+                          )}
+
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-sm text-blue-950 truncate">
+                              {p.name || p.nama || "-"}
+                            </h4>
+                            <p className="text-xs text-slate-600 font-medium truncate mt-0.5">
+                              {p.nama_pendeta || p.pendeta || "-"}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                p.status === "Milik Sendiri"
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                  : p.status === "Sewa"
+                                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                  : p.status === "Pinjam"
+                                  ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                  : "bg-purple-50 text-purple-700 border border-purple-200"
+                              }`}>
+                                {p.status || "Milik Sendiri"}
+                              </span>
+                              {p.jumlah_jemaat && (
+                                <span className="text-[10px] font-bold font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                                  {formatValue(p.jumlah_jemaat, "jumlah_jemaat")} Jemaat
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Info Wilayah & Alamat */}
+                        <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 text-[11px] space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400 font-medium">Wilayah:</span>
+                            <span className="font-bold text-slate-800 text-right">
+                              {isKhusus
+                                ? `${p.wilayah_khusus || "Wilayah Khusus"}${p.daerah_khusus ? ` • ${p.daerah_khusus}` : ""}`
+                                : `${p.nama_mada || "-"}${p.mawil ? ` • ${p.mawil}` : ""}`}
+                            </span>
+                          </div>
+                          {p.alamat_gereja && (
+                            <div className="flex items-start justify-between gap-2 pt-1 border-t border-slate-200/50">
+                              <span className="text-slate-400 font-medium shrink-0">Alamat:</span>
+                              <span className="text-slate-700 text-right truncate">{p.alamat_gereja}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setEditingChurch(p)}
+                            className="flex-1 h-9 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                            </svg>
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteChurch(p.fid, p.name || p.nama)}
+                            className="h-9 px-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-bold hover:bg-rose-100 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                            </svg>
+                            <span>Hapus</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* ======================================== DESKTOP TABLE VIEW (md+) */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
@@ -1152,7 +1305,7 @@ export default function AdminPage() {
                                 <button
                                   type="button"
                                   onClick={() => setEditingChurch(p)}
-                                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 text-slate-600 transition-all"
+                                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 text-slate-600 transition-all cursor-pointer"
                                   title="Edit Data Gereja"
                                 >
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
@@ -1162,7 +1315,7 @@ export default function AdminPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteChurch(p.fid, p.name || p.nama)}
-                                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-600 transition-all"
+                                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-600 transition-all cursor-pointer"
                                   title="Hapus Data"
                                 >
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
@@ -1180,8 +1333,8 @@ export default function AdminPage() {
               </div>
 
               {/* Table Pagination */}
-              <div className="bg-slate-50 px-4 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600">
-                <span>
+              <div className="bg-slate-50 px-4 py-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs text-slate-600">
+                <span className="text-center sm:text-left">
                   Menampilkan <strong>{paginatedChurches.length}</strong> dari <strong>{filteredChurches.length}</strong> data gereja
                 </span>
                 <div className="flex items-center gap-1">
@@ -1189,7 +1342,7 @@ export default function AdminPage() {
                     type="button"
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-semibold disabled:opacity-40 hover:bg-slate-50"
+                    className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-semibold disabled:opacity-40 hover:bg-slate-50 cursor-pointer"
                   >
                     Sebelumnya
                   </button>
@@ -1200,7 +1353,7 @@ export default function AdminPage() {
                     type="button"
                     disabled={currentPage >= totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-semibold disabled:opacity-40 hover:bg-slate-50"
+                    className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-semibold disabled:opacity-40 hover:bg-slate-50 cursor-pointer"
                   >
                     Berikutnya
                   </button>
@@ -1236,9 +1389,89 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* Users Table */}
+            {/* Users Container */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-              <div className="overflow-x-auto">
+              {/* ======================================== MOBILE USER CARDS (< sm) */}
+              <div className="sm:hidden divide-y divide-slate-100">
+                {loadingUsers ? (
+                  <div className="py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
+                      <span>Memuat daftar akun pengguna...</span>
+                    </div>
+                  </div>
+                ) : usersList.length === 0 ? (
+                  <div className="py-12 text-center text-slate-500">
+                    Belum ada pengguna terdaftar.
+                  </div>
+                ) : (
+                  usersList.map((u) => {
+                    const isSelf = u.id === currentUser.id;
+                    const isPrimarySuperadmin = (u.username === "superadmin" || u.username === "admin") && u.role === "superadmin";
+
+                    return (
+                      <div key={u.id} className="p-4 space-y-3 hover:bg-slate-50/60 transition-colors">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-800 font-bold text-xs flex items-center justify-center border border-blue-200 shrink-0">
+                              {u.name.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                                <span>{u.name}</span>
+                                {isSelf && (
+                                  <span className="text-[10px] font-bold bg-blue-600 text-white px-1.5 py-0.2 rounded-full">
+                                    Anda
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-xs text-slate-600 font-mono">@{u.username}</p>
+                            </div>
+                          </div>
+
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase shrink-0 ${
+                            u.role === "superadmin"
+                              ? "bg-purple-50 text-purple-700 border border-purple-200"
+                              : "bg-blue-50 text-blue-700 border border-blue-200"
+                          }`}>
+                            {u.role === "superadmin" ? "Super Admin" : "Administrator"}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
+                          <span>Dibuat: {u.createdAt ? new Date(u.createdAt).toLocaleDateString("id-ID", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }) : "-"}</span>
+
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditUser(u)}
+                              className="px-2.5 py-1 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                            {isSelf || isPrimarySuperadmin ? null : (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteUser(u.id, u.username)}
+                                className="px-2.5 py-1 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 cursor-pointer"
+                              >
+                                Hapus
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* ======================================== DESKTOP USER TABLE (sm+) */}
+              <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
@@ -1366,8 +1599,8 @@ export default function AdminPage() {
           MODAL: TAMBAH GEREJA BARU
       ========================================================================= */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl w-full max-w-2xl border border-slate-200 shadow-2xl p-6 my-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
+          <div className="relative bg-white rounded-2xl sm:rounded-3xl w-full max-w-2xl border border-slate-200 shadow-2xl p-4 sm:p-6 my-auto max-h-[94vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Tambah Data Gereja Baru</h3>
@@ -1558,7 +1791,7 @@ export default function AdminPage() {
 
                 {/* Koordinat & Pilih dari Peta */}
                 <div className="sm:col-span-2 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                       <span className="text-xs font-bold text-slate-800">Titik Koordinat Lokasi Gereja *</span>
                       <p className="text-[10px] text-slate-500">Longitude (X) dan Latitude (Y) peta</p>
@@ -1566,7 +1799,7 @@ export default function AdminPage() {
                     <button
                       type="button"
                       onClick={() => setIsAddMapPickerOpen(true)}
-                      className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                      className="w-full sm:w-auto justify-center px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
                       title="Pilih titik koordinat di peta secara visual"
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5 text-blue-600">
@@ -1662,18 +1895,18 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 text-center"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={addLoading}
-                  className="px-5 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-600/25 hover:bg-blue-700 disabled:opacity-50"
+                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-600/25 hover:bg-blue-700 disabled:opacity-50 text-center flex items-center justify-center"
                 >
                   {addLoading ? "Menyimpan..." : "Simpan Data Gereja"}
                 </button>
@@ -1703,8 +1936,8 @@ export default function AdminPage() {
           MODAL: TAMBAH PENGGUNA BARU (USER MANAGEMENT)
       ========================================================================= */}
       {isAddUserModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md border border-slate-200 shadow-2xl p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-md border border-slate-200 shadow-2xl p-4 sm:p-6 my-auto max-h-[94vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
                 <h3 className="text-base font-bold text-slate-900">Tambah Akun Pengguna</h3>
@@ -1713,7 +1946,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setIsAddUserModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -1776,18 +2009,18 @@ export default function AdminPage() {
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsAddUserModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 text-center cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={addUserLoading}
-                  className="px-5 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-600/25 hover:bg-blue-700 disabled:opacity-50"
+                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-600/25 hover:bg-blue-700 disabled:opacity-50 text-center cursor-pointer"
                 >
                   {addUserLoading ? "Membuat..." : "Buat Pengguna"}
                 </button>
@@ -1801,11 +2034,11 @@ export default function AdminPage() {
           MODAL: EDIT PENGGUNA
       ========================================================================= */}
       {isEditUserModalOpen && editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl w-full max-w-md border border-slate-200 shadow-2xl p-6 my-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-md border border-slate-200 shadow-2xl p-4 sm:p-6 my-auto max-h-[94vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Edit Data Pengguna</h3>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900">Edit Data Pengguna</h3>
                 <p className="text-xs text-slate-500 mt-0.5">Ubah profil atau perbarui password akun.</p>
               </div>
               <button
@@ -1878,21 +2111,21 @@ export default function AdminPage() {
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => {
                     setIsEditUserModalOpen(false);
                     setEditingUser(null);
                   }}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 text-center cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={editUserLoading}
-                  className="px-5 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-600/25 hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-600/25 hover:bg-blue-700 disabled:opacity-50 text-center cursor-pointer"
                 >
                   {editUserLoading ? "Menyimpan..." : "Simpan Perubahan"}
                 </button>

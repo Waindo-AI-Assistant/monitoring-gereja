@@ -25,7 +25,7 @@ export default function RouteInfoCard({
   );
 
   return (
-    <div className="pointer-events-auto absolute bottom-5 left-4 z-1100 w-full max-w-sm rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-2xl backdrop-blur-md transition-all sm:left-6">
+    <div className="pointer-events-auto absolute bottom-3 inset-x-3 sm:inset-x-auto sm:bottom-5 sm:left-6 z-1100 sm:w-96 max-w-md rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-2xl backdrop-blur-md transition-all">
       {/* Header Info */}
       <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
         <div>

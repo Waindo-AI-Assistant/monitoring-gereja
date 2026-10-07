@@ -5,9 +5,10 @@ import { useState, useRef, useEffect } from "react";
 type SearchBoxProps = {
   pois: any[];
   onSelectPOI: (latlng: [number, number], properties: any) => void;
+  className?: string;
 };
 
-export default function SearchBox({ pois, onSelectPOI }: SearchBoxProps) {
+export default function SearchBox({ pois, onSelectPOI, className = "relative w-full sm:w-64 shrink-0" }: SearchBoxProps) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -68,7 +69,7 @@ export default function SearchBox({ pois, onSelectPOI }: SearchBoxProps) {
   };
 
   return (
-    <div ref={containerRef} className="relative w-64 shrink-0">
+    <div ref={containerRef} className={className}>
       <div className="flex h-9 w-full shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 shadow-sm shadow-blue-900/10 transition-colors focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600/15 text-slate-800">
         <svg
           viewBox="0 0 24 24"

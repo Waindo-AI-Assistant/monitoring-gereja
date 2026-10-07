@@ -363,15 +363,29 @@ function ChurchDetailDrawer({
   const pastorName = pastorNameKey && selectedFeature ? String(selectedFeature.properties[pastorNameKey]) : null;
 
   return (
-    <div
-      className={`fixed top-0 right-0 bottom-0 z-1200 w-80 sm:w-96 bg-white border-l border-slate-200 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
-        selectedFeature ? "translate-x-0" : "translate-x-full"
-      }`}
-    >
-      {selectedFeature ? (
-        <>
-          {/* Header Laci */}
-          <div className="flex items-center justify-between bg-blue-950 p-4 text-white">
+    <>
+      {/* Mobile Backdrop */}
+      {selectedFeature && (
+        <div
+          onClick={onClose}
+          className="fixed inset-0 z-1150 bg-slate-900/40 backdrop-blur-xs sm:hidden transition-opacity cursor-pointer"
+        />
+      )}
+
+      <div
+        className={`fixed inset-x-0 bottom-0 z-1200 max-h-[85vh] sm:top-0 sm:right-0 sm:bottom-0 sm:inset-x-auto sm:w-96 sm:max-h-none rounded-t-3xl sm:rounded-none bg-white border-t sm:border-t-0 sm:border-l border-slate-200 shadow-2xl flex flex-col transition-all duration-300 ease-in-out ${
+          selectedFeature
+            ? "translate-y-0 sm:translate-x-0"
+            : "translate-y-full sm:translate-y-0 sm:translate-x-full pointer-events-none"
+        }`}
+      >
+        {/* Mobile Drag Handle */}
+        <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto my-2 sm:hidden shrink-0" />
+
+        {selectedFeature ? (
+          <>
+            {/* Header Laci */}
+            <div className="flex items-center justify-between bg-blue-950 p-4 rounded-t-2xl sm:rounded-none text-white">
             <div className="min-w-0">
               <span className="text-[9px] uppercase tracking-wider font-semibold text-slate-300">
                 {selectedFeature.layerLabel}
@@ -451,6 +465,7 @@ function ChurchDetailDrawer({
         </div>
       )}
     </div>
+    </>
   );
 }
 
@@ -461,13 +476,13 @@ interface DashboardHeaderProps {
 
 function DashboardHeader({ sidebarOpen, onToggleSidebar }: DashboardHeaderProps) {
   return (
-    <header className="h-[72px] shrink-0 bg-[#0f1d3d] px-4 lg:px-8 flex items-center justify-between shadow-md relative z-30">
-      <div className="flex items-center gap-3.5">
+    <header className="h-16 sm:h-[72px] shrink-0 bg-[#0f1d3d] px-3 sm:px-4 lg:px-8 flex items-center justify-between shadow-md relative z-30">
+      <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
         <button
           type="button"
           onClick={onToggleSidebar}
           aria-label={sidebarOpen ? "Tutup panel samping" : "Buka panel samping"}
-          className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white/80 transition-colors hover:bg-white/20 hover:text-white cursor-pointer"
+          className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-white/10 text-white/80 transition-colors hover:bg-white/20 hover:text-white cursor-pointer shrink-0"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5">
             {sidebarOpen ? (
@@ -478,35 +493,35 @@ function DashboardHeader({ sidebarOpen, onToggleSidebar }: DashboardHeaderProps)
           </svg>
         </button>
 
-        <Link href="/" className="landing-navbar__brand">
-          <div className="landing-navbar__logo-wrap">
+        <Link href="/" className="landing-navbar__brand min-w-0">
+          <div className="landing-navbar__logo-wrap h-8 w-8 sm:h-10 sm:w-10">
             <img
               src="/images/Logo GGP2.png"
               alt="Logo GGP"
-              className="h-10 w-auto object-contain shrink-0"
+              className="h-8 sm:h-10 w-auto object-contain shrink-0"
             />
           </div>
-          <div className="landing-navbar__text">
-            <span className="landing-navbar__title">
+          <div className="landing-navbar__text min-w-0">
+            <span className="landing-navbar__title text-xs sm:text-sm font-bold truncate">
               Gereja Gerakan Pentakosta
             </span>
-            <span className="landing-navbar__subtitle">
+            <span className="landing-navbar__subtitle hidden sm:block text-[10px]">
               Dashboard Pemetaan Sebaran Data Gereja
             </span>
           </div>
         </Link>
       </div>
 
-      <div className="landing-navbar__links">
-        <Link href="/" className="landing-navbar__link">
+      <div className="landing-navbar__links shrink-0">
+        <Link href="/" className="landing-navbar__link text-xs px-2 sm:px-4 py-1.5 sm:py-2">
           Home
         </Link>
 
-        <Link href="/dashboard" className="landing-navbar__link landing-navbar__link--active">
+        <Link href="/dashboard" className="landing-navbar__link landing-navbar__link--active text-xs px-2 sm:px-4 py-1.5 sm:py-2">
           Dashboard
         </Link>
 
-        <Link href="/admin" className="landing-navbar__link">
+        <Link href="/admin" className="landing-navbar__link text-xs px-2 sm:px-4 py-1.5 sm:py-2">
           Admin
         </Link>
       </div>
@@ -1048,7 +1063,20 @@ export default function DashboardShell() {
       {/* ------------------------------------------------------------- konten */}
       <div className="relative flex min-h-0 flex-1">
         {sidebarOpen ? (
-          <aside className="absolute inset-y-0 left-0 z-1100 w-64 shrink-0 overflow-y-auto border-r border-slate-200 bg-white p-3 shadow-xl thin-scroll lg:static lg:shadow-none">
+          <aside className="absolute inset-y-0 left-0 z-1100 w-72 max-w-[85vw] shrink-0 overflow-y-auto border-r border-slate-200 bg-white p-3 shadow-2xl thin-scroll lg:static lg:w-64 lg:shadow-none">
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 lg:hidden">
+              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Layer</span>
+              <button
+                type="button"
+                onClick={() => setSidebarToggled(false)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 cursor-pointer"
+                aria-label="Tutup panel samping"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             <LayerControl
               visibleLayers={visibleLayers}
               onToggleLayer={handleToggleLayer}
@@ -1081,7 +1109,7 @@ export default function DashboardShell() {
               <img
                 src="/images/Logo GGP2.png"
                 alt="Logo GGP"
-                className="h-16 w-auto object-contain shrink-0 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
+                className="h-10 sm:h-16 w-auto object-contain shrink-0 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
               />
             </div>
 

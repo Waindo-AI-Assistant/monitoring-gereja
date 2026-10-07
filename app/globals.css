@@ -38,6 +38,28 @@ body {
   font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Mobile Safe Area & Responsiveness Helpers */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    LANDING PAGE STYLES
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -816,8 +838,17 @@ body {
     height: 60px;
   }
 
-  .landing-navbar__text {
+  .landing-navbar__subtitle {
     display: none;
+  }
+
+  .landing-navbar__title {
+    font-size: 0.85rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
   }
 
   .landing-navbar__links {
@@ -891,13 +922,15 @@ body {
   border-radius: 0.75rem;
   padding: 0;
   box-shadow: 0 10px 30px rgb(30 58 138 / 0.18);
+  max-width: calc(100vw - 32px);
+  overflow: hidden;
 }
 
 .leaflet-popup-content {
   margin: 0;
   width: auto !important;
-  min-width: 15rem;
-  max-width: 20rem;
+  min-width: 12rem;
+  max-width: min(20rem, calc(100vw - 40px));
 }
 
 .leaflet-popup-tip {
