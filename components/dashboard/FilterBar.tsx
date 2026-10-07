@@ -103,11 +103,40 @@ export default function FilterBar({
       {/* Pembatas Visual Antara Wilayah Biasa & Wilayah Khusus */}
       <div className="h-5 w-px bg-slate-200 shrink-0 mx-0.5" />
 
-      {/* Filter Daerah Khusus */}
+      {/* Filter Wilayah Khusus (KIRI) */}
       <div className={fieldKhususClass}>
         <span className="flex h-2 w-2 rounded-full bg-amber-500 shrink-0" />
+        <label htmlFor="filter-wilayah-khusus" className={labelKhususClass}>
+          Wilayah Khusus
+        </label>
+        <select
+          id="filter-wilayah-khusus"
+          className={selectKhususClass}
+          value={filters.wilayahKhusus}
+          onChange={(e) =>
+            onChange({
+              ...filters,
+              wilayahKhusus: e.target.value,
+              daerah: ALL,
+              wilayah: ALL,
+              kabupaten: ALL,
+              desa: ALL,
+            })
+          }
+        >
+          <option value={ALL}>Semua Wilayah Khusus</option>
+          {wilayahKhususList.map((wk) => (
+            <option key={wk} value={wk}>
+              {wk}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Filter Mada Khusus / Daerah Khusus (KANAN) */}
+      <div className={fieldKhususClass}>
         <label htmlFor="filter-daerah-khusus" className={labelKhususClass}>
-          Daerah Khusus
+          Mada Khusus
         </label>
         <select
           id="filter-daerah-khusus"
@@ -125,7 +154,7 @@ export default function FilterBar({
             })
           }
         >
-          <option value={ALL}>Semua (Tanpa Filter)</option>
+          <option value={ALL}>Semua Mada Khusus</option>
           <option value={ALL_KHUSUS}>★ Semua Wilayah Khusus</option>
           {daerahKhususList.map((dk) => (
             <option key={dk} value={dk}>
@@ -134,37 +163,6 @@ export default function FilterBar({
           ))}
         </select>
       </div>
-
-      {/* Filter Wilayah Khusus */}
-      {wilayahKhususList.length > 0 && (
-        <div className={fieldKhususClass}>
-          <label htmlFor="filter-wilayah-khusus" className={labelKhususClass}>
-            Wilayah Khusus
-          </label>
-          <select
-            id="filter-wilayah-khusus"
-            className={selectKhususClass}
-            value={filters.wilayahKhusus}
-            onChange={(e) =>
-              onChange({
-                ...filters,
-                wilayahKhusus: e.target.value,
-                daerah: ALL,
-                wilayah: ALL,
-                kabupaten: ALL,
-                desa: ALL,
-              })
-            }
-          >
-            <option value={ALL}>Semua Wilayah Khusus</option>
-            {wilayahKhususList.map((wk) => (
-              <option key={wk} value={wk}>
-                {wk}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
     </>
   );
 }

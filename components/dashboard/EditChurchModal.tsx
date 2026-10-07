@@ -376,22 +376,7 @@ export default function EditChurchModal({
               </>
             ) : (
               <>
-                {/* Daerah Khusus */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-slate-700">
-                    Daerah Khusus <span className="text-amber-600 font-bold">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="daerah_khusus"
-                    value={formData.daerah_khusus}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-amber-200 bg-amber-50/30 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-semibold"
-                    placeholder="Contoh: MAWIL KHUSUS BALI"
-                  />
-                </div>
-
-                {/* Wilayah Khusus */}
+                {/* Wilayah Khusus (KIRI) */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-semibold text-slate-700">Wilayah Khusus</label>
                   <input
@@ -401,6 +386,21 @@ export default function EditChurchModal({
                     onChange={handleChange}
                     className="w-full rounded-xl border border-amber-200 bg-amber-50/30 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                     placeholder="Contoh: Wilayah Khusus 1"
+                  />
+                </div>
+
+                {/* Mada Khusus / Daerah Khusus (KANAN) */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-slate-700">
+                    Mada Khusus (Daerah Khusus) <span className="text-amber-600 font-bold">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="daerah_khusus"
+                    value={formData.daerah_khusus}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-amber-200 bg-amber-50/30 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-semibold"
+                    placeholder="Contoh: MAWIL KHUSUS BALI"
                   />
                 </div>
               </>

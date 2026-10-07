@@ -37,6 +37,8 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterMada, setFilterMada] = useState("ALL");
   const [filterMawil, setFilterMawil] = useState("ALL");
+  const [filterWilayahKhusus, setFilterWilayahKhusus] = useState("ALL");
+  const [filterMadaKhusus, setFilterMadaKhusus] = useState("ALL");
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
@@ -419,7 +421,11 @@ export default function AdminPage() {
   const madaList = useMemo(() => {
     const set = new Set<string>();
     churches.forEach((f) => {
-      if (f.properties?.nama_mada) set.add(String(f.properties.nama_mada).trim());
+      const p = f.properties || {};
+      const isKhusus = p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
+      if (!isKhusus && p.nama_mada) {
+        set.add(String(p.nama_mada).trim());
+      }
     });
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [churches]);
@@ -427,17 +433,73 @@ export default function AdminPage() {
   const mawilList = useMemo(() => {
     const set = new Set<string>();
     churches.forEach((f) => {
-      if (filterMada !== "ALL" && f.properties?.nama_mada !== filterMada) return;
-      if (f.properties?.mawil) set.add(String(f.properties.mawil).trim());
+      const p = f.properties || {};
+      const isKhusus = p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
+      if (isKhusus) return;
+      if (filterMada !== "ALL" && p.nama_mada !== filterMada) return;
+      if (p.mawil) set.add(String(p.mawil).trim());
     });
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [churches, filterMada]);
 
+  // Wilayah Khusus (Kiri)
+  const wilayahKhususList = useMemo(() => {
+    const set = new Set<string>();
+    churches.forEach((f) => {
+      const p = f.properties || {};
+      const isKhusus = p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
+      if (isKhusus && p.wilayah_khusus) {
+        set.add(String(p.wilayah_khusus).trim());
+      }
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [churches]);
+
+  // Mada Khusus (Kanan)
+  const madaKhususList = useMemo(() => {
+    const set = new Set<string>();
+    churches.forEach((f) => {
+      const p = f.properties || {};
+      const isKhusus = p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
+      if (isKhusus) {
+        const val = p.daerah_khusus || p.nama_mada;
+        if (val) set.add(String(val).trim());
+      }
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [churches]);
+
+  const statsWilayahKhususCount = useMemo(() => {
+    return churches.filter((f) => {
+      const p = f.properties || {};
+      return p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
+    }).length;
+  }, [churches]);
+
+  const statsWilayahBiasaCount = useMemo(() => {
+    return churches.length - statsWilayahKhususCount;
+  }, [churches, statsWilayahKhususCount]);
+
   const filteredChurches = useMemo(() => {
     return churches.filter((f) => {
       const p = f.properties || {};
+      const isKhusus = p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
+
       if (filterMada !== "ALL" && p.nama_mada !== filterMada) return false;
       if (filterMawil !== "ALL" && p.mawil !== filterMawil) return false;
+
+      // Filter Wilayah Khusus (Kiri)
+      if (filterWilayahKhusus !== "ALL") {
+        if (!isKhusus || p.wilayah_khusus !== filterWilayahKhusus) return false;
+      }
+
+      // Filter Mada Khusus (Kanan)
+      if (filterMadaKhusus !== "ALL") {
+        if (!isKhusus) return false;
+        const val = p.daerah_khusus || p.nama_mada;
+        if (val !== filterMadaKhusus) return false;
+      }
+
       if (filterStatus !== "ALL" && p.status !== filterStatus) return false;
 
       if (searchQuery.trim() !== "") {
@@ -457,7 +519,7 @@ export default function AdminPage() {
       }
       return true;
     });
-  }, [churches, filterMada, filterMawil, filterStatus, searchQuery]);
+  }, [churches, filterMada, filterMawil, filterWilayahKhusus, filterMadaKhusus, filterStatus, searchQuery]);
 
   const totalPages = Math.ceil(filteredChurches.length / itemsPerPage) || 1;
   const paginatedChurches = useMemo(() => {
@@ -468,7 +530,7 @@ export default function AdminPage() {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filterMada, filterMawil, filterStatus]);
+  }, [searchQuery, filterMada, filterMawil, filterWilayahKhusus, filterMadaKhusus, filterStatus]);
 
   // Loading screen during initial session check
   if (checkingAuth) {
@@ -735,35 +797,67 @@ export default function AdminPage() {
         {activeTab === "churches" && (
           <>
             {/* KPI Cards Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Gereja Terdata</p>
-                <p className="text-2xl font-black text-blue-950 mt-1">{churches.length}</p>
-                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Gereja</p>
+                  <p className="text-2xl font-black text-blue-950 mt-1">{churches.length}</p>
+                </div>
+                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block border border-emerald-200 w-fit">
                   Database Aktif
                 </span>
               </div>
 
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Daerah (Mada)</p>
-                <p className="text-2xl font-black text-blue-950 mt-1">{madaList.length}</p>
-                <span className="text-[10px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded-full mt-2 inline-block">
-                  Wilayah Pelayanan
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Wilayah Biasa</p>
+                  <p className="text-2xl font-black text-blue-950 mt-1">{statsWilayahBiasaCount}</p>
+                </div>
+                <span className="text-[10px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded-full mt-2 inline-block border border-blue-200 w-fit">
+                  {madaList.length} Mada Terdata
                 </span>
               </div>
 
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Mawil</p>
-                <p className="text-2xl font-black text-blue-950 mt-1">{mawilList.length}</p>
-                <span className="text-[10px] text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded-full mt-2 inline-block">
+              {/* Wilayah Khusus (KIRI) */}
+              <div className="bg-white p-4 rounded-2xl border border-amber-300 shadow-xs relative overflow-hidden flex flex-col justify-between">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500" />
+                <div>
+                  <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Wilayah Khusus</p>
+                  <p className="text-2xl font-black text-amber-950 mt-1">{statsWilayahKhususCount}</p>
+                </div>
+                <span className="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-full mt-2 inline-block border border-amber-200 w-fit">
+                  {wilayahKhususList.length} Wilayah
+                </span>
+              </div>
+
+              {/* Mada Khusus (KANAN) */}
+              <div className="bg-white p-4 rounded-2xl border border-amber-300 shadow-xs relative overflow-hidden flex flex-col justify-between">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500" />
+                <div>
+                  <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Mada Khusus</p>
+                  <p className="text-2xl font-black text-amber-950 mt-1">{madaKhususList.length}</p>
+                </div>
+                <span className="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-full mt-2 inline-block border border-amber-200 w-fit">
+                  Daerah Khusus
+                </span>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Mawil</p>
+                  <p className="text-2xl font-black text-blue-950 mt-1">{mawilList.length}</p>
+                </div>
+                <span className="text-[10px] text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded-full mt-2 inline-block border border-indigo-200 w-fit">
                   Majelis Wilayah
                 </span>
               </div>
 
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Hasil Filter</p>
-                <p className="text-2xl font-black text-blue-950 mt-1">{filteredChurches.length}</p>
-                <span className="text-[10px] text-slate-600 font-bold bg-slate-100 px-2 py-0.5 rounded-full mt-2 inline-block">
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Hasil Filter</p>
+                  <p className="text-2xl font-black text-blue-950 mt-1">{filteredChurches.length}</p>
+                </div>
+                <span className="text-[10px] text-slate-600 font-bold bg-slate-100 px-2 py-0.5 rounded-full mt-2 inline-block border border-slate-200 w-fit">
                   Baris Ditampilkan
                 </span>
               </div>
@@ -773,7 +867,7 @@ export default function AdminPage() {
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-0">
                 {/* Search Bar */}
-                <div className="relative min-w-[220px] max-w-sm flex-1">
+                <div className="relative min-w-[200px] max-w-sm flex-1">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                   </svg>
@@ -786,14 +880,19 @@ export default function AdminPage() {
                   />
                 </div>
 
-                {/* Filter Mada */}
+                {/* Filter Mada (Biasa) */}
                 <select
                   value={filterMada}
                   onChange={(e) => {
-                    setFilterMada(e.target.value);
+                    const val = e.target.value;
+                    setFilterMada(val);
                     setFilterMawil("ALL");
+                    if (val !== "ALL") {
+                      setFilterWilayahKhusus("ALL");
+                      setFilterMadaKhusus("ALL");
+                    }
                   }}
-                  className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:border-blue-600 outline-none"
+                  className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:border-blue-600 outline-none cursor-pointer"
                 >
                   <option value="ALL">Semua Mada (Daerah)</option>
                   {madaList.map((m) => (
@@ -801,11 +900,18 @@ export default function AdminPage() {
                   ))}
                 </select>
 
-                {/* Filter Mawil */}
+                {/* Filter Mawil (Biasa) */}
                 <select
                   value={filterMawil}
-                  onChange={(e) => setFilterMawil(e.target.value)}
-                  className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:border-blue-600 outline-none"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFilterMawil(val);
+                    if (val !== "ALL") {
+                      setFilterWilayahKhusus("ALL");
+                      setFilterMadaKhusus("ALL");
+                    }
+                  }}
+                  className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:border-blue-600 outline-none cursor-pointer"
                 >
                   <option value="ALL">Semua Mawil</option>
                   {mawilList.map((w) => (
@@ -813,11 +919,53 @@ export default function AdminPage() {
                   ))}
                 </select>
 
+                <div className="h-5 w-px bg-slate-200 shrink-0 mx-0.5 hidden sm:block" />
+
+                {/* Filter Wilayah Khusus (KIRI) */}
+                <select
+                  value={filterWilayahKhusus}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFilterWilayahKhusus(val);
+                    if (val !== "ALL") {
+                      setFilterMada("ALL");
+                      setFilterMawil("ALL");
+                    }
+                  }}
+                  className="h-9 px-3 bg-amber-50/70 border border-amber-300 text-amber-950 font-bold rounded-xl text-xs focus:bg-white focus:border-amber-600 outline-none cursor-pointer"
+                >
+                  <option value="ALL">Semua Wilayah Khusus</option>
+                  {wilayahKhususList.map((wk) => (
+                    <option key={wk} value={wk}>{wk}</option>
+                  ))}
+                </select>
+
+                {/* Filter Mada Khusus / Daerah Khusus (KANAN) */}
+                <select
+                  value={filterMadaKhusus}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFilterMadaKhusus(val);
+                    if (val !== "ALL") {
+                      setFilterMada("ALL");
+                      setFilterMawil("ALL");
+                    }
+                  }}
+                  className="h-9 px-3 bg-amber-50/70 border border-amber-300 text-amber-950 font-bold rounded-xl text-xs focus:bg-white focus:border-amber-600 outline-none cursor-pointer"
+                >
+                  <option value="ALL">Semua Mada Khusus</option>
+                  {madaKhususList.map((mk) => (
+                    <option key={mk} value={mk}>{mk}</option>
+                  ))}
+                </select>
+
+                <div className="h-5 w-px bg-slate-200 shrink-0 mx-0.5 hidden sm:block" />
+
                 {/* Filter Status */}
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:border-blue-600 outline-none"
+                  className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:border-blue-600 outline-none cursor-pointer"
                 >
                   <option value="ALL">Semua Status</option>
                   <option value="Milik Sendiri">Milik Sendiri</option>
@@ -826,16 +974,18 @@ export default function AdminPage() {
                   <option value="Nomaden">Nomaden</option>
                 </select>
 
-                {(searchQuery || filterMada !== "ALL" || filterMawil !== "ALL" || filterStatus !== "ALL") && (
+                {(searchQuery || filterMada !== "ALL" || filterMawil !== "ALL" || filterWilayahKhusus !== "ALL" || filterMadaKhusus !== "ALL" || filterStatus !== "ALL") && (
                   <button
                     type="button"
                     onClick={() => {
                       setSearchQuery("");
                       setFilterMada("ALL");
                       setFilterMawil("ALL");
+                      setFilterWilayahKhusus("ALL");
+                      setFilterMadaKhusus("ALL");
                       setFilterStatus("ALL");
                     }}
-                    className="h-9 px-3 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                    className="h-9 px-3 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
                   >
                     Reset Filter
                   </button>
@@ -965,8 +1115,10 @@ export default function AdminPage() {
                                   <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 mb-0.5">
                                     Wilayah Khusus
                                   </span>
-                                  <div className="font-semibold text-slate-800">{p.daerah_khusus || p.nama_mada || "-"}</div>
-                                  <div className="text-[10px] text-slate-500">{p.wilayah_khusus || (p.mawil && p.mawil !== " " ? p.mawil : "-")}</div>
+                                  <div className="font-semibold text-slate-800">{p.wilayah_khusus || p.daerah_khusus || p.nama_mada || "-"}</div>
+                                  {p.wilayah_khusus && (
+                                    <div className="text-[10px] text-slate-500">{p.daerah_khusus || p.nama_mada || "-"}</div>
+                                  )}
                                 </div>
                               ) : (
                                 <div>
@@ -1351,8 +1503,19 @@ export default function AdminPage() {
                 ) : (
                   <>
                     <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Wilayah Khusus</label>
+                      <input
+                        type="text"
+                        value={newChurch.wilayah_khusus}
+                        onChange={(e) => setNewChurch({ ...newChurch, wilayah_khusus: e.target.value })}
+                        placeholder="Contoh: Wilayah Khusus 1"
+                        className="w-full h-10 px-3 bg-amber-50/30 border border-amber-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-amber-600 outline-none"
+                      />
+                    </div>
+
+                    <div>
                       <label className="block text-xs font-semibold text-slate-600 mb-1">
-                        Daerah Khusus <span className="text-amber-600 font-bold">*</span>
+                        Mada Khusus (Daerah Khusus) <span className="text-amber-600 font-bold">*</span>
                       </label>
                       <input
                         type="text"
@@ -1360,17 +1523,6 @@ export default function AdminPage() {
                         value={newChurch.daerah_khusus}
                         onChange={(e) => setNewChurch({ ...newChurch, daerah_khusus: e.target.value })}
                         placeholder="Contoh: MAWIL KHUSUS BALI"
-                        className="w-full h-10 px-3 bg-amber-50/30 border border-amber-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-amber-600 outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-600 mb-1">Wilayah Khusus</label>
-                      <input
-                        type="text"
-                        value={newChurch.wilayah_khusus}
-                        onChange={(e) => setNewChurch({ ...newChurch, wilayah_khusus: e.target.value })}
-                        placeholder="Contoh: Wilayah Khusus 1"
                         className="w-full h-10 px-3 bg-amber-50/30 border border-amber-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-amber-600 outline-none"
                       />
                     </div>
