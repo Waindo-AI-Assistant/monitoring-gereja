@@ -58,9 +58,12 @@ export default function AdminPage() {
     jumlah_jemaat: "",
     jam_operasional: "",
     status: "Milik Sendiri",
+    tipe_wilayah: "Wilayah Biasa",
     mawil: "",
     nama_mada: "",
     kode_mada: "",
+    wilayah_khusus: "",
+    daerah_khusus: "",
     x: "",
     y: "",
     foto: "",
@@ -213,9 +216,15 @@ export default function AdminPage() {
 
     try {
       const hasPhoto = Boolean(newChurch.foto || newChurch.foto_2 || newChurch.foto_pendeta);
+      const isKhusus = newChurch.tipe_wilayah === "Wilayah Khusus";
+
       const churchPayload = {
         ...newChurch,
         ATTACH: hasPhoto ? "Ada" : "Tidak",
+        nama_mada: isKhusus ? (newChurch.daerah_khusus || newChurch.nama_mada) : newChurch.nama_mada,
+        mawil: isKhusus ? (newChurch.wilayah_khusus || newChurch.mawil) : newChurch.mawil,
+        daerah_khusus: isKhusus ? newChurch.daerah_khusus : "",
+        wilayah_khusus: isKhusus ? newChurch.wilayah_khusus : "",
       };
 
       const res = await fetch("/api/admin/churches", {
@@ -240,9 +249,12 @@ export default function AdminPage() {
         jumlah_jemaat: "",
         jam_operasional: "",
         status: "Milik Sendiri",
+        tipe_wilayah: "Wilayah Biasa",
         mawil: "",
         nama_mada: "",
         kode_mada: "",
+        wilayah_khusus: "",
+        daerah_khusus: "",
         x: "",
         y: "",
         foto: "",
@@ -433,7 +445,15 @@ export default function AdminPage() {
         const name = String(p.name || "").toLowerCase();
         const pastor = String(p.nama_pendeta || "").toLowerCase();
         const address = String(p.alamat_gereja || "").toLowerCase();
-        return name.includes(q) || pastor.includes(q) || address.includes(q);
+        const daerahKhusus = String(p.daerah_khusus || "").toLowerCase();
+        const wilayahKhusus = String(p.wilayah_khusus || "").toLowerCase();
+        return (
+          name.includes(q) ||
+          pastor.includes(q) ||
+          address.includes(q) ||
+          daerahKhusus.includes(q) ||
+          wilayahKhusus.includes(q)
+        );
       }
       return true;
     });
@@ -940,8 +960,20 @@ export default function AdminPage() {
                               {p.nama_pendeta || p.pendeta || "-"}
                             </td>
                             <td className="py-3 px-4">
-                              <div className="font-semibold text-slate-800">{p.nama_mada || "-"}</div>
-                              <div className="text-[10px] text-slate-500">{p.mawil || "-"}</div>
+                              {p.tipe_wilayah === "Wilayah Khusus" || p.daerah_khusus || p.wilayah_khusus || String(p.nama_mada || "").toUpperCase().includes("KHUSUS") ? (
+                                <div>
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 mb-0.5">
+                                    Wilayah Khusus
+                                  </span>
+                                  <div className="font-semibold text-slate-800">{p.daerah_khusus || p.nama_mada || "-"}</div>
+                                  <div className="text-[10px] text-slate-500">{p.wilayah_khusus || (p.mawil && p.mawil !== " " ? p.mawil : "-")}</div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <div className="font-semibold text-slate-800">{p.nama_mada || "-"}</div>
+                                  <div className="text-[10px] text-slate-500">{p.mawil || "-"}</div>
+                                </div>
+                              )}
                             </td>
                             <td className="py-3 px-4 text-slate-600 max-w-xs truncate" title={p.alamat_gereja || p.alamat || ""}>
                               {p.alamat_gereja || p.alamat || "-"}
@@ -1230,39 +1262,120 @@ export default function AdminPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Daerah (Mada) *</label>
-                  <input
-                    type="text"
-                    required
-                    value={newChurch.nama_mada}
-                    onChange={(e) => setNewChurch({ ...newChurch, nama_mada: e.target.value })}
-                    placeholder="Contoh: MADA JAWA BARAT"
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
-                  />
+                {/* Pilihan Jenis Wilayah: Wilayah Biasa vs Wilayah Khusus */}
+                <div className="sm:col-span-2 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Kategori Wilayah <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <label
+                      className={`flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                        newChurch.tipe_wilayah === "Wilayah Biasa"
+                          ? "bg-blue-50/80 border-blue-500 text-blue-900 shadow-xs ring-1 ring-blue-500/20"
+                          : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="add_tipe_wilayah"
+                        value="Wilayah Biasa"
+                        checked={newChurch.tipe_wilayah === "Wilayah Biasa"}
+                        onChange={() => setNewChurch({ ...newChurch, tipe_wilayah: "Wilayah Biasa" })}
+                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300"
+                      />
+                      <div>
+                        <span className="text-xs font-bold block">Wilayah Biasa</span>
+                        <span className="text-[10px] text-slate-500 block">Mada (Daerah) & Mawil (Wilayah)</span>
+                      </div>
+                    </label>
+
+                    <label
+                      className={`flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                        newChurch.tipe_wilayah === "Wilayah Khusus"
+                          ? "bg-amber-50/80 border-amber-500 text-amber-900 shadow-xs ring-1 ring-amber-500/20"
+                          : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="add_tipe_wilayah"
+                        value="Wilayah Khusus"
+                        checked={newChurch.tipe_wilayah === "Wilayah Khusus"}
+                        onChange={() => setNewChurch({ ...newChurch, tipe_wilayah: "Wilayah Khusus" })}
+                        className="w-4 h-4 text-amber-600 focus:ring-amber-500 border-slate-300"
+                      />
+                      <div>
+                        <span className="text-xs font-bold block">Wilayah Khusus</span>
+                        <span className="text-[10px] text-slate-500 block">Daerah Khusus & Wilayah Khusus</span>
+                      </div>
+                    </label>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Kode Mada (Singkatan)</label>
-                  <input
-                    type="text"
-                    value={newChurch.kode_mada}
-                    onChange={(e) => setNewChurch({ ...newChurch, kode_mada: e.target.value })}
-                    placeholder="Contoh: JABAR"
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none uppercase"
-                  />
-                </div>
+                {newChurch.tipe_wilayah === "Wilayah Biasa" ? (
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Daerah (Mada) *</label>
+                      <input
+                        type="text"
+                        required
+                        value={newChurch.nama_mada}
+                        onChange={(e) => setNewChurch({ ...newChurch, nama_mada: e.target.value })}
+                        placeholder="Contoh: MADA JAWA BARAT"
+                        className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
+                      />
+                    </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Wilayah (Mawil)</label>
-                  <input
-                    type="text"
-                    value={newChurch.mawil}
-                    onChange={(e) => setNewChurch({ ...newChurch, mawil: e.target.value })}
-                    placeholder="Contoh: MAWIL BANDUNG RAYA"
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
-                  />
-                </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Kode Mada (Singkatan)</label>
+                      <input
+                        type="text"
+                        value={newChurch.kode_mada}
+                        onChange={(e) => setNewChurch({ ...newChurch, kode_mada: e.target.value })}
+                        placeholder="Contoh: JABAR"
+                        className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none uppercase"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Wilayah (Mawil)</label>
+                      <input
+                        type="text"
+                        value={newChurch.mawil}
+                        onChange={(e) => setNewChurch({ ...newChurch, mawil: e.target.value })}
+                        placeholder="Contoh: MAWIL BANDUNG RAYA"
+                        className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">
+                        Daerah Khusus <span className="text-amber-600 font-bold">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={newChurch.daerah_khusus}
+                        onChange={(e) => setNewChurch({ ...newChurch, daerah_khusus: e.target.value })}
+                        placeholder="Contoh: MAWIL KHUSUS BALI"
+                        className="w-full h-10 px-3 bg-amber-50/30 border border-amber-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-amber-600 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">Wilayah Khusus</label>
+                      <input
+                        type="text"
+                        value={newChurch.wilayah_khusus}
+                        onChange={(e) => setNewChurch({ ...newChurch, wilayah_khusus: e.target.value })}
+                        placeholder="Contoh: Wilayah Khusus 1"
+                        className="w-full h-10 px-3 bg-amber-50/30 border border-amber-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-amber-600 outline-none"
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Status Kepemilikan</label>

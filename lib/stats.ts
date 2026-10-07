@@ -1,14 +1,24 @@
 // Agregasi statistik untuk Monitoring Gereja.
 export const ALL = "__all__";
+export const ALL_KHUSUS = "__all_khusus__";
 
 export type Filters = {
   daerah: string | typeof ALL;
   wilayah: string | typeof ALL;
+  daerahKhusus: string | typeof ALL;
+  wilayahKhusus: string | typeof ALL;
   kabupaten: string | typeof ALL;
   desa: string | typeof ALL;
 };
 
-export const DEFAULT_FILTERS: Filters = { daerah: ALL, wilayah: ALL, kabupaten: ALL, desa: ALL };
+export const DEFAULT_FILTERS: Filters = {
+  daerah: ALL,
+  wilayah: ALL,
+  daerahKhusus: ALL,
+  wilayahKhusus: ALL,
+  kabupaten: ALL,
+  desa: ALL,
+};
 
 export type Summary = {
   jumlahMada: number;

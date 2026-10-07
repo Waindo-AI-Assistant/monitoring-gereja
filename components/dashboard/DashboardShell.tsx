@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { DEFAULT_BASEMAP_ID, LAYERS, ATTRIBUTE_LABELS, GEREJA_ORDERED_FIELDS, formatValue, type LayerId } from "@/config/dashboard";
 import {
   ALL,
+  ALL_KHUSUS,
   DEFAULT_FILTERS,
   formatArea,
   type Filters,
@@ -222,25 +223,66 @@ interface ChurchAttributesTableProps {
 
 function ChurchAttributesTable({ layerLabel, properties }: ChurchAttributesTableProps) {
   if (layerLabel === "Titik Gereja") {
+    const isKhusus =
+      properties.tipe_wilayah === "Wilayah Khusus" ||
+      Boolean(properties.daerah_khusus && String(properties.daerah_khusus).trim() !== "") ||
+      Boolean(properties.wilayah_khusus && String(properties.wilayah_khusus).trim() !== "") ||
+      String(properties.nama_mada || "").toUpperCase().includes("KHUSUS");
+
+    const effectiveProps: Record<string, any> = {
+      ...properties,
+      daerah_khusus: properties.daerah_khusus || (isKhusus ? properties.nama_mada : ""),
+      wilayah_khusus: properties.wilayah_khusus || (isKhusus && properties.mawil && properties.mawil !== " " ? properties.mawil : ""),
+    };
+
     return (
       <table className="w-full text-left">
         <tbody>
+          <tr className="border-b border-slate-100">
+            <td className="py-2 pr-3 text-[10px] font-medium uppercase text-slate-400 align-top">
+              Tipe Wilayah
+            </td>
+            <td className="py-2 text-xs font-semibold text-right">
+              {isKhusus ? (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                  Wilayah Khusus
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
+                  Wilayah Biasa
+                </span>
+              )}
+            </td>
+          </tr>
+
           {GEREJA_ORDERED_FIELDS.filter((k) => {
-            const val = properties[k];
-            return (
-              val !== undefined &&
-              val !== null &&
-              val !== "" &&
-              !k.toLowerCase().includes("foto") &&
-              !k.toLowerCase().includes("photo") &&
-              !k.toLowerCase().includes("image") &&
-              !k.toLowerCase().includes("gambar") &&
-              !k.toLowerCase().includes("pendeta") &&
-              !k.toLowerCase().includes("pastor")
-            );
+            if (k === "tipe_wilayah") return false;
+            const val = effectiveProps[k];
+            if (val === undefined || val === null || String(val).trim() === "" || String(val).trim() === '""') {
+              return false;
+            }
+            if (
+              k.toLowerCase().includes("foto") ||
+              k.toLowerCase().includes("photo") ||
+              k.toLowerCase().includes("image") ||
+              k.toLowerCase().includes("gambar") ||
+              k.toLowerCase().includes("pendeta") ||
+              k.toLowerCase().includes("pastor")
+            ) {
+              return false;
+            }
+
+            if (isKhusus) {
+              if (k === "nama_mada") return false;
+              if (k === "mawil") return false;
+            } else {
+              if (k === "daerah_khusus" || k === "wilayah_khusus") return false;
+            }
+
+            return true;
           }).map((k) => {
             const label = ATTRIBUTE_LABELS[k] ?? k.replace(/_/g, " ");
-            const displayVal = formatValue(properties[k], k);
+            const displayVal = formatValue(effectiveProps[k], k);
             return (
               <tr key={k} className="border-b border-slate-100 last:border-0">
                 <td className="py-2 pr-3 text-[10px] font-medium uppercase text-slate-400 align-top">
@@ -849,13 +891,14 @@ export default function DashboardShell() {
 
   const daerahList = useMemo(() => {
     const list = poiFeatures
+      .filter((f: any) => f.properties?.tipe_wilayah !== "Wilayah Khusus" && !String(f.properties?.nama_mada || "").toUpperCase().includes("KHUSUS"))
       .map((f: any) => f.properties?.nama_mada)
       .filter((name: any) => name && name.trim() !== "");
     return [...new Set(list)].sort((a, b) => a.localeCompare(b)) as string[];
   }, [poiFeatures]);
 
   const wilayahList = useMemo(() => {
-    let filtered = poiFeatures;
+    let filtered = poiFeatures.filter((f: any) => f.properties?.tipe_wilayah !== "Wilayah Khusus" && !String(f.properties?.nama_mada || "").toUpperCase().includes("KHUSUS"));
     if (filters.daerah !== ALL) {
       filtered = filtered.filter((f: any) => f.properties?.nama_mada === filters.daerah);
     }
@@ -865,21 +908,56 @@ export default function DashboardShell() {
     return [...new Set(list)].sort((a, b) => a.localeCompare(b)) as string[];
   }, [poiFeatures, filters.daerah]);
 
+  const daerahKhususList = useMemo(() => {
+    const list = poiFeatures
+      .filter((f: any) => f.properties?.tipe_wilayah === "Wilayah Khusus" || Boolean(f.properties?.daerah_khusus) || String(f.properties?.nama_mada || "").toUpperCase().includes("KHUSUS"))
+      .map((f: any) => f.properties?.daerah_khusus || f.properties?.nama_mada)
+      .filter((name: any) => name && name.trim() !== "");
+    return [...new Set(list)].sort((a, b) => a.localeCompare(b)) as string[];
+  }, [poiFeatures]);
+
+  const wilayahKhususList = useMemo(() => {
+    let filtered = poiFeatures.filter((f: any) => f.properties?.tipe_wilayah === "Wilayah Khusus" || Boolean(f.properties?.daerah_khusus) || String(f.properties?.nama_mada || "").toUpperCase().includes("KHUSUS"));
+    if (filters.daerahKhusus !== ALL && filters.daerahKhusus !== ALL_KHUSUS) {
+      filtered = filtered.filter((f: any) => (f.properties?.daerah_khusus || f.properties?.nama_mada) === filters.daerahKhusus);
+    }
+    const list = filtered
+      .map((f: any) => f.properties?.wilayah_khusus)
+      .filter((name: any) => name && name.trim() !== "");
+    return [...new Set(list)].sort((a, b) => a.localeCompare(b)) as string[];
+  }, [poiFeatures, filters.daerahKhusus]);
+
   const summary = useMemo(() => {
     const total = poiFeatures.length;
     const filtered = poiFeatures.filter((f: any) => {
       const p = f.properties ?? {};
       if (filters.daerah !== ALL && p.nama_mada !== filters.daerah) return false;
       if (filters.wilayah !== ALL && p.mawil !== filters.wilayah) return false;
+
+      if (filters.daerahKhusus !== ALL) {
+        if (filters.daerahKhusus === ALL_KHUSUS) {
+          const isKhusus = p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
+          if (!isKhusus) return false;
+        } else {
+          const matches = p.daerah_khusus === filters.daerahKhusus || (p.tipe_wilayah === "Wilayah Khusus" && p.nama_mada === filters.daerahKhusus);
+          if (!matches) return false;
+        }
+      }
+
+      if (filters.wilayahKhusus !== ALL) {
+        if (p.wilayah_khusus !== filters.wilayahKhusus) return false;
+      }
+
       return true;
     });
+
     return {
-      jumlahMada: daerahList.length,
-      jumlahWilayah: wilayahList.length,
+      jumlahMada: daerahList.length + daerahKhususList.length,
+      jumlahWilayah: wilayahList.length + (wilayahKhususList.length || 0),
       totalGereja: total,
       gerejaTerfilter: filtered.length,
     };
-  }, [poiFeatures, filters, daerahList, wilayahList]);
+  }, [poiFeatures, filters, daerahList, wilayahList, daerahKhususList, wilayahKhususList]);
 
   const handleFiltersChange = useCallback((next: Filters) => {
     setFilters(next);
@@ -942,6 +1020,8 @@ export default function DashboardShell() {
             onChange={handleFiltersChange}
             daerahList={daerahList}
             wilayahList={wilayahList}
+            daerahKhususList={daerahKhususList}
+            wilayahKhususList={wilayahKhususList}
             pois={poiFeatures}
             onSelectPOI={handleSelectPOI}
           />

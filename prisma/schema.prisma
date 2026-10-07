@@ -34,6 +34,9 @@ model Church {
   mawil           String?  // Majelis Wilayah
   kodeMada        String?  @map("kode_mada")
   namaMada        String?  @map("nama_mada")
+  tipeWilayah     String?  @default("Wilayah Biasa") @map("tipe_wilayah")
+  wilayahKhusus   String?  @map("wilayah_khusus")
+  daerahKhusus    String?  @map("daerah_khusus")
   no              Int?
   x               Float?   @default(0) // Longitude
   y               Float?   @default(0) // Latitude

@@ -128,7 +128,9 @@ export default function SearchBox({ pois, onSelectPOI }: SearchBoxProps) {
               >
                 <div className="font-semibold truncate text-left">{poi.properties.name}</div>
                 <div className="text-[9px] text-slate-400 truncate text-left">
-                  {poi.properties.mawil || "Majelis Wilayah"} &bull; {poi.properties.nama_mada || "Mada"}
+                  {poi.properties.tipe_wilayah === "Wilayah Khusus" || poi.properties.daerah_khusus || poi.properties.wilayah_khusus || String(poi.properties.nama_mada || "").toUpperCase().includes("KHUSUS")
+                    ? `${poi.properties.wilayah_khusus || (poi.properties.mawil && poi.properties.mawil !== " " ? poi.properties.mawil : "Wilayah Khusus")} \u2022 ${poi.properties.daerah_khusus || poi.properties.nama_mada || "Daerah Khusus"}`
+                    : `${poi.properties.mawil || "Majelis Wilayah"} \u2022 ${poi.properties.nama_mada || "Mada"}`}
                 </div>
               </button>
             );

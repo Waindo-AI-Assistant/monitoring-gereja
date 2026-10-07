@@ -223,6 +223,9 @@ export const ATTRIBUTE_LABELS: Record<string, string> = {
   mawil: "Majelis Wilayah",
   kode_mada: "Kode Mada",
   nama_mada: "Nama Majelis Daerah",
+  tipe_wilayah: "Tipe Wilayah",
+  daerah_khusus: "Daerah Khusus",
+  wilayah_khusus: "Wilayah Khusus",
   no: "NO",
   x: "X (Longitude)",
   y: "Y (Latitude)",
@@ -252,8 +255,11 @@ export const ATTRIBUTE_LABELS: Record<string, string> = {
 
 /** Atribut gereja terurut yang akan ditampilkan pada UI ketika diklik */
 export const GEREJA_ORDERED_FIELDS = [
+  "tipe_wilayah",
   "nama_mada",
   "mawil",
+  "daerah_khusus",
+  "wilayah_khusus",
   "no",
   "name",
   "nama_pendeta",

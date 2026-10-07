@@ -26,9 +26,12 @@ export default function EditChurchModal({
     jumlah_jemaat: "",
     jam_operasional: "",
     status: "Milik Sendiri",
+    tipe_wilayah: "Wilayah Biasa",
     mawil: "",
     nama_mada: "",
     kode_mada: "",
+    wilayah_khusus: "",
+    daerah_khusus: "",
     x: "",
     y: "",
     foto: "",
@@ -43,6 +46,14 @@ export default function EditChurchModal({
 
   useEffect(() => {
     if (churchData) {
+      const isKhusus =
+        churchData.tipe_wilayah === "Wilayah Khusus" ||
+        Boolean(churchData.wilayah_khusus && String(churchData.wilayah_khusus).trim() !== "") ||
+        Boolean(churchData.daerah_khusus && String(churchData.daerah_khusus).trim() !== "") ||
+        String(churchData.nama_mada || "").toUpperCase().includes("KHUSUS");
+
+      const initialTipe = isKhusus ? "Wilayah Khusus" : "Wilayah Biasa";
+
       setFormData({
         name: churchData.name ? String(churchData.name).trim() : "",
         nama_pendeta: churchData.nama_pendeta ? String(churchData.nama_pendeta).trim() : "",
@@ -52,9 +63,16 @@ export default function EditChurchModal({
         jumlah_jemaat: churchData.jumlah_jemaat ? String(churchData.jumlah_jemaat).trim() : "",
         jam_operasional: churchData.jam_operasional ? String(churchData.jam_operasional).trim() : "",
         status: churchData.status ? String(churchData.status).trim() : "Milik Sendiri",
+        tipe_wilayah: initialTipe,
         mawil: churchData.mawil ? String(churchData.mawil).trim() : "",
         nama_mada: churchData.nama_mada ? String(churchData.nama_mada).trim() : "",
         kode_mada: churchData.kode_mada ? String(churchData.kode_mada).trim() : "",
+        wilayah_khusus: churchData.wilayah_khusus
+          ? String(churchData.wilayah_khusus).trim()
+          : (isKhusus && churchData.mawil && churchData.mawil !== " " ? String(churchData.mawil).trim() : ""),
+        daerah_khusus: churchData.daerah_khusus
+          ? String(churchData.daerah_khusus).trim()
+          : (isKhusus ? String(churchData.nama_mada || "").trim() : ""),
         x: churchData.x !== undefined && churchData.x !== null ? String(churchData.x).trim() : "",
         y: churchData.y !== undefined && churchData.y !== null ? String(churchData.y).trim() : "",
         foto: churchData.foto ? String(churchData.foto).trim() : "",
@@ -80,9 +98,15 @@ export default function EditChurchModal({
 
     try {
       const hasPhoto = Boolean(formData.foto || formData.foto_2 || formData.foto_pendeta);
+      const isKhusus = formData.tipe_wilayah === "Wilayah Khusus";
+
       const updatedProperties = {
         ...formData,
         ATTACH: hasPhoto ? "Ada" : "Tidak",
+        nama_mada: isKhusus ? (formData.daerah_khusus || formData.nama_mada) : formData.nama_mada,
+        mawil: isKhusus ? (formData.wilayah_khusus || formData.mawil) : formData.mawil,
+        daerah_khusus: isKhusus ? formData.daerah_khusus : "",
+        wilayah_khusus: isKhusus ? formData.wilayah_khusus : "",
       };
 
       const res = await fetch("/api/poi/update", {
@@ -260,44 +284,127 @@ export default function EditChurchModal({
               </select>
             </div>
 
-            {/* Majelis Wilayah */}
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-700">Majelis Wilayah (Mawil)</label>
-              <input
-                type="text"
-                name="mawil"
-                value={formData.mawil}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                placeholder="Contoh: Wilayah 1"
-              />
+            {/* Kategori Wilayah (Radio Button: Wilayah Biasa vs Wilayah Khusus) */}
+            <div className="md:col-span-2 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+              <label className="text-[11px] font-bold text-slate-700 block">
+                Kategori Wilayah <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <label
+                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                    formData.tipe_wilayah === "Wilayah Biasa"
+                      ? "bg-blue-50/80 border-blue-500 text-blue-900 shadow-xs ring-1 ring-blue-500/20"
+                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="tipe_wilayah"
+                    value="Wilayah Biasa"
+                    checked={formData.tipe_wilayah === "Wilayah Biasa"}
+                    onChange={() => setFormData((prev) => ({ ...prev, tipe_wilayah: "Wilayah Biasa" }))}
+                    className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300"
+                  />
+                  <div>
+                    <span className="text-xs font-bold block">Wilayah Biasa</span>
+                    <span className="text-[10px] text-slate-500 block">Mada (Daerah) & Mawil (Wilayah)</span>
+                  </div>
+                </label>
+
+                <label
+                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                    formData.tipe_wilayah === "Wilayah Khusus"
+                      ? "bg-amber-50/80 border-amber-500 text-amber-900 shadow-xs ring-1 ring-amber-500/20"
+                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="tipe_wilayah"
+                    value="Wilayah Khusus"
+                    checked={formData.tipe_wilayah === "Wilayah Khusus"}
+                    onChange={() => setFormData((prev) => ({ ...prev, tipe_wilayah: "Wilayah Khusus" }))}
+                    className="w-4 h-4 text-amber-600 focus:ring-amber-500 border-slate-300"
+                  />
+                  <div>
+                    <span className="text-xs font-bold block">Wilayah Khusus</span>
+                    <span className="text-[10px] text-slate-500 block">Daerah Khusus & Wilayah Khusus</span>
+                  </div>
+                </label>
+              </div>
             </div>
 
-            {/* Majelis Daerah */}
-            {/* Majelis Daerah & Kode Mada */}
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-700">Majelis Daerah (Mada)</label>
-              <input
-                type="text"
-                name="nama_mada"
-                value={formData.nama_mada}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                placeholder="Contoh: SUMUT"
-              />
-            </div>
+            {formData.tipe_wilayah === "Wilayah Biasa" ? (
+              <>
+                {/* Majelis Wilayah */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-slate-700">Majelis Wilayah (Mawil)</label>
+                  <input
+                    type="text"
+                    name="mawil"
+                    value={formData.mawil}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    placeholder="Contoh: Wilayah 1"
+                  />
+                </div>
 
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-700">Kode Mada (Singkatan)</label>
-              <input
-                type="text"
-                name="kode_mada"
-                value={formData.kode_mada}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 uppercase"
-                placeholder="Contoh: SUMUT"
-              />
-            </div>
+                {/* Majelis Daerah */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-slate-700">Majelis Daerah (Mada)</label>
+                  <input
+                    type="text"
+                    name="nama_mada"
+                    value={formData.nama_mada}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    placeholder="Contoh: SUMUT"
+                  />
+                </div>
+
+                <div className="md:col-span-2 space-y-1">
+                  <label className="text-[11px] font-semibold text-slate-700">Kode Mada (Singkatan)</label>
+                  <input
+                    type="text"
+                    name="kode_mada"
+                    value={formData.kode_mada}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 uppercase"
+                    placeholder="Contoh: SUMUT"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Daerah Khusus */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-slate-700">
+                    Daerah Khusus <span className="text-amber-600 font-bold">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="daerah_khusus"
+                    value={formData.daerah_khusus}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-amber-200 bg-amber-50/30 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-semibold"
+                    placeholder="Contoh: MAWIL KHUSUS BALI"
+                  />
+                </div>
+
+                {/* Wilayah Khusus */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-slate-700">Wilayah Khusus</label>
+                  <input
+                    type="text"
+                    name="wilayah_khusus"
+                    value={formData.wilayah_khusus}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-amber-200 bg-amber-50/30 px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                    placeholder="Contoh: Wilayah Khusus 1"
+                  />
+                </div>
+              </>
+            )}
 
             {/* Koordinat & Pilih dari Peta */}
             <div className="md:col-span-2 p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">

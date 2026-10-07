@@ -24,7 +24,7 @@ import {
   type LayerDef,
   type LayerId,
 } from "@/config/dashboard";
-import { ALL, DEFAULT_FILTERS, type Filters } from "@/lib/stats";
+import { ALL, ALL_KHUSUS, DEFAULT_FILTERS, type Filters } from "@/lib/stats";
 import type { RouteResult } from "@/lib/routing";
 
 /** Alat peta yang aktif — hanya satu yang boleh hidup pada satu waktu. */
@@ -88,8 +88,38 @@ function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
 
   let rows = "";
   if (layer.id === "poi") {
-    rows = GEREJA_ORDERED_FIELDS.map((k) => {
-      const v = props[k];
+    const isKhusus =
+      props.tipe_wilayah === "Wilayah Khusus" ||
+      Boolean(props.daerah_khusus && String(props.daerah_khusus).trim() !== "") ||
+      Boolean(props.wilayah_khusus && String(props.wilayah_khusus).trim() !== "") ||
+      String(props.nama_mada || "").toUpperCase().includes("KHUSUS");
+
+    const effectiveProps: Record<string, any> = {
+      ...props,
+      daerah_khusus: props.daerah_khusus || (isKhusus ? props.nama_mada : ""),
+      wilayah_khusus: props.wilayah_khusus || (isKhusus && props.mawil && props.mawil !== " " ? props.mawil : ""),
+    };
+
+    const badgeTipe = `<tr class="border-b border-slate-100 last:border-0">
+      <td class="py-1.5 pr-3 align-top text-[11px] font-medium uppercase tracking-wide text-slate-500">Tipe Wilayah</td>
+      <td class="py-1.5 text-right text-xs font-bold ${isKhusus ? "text-amber-700" : "text-blue-700"}">
+        ${isKhusus ? "Wilayah Khusus" : "Wilayah Biasa"}
+      </td>
+    </tr>`;
+
+    rows = badgeTipe + GEREJA_ORDERED_FIELDS.filter((k) => {
+      if (k === "tipe_wilayah") return false;
+      const v = effectiveProps[k];
+      if (v === undefined || v === null || String(v).trim() === "" || String(v).trim() === '""') return false;
+
+      if (isKhusus) {
+        if (k === "nama_mada" || k === "mawil") return false;
+      } else {
+        if (k === "daerah_khusus" || k === "wilayah_khusus") return false;
+      }
+      return true;
+    }).map((k) => {
+      const v = effectiveProps[k];
       const value = formatValue(v, k);
       const label = ATTRIBUTE_LABELS[k] ?? k;
       return `<tr class="border-b border-slate-100 last:border-0">
@@ -280,10 +310,28 @@ function filterFeatureByScope(f: any, layerId: string, filters: Filters): boolea
 
   const matchDaerah = filters.daerah === ALL || p.nama_mada === filters.daerah;
   const matchWilayah = filters.wilayah === ALL || p.mawil === filters.wilayah;
+
+  let matchDaerahKhusus = true;
+  if (filters.daerahKhusus !== ALL) {
+    if (filters.daerahKhusus === ALL_KHUSUS) {
+      matchDaerahKhusus =
+        p.tipe_wilayah === "Wilayah Khusus" ||
+        Boolean(p.daerah_khusus) ||
+        String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
+    } else {
+      matchDaerahKhusus =
+        p.daerah_khusus === filters.daerahKhusus ||
+        (p.tipe_wilayah === "Wilayah Khusus" && p.nama_mada === filters.daerahKhusus);
+    }
+  }
+
+  const matchWilayahKhusus =
+    filters.wilayahKhusus === ALL || p.wilayah_khusus === filters.wilayahKhusus;
+
   const matchKabupaten = filters.kabupaten === ALL || p.kabupaten === filters.kabupaten;
   const matchDesa = filters.desa === ALL || p.desa === filters.desa;
 
-  return matchDaerah && matchWilayah && matchKabupaten && matchDesa;
+  return matchDaerah && matchWilayah && matchDaerahKhusus && matchWilayahKhusus && matchKabupaten && matchDesa;
 }
 
 function checkAnyPopupOpen(map: LeafletNamespace.Map): boolean {
@@ -1052,7 +1100,14 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
     const map = mapRef.current;
     if (!map) return;
 
-    if (newFilters.daerah === ALL && newFilters.wilayah === ALL && newFilters.kabupaten === ALL && newFilters.desa === ALL) {
+    if (
+      newFilters.daerah === ALL &&
+      newFilters.wilayah === ALL &&
+      newFilters.daerahKhusus === ALL &&
+      newFilters.wilayahKhusus === ALL &&
+      newFilters.kabupaten === ALL &&
+      newFilters.desa === ALL
+    ) {
       if (highlightLayerRef.current) {
         map.removeLayer(highlightLayerRef.current);
         highlightLayerRef.current = null;
