@@ -317,16 +317,18 @@ function filterFeatureByScope(f: any, layerId: string, filters: Filters): boolea
       matchDaerahKhusus =
         p.tipe_wilayah === "Wilayah Khusus" ||
         Boolean(p.daerah_khusus) ||
+        Boolean(p.wilayah_khusus) ||
         String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
     } else {
-      matchDaerahKhusus =
-        p.daerah_khusus === filters.daerahKhusus ||
-        (p.tipe_wilayah === "Wilayah Khusus" && p.nama_mada === filters.daerahKhusus);
+      matchDaerahKhusus = p.daerah_khusus === filters.daerahKhusus;
     }
   }
 
-  const matchWilayahKhusus =
-    filters.wilayahKhusus === ALL || p.wilayah_khusus === filters.wilayahKhusus;
+  let matchWilayahKhusus = true;
+  if (filters.wilayahKhusus !== ALL) {
+    const wkVal = p.wilayah_khusus || (p.tipe_wilayah === "Wilayah Khusus" && String(p.nama_mada || "").toUpperCase().includes("MAWIL") ? p.nama_mada : "");
+    matchWilayahKhusus = wkVal === filters.wilayahKhusus;
+  }
 
   const matchKabupaten = filters.kabupaten === ALL || p.kabupaten === filters.kabupaten;
   const matchDesa = filters.desa === ALL || p.desa === filters.desa;

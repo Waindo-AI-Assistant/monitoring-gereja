@@ -20,7 +20,7 @@ export default function SummaryCards({ summary }: SummaryCardsProps) {
       hint: "Jumlah Majelis Daerah yang terdaftar",
     },
     {
-      label: "Total Wilayah",
+      label: "Total Mawil",
       value: formatInt(summary.jumlahWilayah),
       hint: "Jumlah Majelis Wilayah yang terdaftar pada Mada aktif",
     },

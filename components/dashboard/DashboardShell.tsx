@@ -910,19 +910,19 @@ export default function DashboardShell() {
 
   const daerahKhususList = useMemo(() => {
     const list = poiFeatures
-      .filter((f: any) => f.properties?.tipe_wilayah === "Wilayah Khusus" || Boolean(f.properties?.daerah_khusus) || String(f.properties?.nama_mada || "").toUpperCase().includes("KHUSUS"))
-      .map((f: any) => f.properties?.daerah_khusus || f.properties?.nama_mada)
+      .filter((f: any) => f.properties?.tipe_wilayah === "Wilayah Khusus" && Boolean(f.properties?.daerah_khusus))
+      .map((f: any) => f.properties?.daerah_khusus)
       .filter((name: any) => name && name.trim() !== "");
     return [...new Set(list)].sort((a, b) => a.localeCompare(b)) as string[];
   }, [poiFeatures]);
 
   const wilayahKhususList = useMemo(() => {
-    let filtered = poiFeatures.filter((f: any) => f.properties?.tipe_wilayah === "Wilayah Khusus" || Boolean(f.properties?.daerah_khusus) || String(f.properties?.nama_mada || "").toUpperCase().includes("KHUSUS"));
+    let filtered = poiFeatures.filter((f: any) => f.properties?.tipe_wilayah === "Wilayah Khusus" || Boolean(f.properties?.wilayah_khusus) || String(f.properties?.nama_mada || "").toUpperCase().includes("KHUSUS"));
     if (filters.daerahKhusus !== ALL && filters.daerahKhusus !== ALL_KHUSUS) {
-      filtered = filtered.filter((f: any) => (f.properties?.daerah_khusus || f.properties?.nama_mada) === filters.daerahKhusus);
+      filtered = filtered.filter((f: any) => f.properties?.daerah_khusus === filters.daerahKhusus);
     }
     const list = filtered
-      .map((f: any) => f.properties?.wilayah_khusus)
+      .map((f: any) => f.properties?.wilayah_khusus || (String(f.properties?.nama_mada || "").toUpperCase().includes("MAWIL") ? f.properties?.nama_mada : ""))
       .filter((name: any) => name && name.trim() !== "");
     return [...new Set(list)].sort((a, b) => a.localeCompare(b)) as string[];
   }, [poiFeatures, filters.daerahKhusus]);
@@ -936,16 +936,17 @@ export default function DashboardShell() {
 
       if (filters.daerahKhusus !== ALL) {
         if (filters.daerahKhusus === ALL_KHUSUS) {
-          const isKhusus = p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
+          const isKhusus = p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.daerah_khusus) || Boolean(p.wilayah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
           if (!isKhusus) return false;
         } else {
-          const matches = p.daerah_khusus === filters.daerahKhusus || (p.tipe_wilayah === "Wilayah Khusus" && p.nama_mada === filters.daerahKhusus);
+          const matches = p.daerah_khusus === filters.daerahKhusus;
           if (!matches) return false;
         }
       }
 
       if (filters.wilayahKhusus !== ALL) {
-        if (p.wilayah_khusus !== filters.wilayahKhusus) return false;
+        const wkVal = p.wilayah_khusus || (p.tipe_wilayah === "Wilayah Khusus" && String(p.nama_mada || "").toUpperCase().includes("MAWIL") ? p.nama_mada : "");
+        if (wkVal !== filters.wilayahKhusus) return false;
       }
 
       return true;

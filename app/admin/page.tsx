@@ -442,28 +442,28 @@ export default function AdminPage() {
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [churches, filterMada]);
 
-  // Wilayah Khusus (Kiri)
+  // Wilayah Khusus (Mawil Khusus - Kiri)
   const wilayahKhususList = useMemo(() => {
     const set = new Set<string>();
     churches.forEach((f) => {
       const p = f.properties || {};
-      const isKhusus = p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
-      if (isKhusus && p.wilayah_khusus) {
-        set.add(String(p.wilayah_khusus).trim());
+      const isKhusus = p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.wilayah_khusus) || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
+      if (isKhusus) {
+        const val = p.wilayah_khusus || (String(p.nama_mada || "").toUpperCase().includes("MAWIL") ? p.nama_mada : "");
+        if (val) set.add(String(val).trim());
       }
     });
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [churches]);
 
-  // Mada Khusus (Kanan)
+  // Mada Khusus (Daerah Khusus - Kanan)
   const madaKhususList = useMemo(() => {
     const set = new Set<string>();
     churches.forEach((f) => {
       const p = f.properties || {};
-      const isKhusus = p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
-      if (isKhusus) {
-        const val = p.daerah_khusus || p.nama_mada;
-        if (val) set.add(String(val).trim());
+      const isKhusus = p.tipe_wilayah === "Wilayah Khusus" && Boolean(p.daerah_khusus);
+      if (isKhusus && p.daerah_khusus) {
+        set.add(String(p.daerah_khusus).trim());
       }
     });
     return Array.from(set).sort((a, b) => a.localeCompare(b));
@@ -472,7 +472,7 @@ export default function AdminPage() {
   const statsWilayahKhususCount = useMemo(() => {
     return churches.filter((f) => {
       const p = f.properties || {};
-      return p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
+      return p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.wilayah_khusus) || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
     }).length;
   }, [churches]);
 
@@ -483,21 +483,22 @@ export default function AdminPage() {
   const filteredChurches = useMemo(() => {
     return churches.filter((f) => {
       const p = f.properties || {};
-      const isKhusus = p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
+      const isKhusus = p.tipe_wilayah === "Wilayah Khusus" || Boolean(p.wilayah_khusus) || Boolean(p.daerah_khusus) || String(p.nama_mada || "").toUpperCase().includes("KHUSUS");
 
       if (filterMada !== "ALL" && p.nama_mada !== filterMada) return false;
       if (filterMawil !== "ALL" && p.mawil !== filterMawil) return false;
 
-      // Filter Wilayah Khusus (Kiri)
+      // Filter Wilayah Khusus (Mawil Khusus - Kiri)
       if (filterWilayahKhusus !== "ALL") {
-        if (!isKhusus || p.wilayah_khusus !== filterWilayahKhusus) return false;
+        if (!isKhusus) return false;
+        const wkVal = p.wilayah_khusus || (String(p.nama_mada || "").toUpperCase().includes("MAWIL") ? p.nama_mada : "");
+        if (wkVal !== filterWilayahKhusus) return false;
       }
 
-      // Filter Mada Khusus (Kanan)
+      // Filter Mada Khusus (Daerah Khusus - Kanan)
       if (filterMadaKhusus !== "ALL") {
         if (!isKhusus) return false;
-        const val = p.daerah_khusus || p.nama_mada;
-        if (val !== filterMadaKhusus) return false;
+        if (p.daerah_khusus !== filterMadaKhusus) return false;
       }
 
       if (filterStatus !== "ALL" && p.status !== filterStatus) return false;
@@ -818,19 +819,7 @@ export default function AdminPage() {
                 </span>
               </div>
 
-              {/* Wilayah Khusus (KIRI) */}
-              <div className="bg-white p-4 rounded-2xl border border-amber-300 shadow-xs relative overflow-hidden flex flex-col justify-between">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500" />
-                <div>
-                  <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Wilayah Khusus</p>
-                  <p className="text-2xl font-black text-amber-950 mt-1">{statsWilayahKhususCount}</p>
-                </div>
-                <span className="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-full mt-2 inline-block border border-amber-200 w-fit">
-                  {wilayahKhususList.length} Wilayah
-                </span>
-              </div>
-
-              {/* Mada Khusus (KANAN) */}
+              {/* Mada Khusus (Daerah Khusus - KIRI) */}
               <div className="bg-white p-4 rounded-2xl border border-amber-300 shadow-xs relative overflow-hidden flex flex-col justify-between">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500" />
                 <div>
@@ -838,7 +827,19 @@ export default function AdminPage() {
                   <p className="text-2xl font-black text-amber-950 mt-1">{madaKhususList.length}</p>
                 </div>
                 <span className="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-full mt-2 inline-block border border-amber-200 w-fit">
-                  Daerah Khusus
+                  {madaKhususList.length} Mada Khusus
+                </span>
+              </div>
+
+              {/* Mawil Khusus (Wilayah Khusus - KANAN) */}
+              <div className="bg-white p-4 rounded-2xl border border-amber-300 shadow-xs relative overflow-hidden flex flex-col justify-between">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500" />
+                <div>
+                  <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Mawil Khusus</p>
+                  <p className="text-2xl font-black text-amber-950 mt-1">{statsWilayahKhususCount}</p>
+                </div>
+                <span className="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-full mt-2 inline-block border border-amber-200 w-fit">
+                  {wilayahKhususList.length} Mawil Khusus
                 </span>
               </div>
 
@@ -921,26 +922,7 @@ export default function AdminPage() {
 
                 <div className="h-5 w-px bg-slate-200 shrink-0 mx-0.5 hidden sm:block" />
 
-                {/* Filter Wilayah Khusus (KIRI) */}
-                <select
-                  value={filterWilayahKhusus}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setFilterWilayahKhusus(val);
-                    if (val !== "ALL") {
-                      setFilterMada("ALL");
-                      setFilterMawil("ALL");
-                    }
-                  }}
-                  className="h-9 px-3 bg-amber-50/70 border border-amber-300 text-amber-950 font-bold rounded-xl text-xs focus:bg-white focus:border-amber-600 outline-none cursor-pointer"
-                >
-                  <option value="ALL">Semua Wilayah Khusus</option>
-                  {wilayahKhususList.map((wk) => (
-                    <option key={wk} value={wk}>{wk}</option>
-                  ))}
-                </select>
-
-                {/* Filter Mada Khusus / Daerah Khusus (KANAN) */}
+                {/* Filter Mada Khusus / Daerah Khusus (KIRI) */}
                 <select
                   value={filterMadaKhusus}
                   onChange={(e) => {
@@ -956,6 +938,25 @@ export default function AdminPage() {
                   <option value="ALL">Semua Mada Khusus</option>
                   {madaKhususList.map((mk) => (
                     <option key={mk} value={mk}>{mk}</option>
+                  ))}
+                </select>
+
+                {/* Filter Mawil Khusus / Wilayah Khusus (KANAN) */}
+                <select
+                  value={filterWilayahKhusus}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFilterWilayahKhusus(val);
+                    if (val !== "ALL") {
+                      setFilterMada("ALL");
+                      setFilterMawil("ALL");
+                    }
+                  }}
+                  className="h-9 px-3 bg-amber-50/70 border border-amber-300 text-amber-950 font-bold rounded-xl text-xs focus:bg-white focus:border-amber-600 outline-none cursor-pointer"
+                >
+                  <option value="ALL">Semua Mawil Khusus</option>
+                  {wilayahKhususList.map((wk) => (
+                    <option key={wk} value={wk}>{wk}</option>
                   ))}
                 </select>
 
@@ -1503,27 +1504,28 @@ export default function AdminPage() {
                 ) : (
                   <>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-600 mb-1">Wilayah Khusus</label>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">
+                        Mada Khusus (Daerah Khusus)
+                      </label>
                       <input
                         type="text"
-                        value={newChurch.wilayah_khusus}
-                        onChange={(e) => setNewChurch({ ...newChurch, wilayah_khusus: e.target.value })}
-                        placeholder="Contoh: Wilayah Khusus 1"
+                        value={newChurch.daerah_khusus}
+                        onChange={(e) => setNewChurch({ ...newChurch, daerah_khusus: e.target.value })}
+                        placeholder="Contoh: Mada Khusus..."
                         className="w-full h-10 px-3 bg-amber-50/30 border border-amber-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-amber-600 outline-none"
                       />
                     </div>
 
                     <div>
                       <label className="block text-xs font-semibold text-slate-600 mb-1">
-                        Mada Khusus (Daerah Khusus) <span className="text-amber-600 font-bold">*</span>
+                        Mawil Khusus (Wilayah Khusus) <span className="text-amber-600 font-bold">*</span>
                       </label>
                       <input
                         type="text"
-                        required
-                        value={newChurch.daerah_khusus}
-                        onChange={(e) => setNewChurch({ ...newChurch, daerah_khusus: e.target.value })}
+                        value={newChurch.wilayah_khusus}
+                        onChange={(e) => setNewChurch({ ...newChurch, wilayah_khusus: e.target.value })}
                         placeholder="Contoh: MAWIL KHUSUS BALI"
-                        className="w-full h-10 px-3 bg-amber-50/30 border border-amber-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-amber-600 outline-none"
+                        className="w-full h-10 px-3 bg-amber-50/30 border border-amber-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-amber-600 outline-none font-semibold"
                       />
                     </div>
                   </>

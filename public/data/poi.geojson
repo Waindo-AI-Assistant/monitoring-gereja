@@ -18918,7 +18918,7 @@
         "jumlah_jemaat": " ",
         "jam_operasional": " ",
         "status": "Aktif",
-        "mawil": " ",
+        "mawil": "MAWIL KHUSUS BALI",
         "kode_mada": "",
         "nama_mada": "MAWIL KHUSUS BALI",
         "no": 1,
@@ -18931,8 +18931,8 @@
         ],
         "foto_pendeta": "",
         "tipe_wilayah": "Wilayah Khusus",
-        "daerah_khusus": "MAWIL KHUSUS BALI",
-        "wilayah_khusus": ""
+        "daerah_khusus": "",
+        "wilayah_khusus": "MAWIL KHUSUS BALI"
       },
       "geometry": {
         "type": "Point",
@@ -18955,7 +18955,7 @@
         "jumlah_jemaat": " ",
         "jam_operasional": " ",
         "status": "Aktif",
-        "mawil": " ",
+        "mawil": "MAWIL KHUSUS BALI",
         "kode_mada": "",
         "nama_mada": "MAWIL KHUSUS BALI",
         "no": 2,
@@ -18966,8 +18966,8 @@
         "photos": [],
         "foto_pendeta": "",
         "tipe_wilayah": "Wilayah Khusus",
-        "daerah_khusus": "MAWIL KHUSUS BALI",
-        "wilayah_khusus": ""
+        "daerah_khusus": "",
+        "wilayah_khusus": "MAWIL KHUSUS BALI"
       },
       "geometry": null
     },
@@ -18984,7 +18984,7 @@
         "jumlah_jemaat": " ",
         "jam_operasional": " ",
         "status": "Aktif",
-        "mawil": " ",
+        "mawil": "MAWIL KHUSUS BALI",
         "kode_mada": "",
         "nama_mada": "MAWIL KHUSUS BALI",
         "no": 3,
@@ -18997,8 +18997,8 @@
         ],
         "foto_pendeta": "",
         "tipe_wilayah": "Wilayah Khusus",
-        "daerah_khusus": "MAWIL KHUSUS BALI",
-        "wilayah_khusus": ""
+        "daerah_khusus": "",
+        "wilayah_khusus": "MAWIL KHUSUS BALI"
       },
       "geometry": {
         "type": "Point",
@@ -19021,7 +19021,7 @@
         "jumlah_jemaat": " ",
         "jam_operasional": " ",
         "status": "Aktif",
-        "mawil": " ",
+        "mawil": "MAWIL KHUSUS KALTENG",
         "kode_mada": "",
         "nama_mada": "MAWIL KHUSUS KALTENG",
         "no": 1,
@@ -19032,8 +19032,8 @@
         "photos": [],
         "foto_pendeta": "",
         "tipe_wilayah": "Wilayah Khusus",
-        "daerah_khusus": "MAWIL KHUSUS KALTENG",
-        "wilayah_khusus": ""
+        "daerah_khusus": "",
+        "wilayah_khusus": "MAWIL KHUSUS KALTENG"
       },
       "geometry": null
     },
@@ -19050,7 +19050,7 @@
         "jumlah_jemaat": " ",
         "jam_operasional": " ",
         "status": "Aktif",
-        "mawil": " ",
+        "mawil": "MAWIL KHUSUS KALTENG",
         "kode_mada": "",
         "nama_mada": "MAWIL KHUSUS KALTENG",
         "no": 2,
@@ -19061,8 +19061,8 @@
         "photos": [],
         "foto_pendeta": "",
         "tipe_wilayah": "Wilayah Khusus",
-        "daerah_khusus": "MAWIL KHUSUS KALTENG",
-        "wilayah_khusus": ""
+        "daerah_khusus": "",
+        "wilayah_khusus": "MAWIL KHUSUS KALTENG"
       },
       "geometry": null
     },
@@ -19079,7 +19079,7 @@
         "jumlah_jemaat": " ",
         "jam_operasional": " ",
         "status": "Aktif",
-        "mawil": " ",
+        "mawil": "MAWIL KHUSUS KALTENG",
         "kode_mada": "",
         "nama_mada": "MAWIL KHUSUS KALTENG",
         "no": 3,
@@ -19090,8 +19090,8 @@
         "photos": [],
         "foto_pendeta": "",
         "tipe_wilayah": "Wilayah Khusus",
-        "daerah_khusus": "MAWIL KHUSUS KALTENG",
-        "wilayah_khusus": ""
+        "daerah_khusus": "",
+        "wilayah_khusus": "MAWIL KHUSUS KALTENG"
       },
       "geometry": null
     },
@@ -19108,7 +19108,7 @@
         "jumlah_jemaat": " ",
         "jam_operasional": " ",
         "status": "Aktif",
-        "mawil": " ",
+        "mawil": "MAWIL KHUSUS KALTENG",
         "kode_mada": "",
         "nama_mada": "MAWIL KHUSUS KALTENG",
         "no": 4,
@@ -19119,8 +19119,8 @@
         "photos": [],
         "foto_pendeta": "",
         "tipe_wilayah": "Wilayah Khusus",
-        "daerah_khusus": "MAWIL KHUSUS KALTENG",
-        "wilayah_khusus": ""
+        "daerah_khusus": "",
+        "wilayah_khusus": "MAWIL KHUSUS KALTENG"
       },
       "geometry": null
     },
@@ -19137,7 +19137,7 @@
         "jumlah_jemaat": " ",
         "jam_operasional": " ",
         "status": "Aktif",
-        "mawil": " ",
+        "mawil": "MAWIL KHUSUS NTT",
         "kode_mada": "",
         "nama_mada": "MAWIL KHUSUS NTT",
         "no": 1,
@@ -19150,8 +19150,8 @@
         ],
         "foto_pendeta": "",
         "tipe_wilayah": "Wilayah Khusus",
-        "daerah_khusus": "MAWIL KHUSUS NTT",
-        "wilayah_khusus": ""
+        "daerah_khusus": "",
+        "wilayah_khusus": "MAWIL KHUSUS NTT"
       },
       "geometry": {
         "type": "Point",
@@ -19174,7 +19174,7 @@
         "jumlah_jemaat": " ",
         "jam_operasional": " ",
         "status": "Aktif",
-        "mawil": " ",
+        "mawil": "MAWIL KHUSUS NTT",
         "kode_mada": "",
         "nama_mada": "MAWIL KHUSUS NTT",
         "no": 2,
@@ -19185,8 +19185,8 @@
         "photos": [],
         "foto_pendeta": "",
         "tipe_wilayah": "Wilayah Khusus",
-        "daerah_khusus": "MAWIL KHUSUS NTT",
-        "wilayah_khusus": ""
+        "daerah_khusus": "",
+        "wilayah_khusus": "MAWIL KHUSUS NTT"
       },
       "geometry": null
     },
@@ -19203,7 +19203,7 @@
         "jumlah_jemaat": " ",
         "jam_operasional": " ",
         "status": "Aktif",
-        "mawil": " ",
+        "mawil": "MAWIL KHUSUS MALUKU UTARA",
         "kode_mada": "",
         "nama_mada": "MAWIL KHUSUS MALUKU UTARA",
         "no": 1,
@@ -19214,8 +19214,8 @@
         "photos": [],
         "foto_pendeta": "",
         "tipe_wilayah": "Wilayah Khusus",
-        "daerah_khusus": "MAWIL KHUSUS MALUKU UTARA",
-        "wilayah_khusus": ""
+        "daerah_khusus": "",
+        "wilayah_khusus": "MAWIL KHUSUS MALUKU UTARA"
       },
       "geometry": {
         "type": "Point",
@@ -19238,7 +19238,7 @@
         "jumlah_jemaat": " ",
         "jam_operasional": " ",
         "status": "Aktif",
-        "mawil": " ",
+        "mawil": "MAWIL KHUSUS MALUKU UTARA",
         "kode_mada": "",
         "nama_mada": "MAWIL KHUSUS MALUKU UTARA",
         "no": 2,
@@ -19249,8 +19249,8 @@
         "photos": [],
         "foto_pendeta": "",
         "tipe_wilayah": "Wilayah Khusus",
-        "daerah_khusus": "MAWIL KHUSUS MALUKU UTARA",
-        "wilayah_khusus": ""
+        "daerah_khusus": "",
+        "wilayah_khusus": "MAWIL KHUSUS MALUKU UTARA"
       },
       "geometry": {
         "type": "Point",
@@ -19273,7 +19273,7 @@
         "jumlah_jemaat": " ",
         "jam_operasional": " ",
         "status": "Aktif",
-        "mawil": " ",
+        "mawil": "MAWIL KHUSUS MALUKU UTARA",
         "kode_mada": "",
         "nama_mada": "MAWIL KHUSUS MALUKU UTARA",
         "no": 3,
@@ -19284,8 +19284,8 @@
         "photos": [],
         "foto_pendeta": "",
         "tipe_wilayah": "Wilayah Khusus",
-        "daerah_khusus": "MAWIL KHUSUS MALUKU UTARA",
-        "wilayah_khusus": ""
+        "daerah_khusus": "",
+        "wilayah_khusus": "MAWIL KHUSUS MALUKU UTARA"
       },
       "geometry": {
         "type": "Point",
@@ -19308,7 +19308,7 @@
         "jumlah_jemaat": " ",
         "jam_operasional": " ",
         "status": "Aktif",
-        "mawil": " ",
+        "mawil": "MAWIL KHUSUS MALUKU UTARA",
         "kode_mada": "",
         "nama_mada": "MAWIL KHUSUS MALUKU UTARA",
         "no": 4,
@@ -19319,8 +19319,8 @@
         "photos": [],
         "foto_pendeta": "",
         "tipe_wilayah": "Wilayah Khusus",
-        "daerah_khusus": "MAWIL KHUSUS MALUKU UTARA",
-        "wilayah_khusus": ""
+        "daerah_khusus": "",
+        "wilayah_khusus": "MAWIL KHUSUS MALUKU UTARA"
       },
       "geometry": null
     }
