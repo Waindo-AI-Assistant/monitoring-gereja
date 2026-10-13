@@ -14,6 +14,19 @@ function authenticateAdmin(req: NextRequest) {
 
 const GEOJSON_PATH = path.join(process.cwd(), "public", "data", "poi.geojson");
 
+async function safeWriteGeoJSON(filePath: string, data: any): Promise<boolean> {
+  try {
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");
+    return true;
+  } catch (err: any) {
+    console.warn(`[GeoJSON Sync Warning] Gagal menulis ke ${filePath}:`, err.message);
+    if (err.code === "EACCES" || err.code === "EPERM") {
+      return false;
+    }
+    throw err;
+  }
+}
+
 // GET: Fetch all church records
 export async function GET(req: NextRequest) {
   try {
@@ -155,7 +168,7 @@ export async function POST(req: NextRequest) {
     };
 
     geojson.features.unshift(newFeature);
-    await fs.writeFile(GEOJSON_PATH, JSON.stringify(geojson, null, 2), "utf-8");
+    await safeWriteGeoJSON(GEOJSON_PATH, geojson);
 
     // Sinkronisasi insert ke PostgreSQL via Prisma jika aktif
     try {
@@ -243,7 +256,7 @@ export async function PUT(req: NextRequest) {
       };
     }
 
-    await fs.writeFile(GEOJSON_PATH, JSON.stringify(geojson, null, 2), "utf-8");
+    await safeWriteGeoJSON(GEOJSON_PATH, geojson);
 
     // Sinkronisasi ke PostgreSQL via Prisma jika aktif
     try {
@@ -336,7 +349,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Data gereja tidak ditemukan." }, { status: 404 });
     }
 
-    await fs.writeFile(GEOJSON_PATH, JSON.stringify(geojson, null, 2), "utf-8");
+    await safeWriteGeoJSON(GEOJSON_PATH, geojson);
 
     // Sinkronisasi delete ke PostgreSQL via Prisma jika aktif
     try {

@@ -182,7 +182,7 @@ body {
   min-height: 100vh;
   display: flex;
   align-items: center;
-  background: #ffffff;
+  background: #d9f2ff url("/images/ggp-sky-hero%20-%20Copy.png") center / cover no-repeat;
   padding: 120px 2rem 80px;
   overflow: hidden;
 }
@@ -247,16 +247,22 @@ body {
 .landing-hero__inner {
   max-width: 1280px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 64px;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
   width: 100%;
   position: relative;
   z-index: 1;
 }
 
 .landing-hero__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  width: 100%;
+  max-width: 860px;
   animation: fade-up 0.8s ease-out;
 }
 
@@ -338,12 +344,13 @@ body {
 /* Heading */
 .landing-hero__heading {
   font-family: 'Outfit', sans-serif;
-  font-size: 2.5rem;
+  font-size: 2.75rem;
   font-weight: 900;
-  line-height: 1.1;
+  line-height: 1.15;
   letter-spacing: -0.03em;
   color: var(--slate-800);
   margin-bottom: 20px;
+  text-align: left;
 }
 
 .landing-hero__heading-accent {
@@ -359,7 +366,10 @@ body {
   line-height: 1.75;
   color: var(--slate-600);
   margin-bottom: 36px;
-  max-width: 500px;
+  max-width: 580px;
+  margin-left: 0;
+  margin-right: 0;
+  text-align: left;
 }
 
 /* CTA Group */
@@ -427,11 +437,13 @@ body {
   display: flex;
   align-items: center;
   gap: 0;
-  padding: 18px 28px;
+  padding: 18px 24px;
   background: #ffffff;
   border: 1px solid var(--slate-200);
   border-radius: 20px;
   width: fit-content;
+  max-width: 100%;
+  margin: 0;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
 }
 
@@ -439,7 +451,24 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 24px;
+  justify-content: center;
+  text-align: center;
+  padding: 0 20px;
+}
+
+.landing-hero__stat--link {
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 14px;
+  margin: -6px 0;
+  padding: 6px 18px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.landing-hero__stat--link:hover {
+  background: rgba(37, 99, 235, 0.06);
+  transform: translateY(-2px);
 }
 
 .landing-hero__stat-value {
@@ -451,6 +480,12 @@ body {
   letter-spacing: -0.02em;
 }
 
+.landing-hero__stat-value--period {
+  font-size: 1.45rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
 .landing-hero__stat-label {
   font-size: 0.7rem;
   font-weight: 600;
@@ -458,6 +493,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-top: 2px;
+  white-space: nowrap;
 }
 
 .landing-hero__stat-divider {
@@ -465,6 +501,133 @@ body {
   height: 32px;
   background: var(--slate-200);
   flex-shrink: 0;
+}
+
+/* Dedicated dashboard preview section */
+.landing-preview {
+  padding: 80px 2rem;
+  background: #f8fafc;
+  border-block: 1px solid #e2e8f0;
+  scroll-margin-top: 72px;
+}
+
+.landing-preview__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.3fr);
+  grid-template-areas: "copy image" "action image";
+  column-gap: 56px;
+  row-gap: 24px;
+  align-items: center;
+}
+
+.landing-preview__copy {
+  grid-area: copy;
+  align-self: end;
+}
+
+.landing-preview__label {
+  color: var(--blue-700);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.landing-preview__heading {
+  font-family: "Outfit", sans-serif;
+  font-size: clamp(1.65rem, 2.7vw, 2rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--slate-800);
+  margin-bottom: 18px;
+  text-wrap: balance;
+  scroll-margin-top: 96px;
+}
+
+.landing-preview__description {
+  max-width: 420px;
+  color: var(--slate-600);
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.landing-preview__figure {
+  grid-area: image;
+  min-width: 0;
+  margin: 0;
+}
+
+.landing-preview__frame {
+  overflow: hidden;
+  border: 1px solid #d6e0ec;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(15, 29, 61, 0.08);
+}
+
+.landing-preview__image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.landing-preview__caption {
+  margin-top: 14px;
+  text-align: center;
+  color: var(--slate-600);
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.landing-preview__cta {
+  grid-area: action;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.landing-preview__cta .landing-hero__cta {
+  min-height: 48px;
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-size: 0.875rem;
+}
+
+.landing-preview__cta .landing-hero__cta:focus-visible {
+  outline: 3px solid var(--blue-700);
+  outline-offset: 4px;
+}
+
+.landing-preview__hint {
+  color: var(--slate-600);
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .landing-preview__inner {
+    max-width: 680px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "copy" "image" "action";
+    gap: 28px;
+  }
+
+  .landing-preview__description {
+    max-width: 560px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-preview__cta .landing-hero__cta {
+    transition: none;
+    transform: none;
+  }
 }
 
 /* Preview */
@@ -541,7 +704,7 @@ body {
 /* ────────────────────── FEATURES ────────────────────── */
 .landing-features {
   padding: 120px 2rem;
-  background: #f8fafc;
+  background: #d9f2ff url("/images/ggp-sky-hero%20-%20Copy%202.png") center / cover no-repeat;
   position: relative;
   overflow: hidden;
 }
@@ -550,11 +713,12 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(
-    rgba(0, 0, 0, 0.015) 1px,
-    transparent 1px
+  background: linear-gradient(
+    180deg,
+    rgba(248, 250, 252, 0.9),
+    rgba(248, 250, 252, 0.8) 22%,
+    transparent 48%
   );
-  background-size: 40px 40px;
   pointer-events: none;
 }
 
@@ -565,7 +729,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--blue-400);
+  color: var(--blue-700);
   position: relative;
   z-index: 1;
 }
@@ -585,7 +749,7 @@ body {
 .landing-features__subtitle {
   text-align: center;
   font-size: 0.95rem;
-  color: var(--slate-500);
+  color: var(--slate-600);
   margin-bottom: 56px;
   max-width: 520px;
   margin-left: auto;
@@ -792,26 +956,11 @@ body {
 
 @media (max-width: 1024px) {
   .landing-hero__inner {
-    grid-template-columns: 1fr;
     gap: 48px;
-    text-align: center;
   }
 
   .landing-hero__heading {
-    font-size: 2rem;
-  }
-
-  .landing-hero__desc {
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .landing-hero__cta-group {
-    justify-content: center;
-  }
-
-  .landing-hero__stats {
-    margin: 0 auto;
+    font-size: 2.25rem;
   }
 
   .landing-features__grid {
@@ -897,6 +1046,14 @@ body {
 
   .landing-hero__stat-divider {
     display: none;
+  }
+
+  .landing-preview {
+    padding: 48px 1rem;
+  }
+
+  .landing-preview__heading {
+    margin-bottom: 16px;
   }
 
   .landing-features {

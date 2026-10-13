@@ -34,9 +34,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    user: "root" # Mencegah EACCES permission denied pada volume bind mount Linux host
     volumes:
       - ./data:/app/data
       - ./public/data:/app/public/data
+      - ./public/uploads:/app/public/uploads
 
 volumes:
   pgdata:

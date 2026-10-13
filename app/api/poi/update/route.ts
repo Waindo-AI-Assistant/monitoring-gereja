@@ -68,8 +68,15 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // 5. Tulis kembali ke file GeoJSON
-    await fs.writeFile(filePath, JSON.stringify(geojsonData, null, 2), "utf-8");
+    // 5. Tulis kembali ke file GeoJSON secara aman
+    try {
+      await fs.writeFile(filePath, JSON.stringify(geojsonData, null, 2), "utf-8");
+    } catch (fsErr: any) {
+      console.warn("[GeoJSON Update Warning] Gagal menulis ke poi.geojson:", fsErr.message);
+      if (fsErr.code !== "EACCES" && fsErr.code !== "EPERM") {
+        throw fsErr;
+      }
+    }
 
     // 6. Sinkronisasi ke PostgreSQL via Prisma jika terhubung
     try {

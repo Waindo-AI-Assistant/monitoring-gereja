@@ -45,7 +45,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 
 # Buat direktori data untuk persistensi lokal jika diperlukan
-RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data /app/public
+RUN mkdir -p /app/data /app/public/data /app/public/uploads && chown -R nextjs:nodejs /app/data /app/public
 
 USER nextjs
 

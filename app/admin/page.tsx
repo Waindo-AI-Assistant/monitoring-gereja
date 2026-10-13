@@ -7,6 +7,8 @@ import EditChurchModal from "@/components/dashboard/EditChurchModal";
 import CoordinatePickerModal from "@/components/map/CoordinatePickerModal";
 import ImageUploadInput from "@/components/ui/ImageUploadInput";
 import { exportGeoJSON, exportCSV } from "@/lib/export";
+import "@/lib/i18n";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 type SafeUser = {
   id: string;
@@ -722,7 +724,7 @@ export default function AdminPage() {
                 </span>
               </div>
               <span className="landing-navbar__subtitle hidden sm:block text-[10px]">
-                Dashboard Pemetaan Sebaran Data Gereja
+                Dashboard Pemetaan 
               </span>
             </div>
           </Link>
@@ -731,7 +733,7 @@ export default function AdminPage() {
         {/* Tab Navigation & User Controls */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Main Page Links */}
-          <div className="landing-navbar__links hidden lg:flex">
+          <div className="landing-navbar__links hidden lg:flex items-center gap-1">
             <Link href="/" className="landing-navbar__link text-xs px-3 py-1.5">
               Home
             </Link>
@@ -741,6 +743,10 @@ export default function AdminPage() {
             <Link href="/admin" className="landing-navbar__link landing-navbar__link--active text-xs px-3 py-1.5">
               Admin
             </Link>
+          </div>
+
+          <div className="hidden sm:block">
+            <LanguageSwitcher variant="compact" />
           </div>
 
           <div className="h-6 w-px bg-white/20 hidden lg:block" />

@@ -18,6 +18,8 @@ import SummaryCards from "./SummaryCards";
 import FilterBar from "./FilterBar";
 import LayerControl from "./LayerControl";
 import RouteInfoCard from "./RouteInfoCard";
+import "@/lib/i18n";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 // Leaflet menyentuh `window` saat modul dievaluasi, jadi peta tidak boleh
 // ikut render di server.
@@ -506,13 +508,13 @@ function DashboardHeader({ sidebarOpen, onToggleSidebar }: DashboardHeaderProps)
               Gereja Gerakan Pentakosta
             </span>
             <span className="landing-navbar__subtitle hidden sm:block text-[10px]">
-              Dashboard Pemetaan Sebaran Data Gereja
+              Dashboard Pemetaan 
             </span>
           </div>
         </Link>
       </div>
 
-      <div className="landing-navbar__links shrink-0">
+      <div className="landing-navbar__links shrink-0 items-center gap-1 sm:gap-2">
         <Link href="/" className="landing-navbar__link text-xs px-2 sm:px-4 py-1.5 sm:py-2">
           Home
         </Link>
@@ -524,6 +526,10 @@ function DashboardHeader({ sidebarOpen, onToggleSidebar }: DashboardHeaderProps)
         <Link href="/admin" className="landing-navbar__link text-xs px-2 sm:px-4 py-1.5 sm:py-2">
           Admin
         </Link>
+
+        <div className="ml-1">
+          <LanguageSwitcher variant="compact" />
+        </div>
       </div>
     </header>
   );
