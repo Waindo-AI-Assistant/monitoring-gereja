@@ -11,6 +11,7 @@ import {
 import "leaflet/dist/leaflet.css";
 import type * as LeafletNamespace from "leaflet";
 import geojsonvt from "geojson-vt";
+import i18next from "i18next";
 import {
   BASEMAPS,
   INDONESIA_EXTENT,
@@ -21,6 +22,7 @@ import {
   GEREJA_ORDERED_FIELDS,
   classLabel,
   formatValue,
+  getAttributeLabel,
   type LayerDef,
   type LayerId,
 } from "@/config/dashboard";
@@ -76,10 +78,15 @@ function sphericalArea(points: LeafletNamespace.LatLng[]): number {
 
 /** Susun tabel atribut untuk popup. Nilai kosong dibuang agar popup tetap ringkas. */
 function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
+  const isEn = i18next.language === "en";
   const nameKey = Object.keys(props).find((k) =>
     ["name", "nama", "title", "judul"].includes(k.toLowerCase()),
   );
-  const titleText = nameKey ? String(props[nameKey]) : layer.label;
+  let defaultLayerLabel = layer.label;
+  if (layer.id === "poi") defaultLayerLabel = isEn ? "Church Locations" : "Titik Gereja";
+  if (layer.id === "batas_provinsi") defaultLayerLabel = isEn ? "Regional Boundaries (MADA)" : "Batas Mada";
+  if (layer.id === "batas_kabupaten") defaultLayerLabel = isEn ? "District Boundaries (MAWIL)" : "Batas Wilayah";
+  const titleText = nameKey ? String(props[nameKey]) : defaultLayerLabel;
 
   const imgKey = Object.keys(props).find((k) =>
     ["foto", "photo", "image", "gambar", "image_url", "url_foto"].includes(k.toLowerCase()),
@@ -101,9 +108,9 @@ function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
     };
 
     const badgeTipe = `<tr class="border-b border-slate-100 last:border-0">
-      <td class="py-1.5 pr-3 align-top text-[11px] font-medium uppercase tracking-wide text-slate-500">Tipe Wilayah</td>
+      <td class="py-1.5 pr-3 align-top text-[11px] font-medium uppercase tracking-wide text-slate-500">${isEn ? "Region Category" : "Tipe Wilayah"}</td>
       <td class="py-1.5 text-right text-xs font-bold ${isKhusus ? "text-amber-700" : "text-blue-700"}">
-        ${isKhusus ? "Wilayah Khusus" : "Wilayah Biasa"}
+        ${isKhusus ? (isEn ? "Special Territory" : "Wilayah Khusus") : (isEn ? "Regular Territory" : "Wilayah Biasa")}
       </td>
     </tr>`;
 
@@ -121,7 +128,7 @@ function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
     }).map((k) => {
       const v = effectiveProps[k];
       const value = formatValue(v, k);
-      const label = ATTRIBUTE_LABELS[k] ?? k;
+      const label = getAttributeLabel(k, isEn);
       return `<tr class="border-b border-slate-100 last:border-0">
         <td class="py-1.5 pr-3 align-top text-[11px] font-medium uppercase tracking-wide text-slate-500">${label}</td>
         <td class="py-1.5 text-right text-xs font-semibold text-slate-800">${value}</td>
@@ -131,7 +138,7 @@ function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
     rows = Object.entries(props)
       .filter(([k, v]) => k !== imgKey && k !== nameKey && v !== null && v !== undefined && v !== "")
       .map(([k, v]) => {
-        const label = ATTRIBUTE_LABELS[k] ?? k;
+        const label = getAttributeLabel(k, isEn);
         let value = formatValue(v, k);
         if (layer.classField === k) value = classLabel(layer.id, value);
         return `<tr class="border-b border-slate-100 last:border-0">
@@ -144,7 +151,7 @@ function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
 
   const imageHtml = imageUrl
     ? `<div class="w-full h-36 overflow-hidden bg-slate-100 border-b border-slate-100">
-        <img src="${imageUrl}" alt="Foto ${titleText}" class="w-full h-full object-cover" onerror="this.parentNode.style.display='none';" />
+        <img src="${imageUrl}" alt="${isEn ? "Photo" : "Foto"} ${titleText}" class="w-full h-full object-cover" onerror="this.parentNode.style.display='none';" />
       </div>`
     : "";
 
@@ -152,7 +159,7 @@ function popupHtml(layer: LayerDef, props: Record<string, unknown>): string {
     ${imageHtml}
     <div class="bg-blue-950 px-3 py-2 text-xs font-semibold text-white">${titleText}</div>
     <div class="max-h-56 overflow-y-auto px-3 py-1">
-      <table class="w-full border-collapse">${rows || '<tr><td class="py-2 text-xs text-slate-500">Tidak ada atribut.</td></tr>'}</table>
+      <table class="w-full border-collapse">${rows || (isEn ? '<tr><td class="py-2 text-xs text-slate-500">No attributes.</td></tr>' : '<tr><td class="py-2 text-xs text-slate-500">Tidak ada atribut.</td></tr>')}</table>
     </div>
   </div>`;
 }
@@ -890,7 +897,9 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
           map.removeLayer(tempPolygon);
           tempPolygon = null;
         }
-        overlay.innerText = "Klik pada peta untuk mulai mengukur";
+        overlay.innerText = i18next.language === "en"
+          ? "Click on the map to start measuring"
+          : "Klik pada peta untuk mulai mengukur";
         return;
       }
 
@@ -935,10 +944,15 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
       }
       totalDist += dist;
 
+      const isEn = i18next.language === "en";
       if (points.length >= 2) {
-        overlay.innerText = `Jarak total: ${(totalDist / 1000).toFixed(2)} km\nKlik untuk menambah titik\nKlik kanan untuk undo`;
+        overlay.innerText = isEn
+          ? `Total distance: ${(totalDist / 1000).toFixed(2)} km\nClick to add point\nRight-click to undo`
+          : `Jarak total: ${(totalDist / 1000).toFixed(2)} km\nKlik untuk menambah titik\nKlik kanan untuk undo`;
       } else {
-        overlay.innerText = `Jarak: ${(dist / 1000).toFixed(2)} km\nKlik untuk menambah titik\nKlik kanan untuk undo`;
+        overlay.innerText = isEn
+          ? `Distance: ${(dist / 1000).toFixed(2)} km\nClick to add point\nRight-click to undo`
+          : `Jarak: ${(dist / 1000).toFixed(2)} km\nKlik untuk menambah titik\nKlik kanan untuk undo`;
       }
     }
 
@@ -982,7 +996,9 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
 
       if (overlay) {
         if (points.length === 0) {
-          overlay.innerText = "Klik pada peta untuk mulai mengukur";
+          overlay.innerText = i18next.language === "en"
+            ? "Click on the map to start measuring"
+            : "Klik pada peta untuk mulai mengukur";
         } else {
           onMouseMove(e);
         }

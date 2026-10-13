@@ -945,6 +945,8 @@ function PhotoLightboxModal({
 }
 
 export default function DashboardShell() {
+  const { t, i18n } = useTranslation();
+  const isEn = i18n.language === "en";
   const mapRef = useRef<MapHandle | null>(null);
 
   const [poiFeatures, setPoiFeatures] = useState<any[]>([]);
@@ -998,23 +1000,23 @@ export default function DashboardShell() {
 
   const handleLocateUser = useCallback(() => {
     if (typeof window !== "undefined" && !window.isSecureContext && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-      showRoutingToast("Fitur GPS browser mewajibkan koneksi HTTPS (SSL) untuk mengakses lokasi perangkat pada IP publik.");
+      showRoutingToast(isEn ? "GPS requires HTTPS (SSL) connection on public IP." : "Fitur GPS browser mewajibkan koneksi HTTPS (SSL) untuk mengakses lokasi perangkat pada IP publik.");
       return;
     }
 
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      showRoutingToast("Perangkat atau browser Anda tidak mendukung GPS Geolocation.");
+      showRoutingToast(isEn ? "Your device or browser does not support GPS Geolocation." : "Perangkat atau browser Anda tidak mendukung GPS Geolocation.");
       return;
     }
 
     if (userLocation) {
       mapRef.current?.flyToCoords(userLocation, 16);
-      showRoutingToast("Memusatkan tampilan peta ke posisi Anda.");
+      showRoutingToast(isEn ? "Centering map view to your location." : "Memusatkan tampilan peta ke posisi Anda.");
       return;
     }
 
     setIsLocating(true);
-    showRoutingToast("Mendeteksi koordinat GPS Anda...");
+    showRoutingToast(isEn ? "Detecting your GPS coordinates..." : "Mendeteksi koordinat GPS Anda...");
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -1022,30 +1024,30 @@ export default function DashboardShell() {
         setUserLocation(coords);
         setIsLocating(false);
         mapRef.current?.flyToCoords(coords, 16);
-        showRoutingToast("Lokasi Anda berhasil ditemukan!");
+        showRoutingToast(isEn ? "Your location was found successfully!" : "Lokasi Anda berhasil ditemukan!");
       },
       (err) => {
         setIsLocating(false);
         if (err.code === 1) {
-          showRoutingToast("Izin lokasi GPS ditolak oleh browser atau memerlukan protokol HTTPS.");
+          showRoutingToast(isEn ? "GPS permission denied by browser or requires HTTPS." : "Izin lokasi GPS ditolak oleh browser atau memerlukan protokol HTTPS.");
         } else {
-          showRoutingToast("Gagal mendeteksi lokasi GPS perangkat Anda.");
+          showRoutingToast(isEn ? "Failed to detect device GPS coordinates." : "Gagal mendeteksi lokasi GPS perangkat Anda.");
         }
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
-  }, [userLocation, showRoutingToast]);
+  }, [userLocation, showRoutingToast, isEn]);
 
   const handleGetDirections = useCallback((props: any) => {
     const lat = Number(props.y || props.lat || props.latitude);
     const lng = Number(props.x || props.lng || props.longitude);
 
     if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-      showRoutingToast("Koordinat lokasi gereja ini belum valid.");
+      showRoutingToast(isEn ? "Church coordinates are not yet valid." : "Koordinat lokasi gereja ini belum valid.");
       return;
     }
 
-    const churchName = props.name || props.nama || "Gereja Tujuan";
+    const churchName = props.name || props.nama || (isEn ? "Target Church" : "Gereja Tujuan");
     setRouteTargetName(churchName);
 
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -1054,7 +1056,7 @@ export default function DashboardShell() {
     }
 
     setIsRoutingLoading(true);
-    showRoutingToast("Mendeteksi lokasi GPS Anda...");
+    showRoutingToast(isEn ? "Detecting your GPS coordinates..." : "Mendeteksi lokasi GPS Anda...");
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -1063,7 +1065,7 @@ export default function DashboardShell() {
         setUserLocation([userLat, userLng]);
 
         try {
-          showRoutingToast("Mengalkulasi rute jalan tercepat...");
+          showRoutingToast(isEn ? "Calculating fastest driving route..." : "Mengalkulasi rute jalan tercepat...");
           const result = await calculateRoute([userLat, userLng], [lat, lng]);
           setRouteResult(result);
           setIsRoutingLoading(false);
@@ -1072,13 +1074,13 @@ export default function DashboardShell() {
           setSelectedFeature(null);
         } catch (err: any) {
           setIsRoutingLoading(false);
-          showRoutingToast(err.message || "Gagal mengalkulasi rute jalan.");
+          showRoutingToast(err.message || (isEn ? "Failed to calculate road route." : "Gagal mengalkulasi rute jalan."));
         }
       },
       async (geoError) => {
         // Jika izin lokasi GPS tidak aktif / ditolak browser karena HTTP, coba simulasi dari Jakarta atau buka Google Maps
         try {
-          showRoutingToast("GPS browser nonaktif / butuh HTTPS. Menghitung rute alternatif...");
+          showRoutingToast(isEn ? "GPS disabled / requires HTTPS. Calculating alternative route..." : "GPS browser nonaktif / butuh HTTPS. Menghitung rute alternatif...");
           const defaultStart: [number, number] = [-6.1843, 106.8456]; // Kramat Pulo, Jakarta Pusat
           const result = await calculateRoute(defaultStart, [lat, lng]);
           setRouteResult(result);
@@ -1087,13 +1089,13 @@ export default function DashboardShell() {
           setSelectedFeature(null);
         } catch (err) {
           setIsRoutingLoading(false);
-          showRoutingToast("Membuka petunjuk arah di Google Maps...");
+          showRoutingToast(isEn ? "Opening directions in Google Maps..." : "Membuka petunjuk arah di Google Maps...");
           window.open(getGoogleMapsDirectionsUrl(lat, lng), "_blank");
         }
       },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
     );
-  }, [showRoutingToast]);
+  }, [showRoutingToast, isEn]);
 
   const isWideScreen = useIsWideScreen();
   const sidebarOpen = sidebarToggled ?? isWideScreen;
@@ -1308,13 +1310,13 @@ export default function DashboardShell() {
         <button
           type="button"
           onClick={handleReset}
-          title="Kembalikan filter ke tampilan awal"
+          title={t("dashboard.reset_title") || "Kembalikan filter ke tampilan awal"}
           className="h-9 shrink-0 rounded-xl border border-slate-200 bg-white px-2.5 sm:px-3 text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-slate-500 shadow-xs transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 cursor-pointer flex items-center gap-1.5"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5 text-slate-400">
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
           </svg>
-          <span className="hidden sm:inline">Reset</span>
+          <span className="hidden sm:inline">{t("dashboard.reset") || "Reset"}</span>
         </button>
       </div>
 
@@ -1323,12 +1325,14 @@ export default function DashboardShell() {
         {sidebarOpen ? (
           <aside className="absolute inset-y-0 left-0 z-1100 w-72 max-w-[85vw] shrink-0 overflow-y-auto border-r border-slate-200 bg-white p-3 shadow-2xl thin-scroll lg:static lg:w-64 lg:shadow-none">
             <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 lg:hidden">
-              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Layer</span>
+              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                {t("dashboard.layer_settings") || "Pengaturan Layer"}
+              </span>
               <button
                 type="button"
                 onClick={() => setSidebarToggled(false)}
                 className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 cursor-pointer"
-                aria-label="Tutup panel samping"
+                aria-label={isEn ? "Close side panel" : "Tutup panel samping"}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -1408,7 +1412,7 @@ export default function DashboardShell() {
         {sidebarOpen ? (
           <button
             type="button"
-            aria-label="Tutup panel"
+            aria-label={isEn ? "Close panel" : "Tutup panel"}
             onClick={() => setSidebarToggled(false)}
             className="absolute inset-0 z-1050 bg-slate-900/20 lg:hidden"
           />
