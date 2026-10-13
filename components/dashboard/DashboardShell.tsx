@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { DEFAULT_BASEMAP_ID, LAYERS, ATTRIBUTE_LABELS, GEREJA_ORDERED_FIELDS, formatValue, type LayerId } from "@/config/dashboard";
+import { DEFAULT_BASEMAP_ID, LAYERS, ATTRIBUTE_LABELS, GEREJA_ORDERED_FIELDS, formatValue, getAttributeLabel, type LayerId } from "@/config/dashboard";
 import {
   ALL,
   ALL_KHUSUS,
@@ -19,6 +19,7 @@ import FilterBar from "./FilterBar";
 import LayerControl from "./LayerControl";
 import RouteInfoCard from "./RouteInfoCard";
 import "@/lib/i18n";
+import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 // Leaflet menyentuh `window` saat modul dievaluasi, jadi peta tidak boleh
@@ -224,7 +225,10 @@ interface ChurchAttributesTableProps {
 }
 
 function ChurchAttributesTable({ layerLabel, properties }: ChurchAttributesTableProps) {
-  if (layerLabel === "Titik Gereja") {
+  const { i18n } = useTranslation();
+  const isEn = i18n.language === "en";
+
+  if (layerLabel === "Titik Gereja" || layerLabel === "Church Locations") {
     const isKhusus =
       properties.tipe_wilayah === "Wilayah Khusus" ||
       Boolean(properties.daerah_khusus && String(properties.daerah_khusus).trim() !== "") ||
@@ -242,16 +246,16 @@ function ChurchAttributesTable({ layerLabel, properties }: ChurchAttributesTable
         <tbody>
           <tr className="border-b border-slate-100">
             <td className="py-2 pr-3 text-[10px] font-medium uppercase text-slate-400 align-top">
-              Tipe Wilayah
+              {isEn ? "Region Category" : "Tipe Wilayah"}
             </td>
             <td className="py-2 text-xs font-semibold text-right">
               {isKhusus ? (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                  Wilayah Khusus
+                  {isEn ? "Special Territory" : "Wilayah Khusus"}
                 </span>
               ) : (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
-                  Wilayah Biasa
+                  {isEn ? "Regular Territory" : "Wilayah Biasa"}
                 </span>
               )}
             </td>
@@ -283,7 +287,7 @@ function ChurchAttributesTable({ layerLabel, properties }: ChurchAttributesTable
 
             return true;
           }).map((k) => {
-            const label = ATTRIBUTE_LABELS[k] ?? k.replace(/_/g, " ");
+            const label = getAttributeLabel(k, isEn);
             const displayVal = formatValue(effectiveProps[k], k);
             return (
               <tr key={k} className="border-b border-slate-100 last:border-0">
@@ -317,7 +321,7 @@ function ChurchAttributesTable({ layerLabel, properties }: ChurchAttributesTable
               !k.toLowerCase().includes("gambar")
           )
           .map(([k, v]) => {
-            const label = ATTRIBUTE_LABELS[k] ?? k.replace(/_/g, " ");
+            const label = getAttributeLabel(k, isEn);
             const displayVal = formatValue(v, k);
             return (
               <tr key={k} className="border-b border-slate-100 last:border-0">
@@ -357,12 +361,23 @@ function ChurchDetailDrawer({
   onGetRoute,
   isRoutingLoading,
 }: ChurchDetailDrawerProps) {
+  const { t, i18n } = useTranslation();
+  const isEn = i18n.language === "en";
+
   const pastorNameKey = selectedFeature
     ? Object.keys(selectedFeature.properties).find((k) =>
         ["pendeta", "nama_pendeta", "pastor", "nama_pastor", "priest", "pimpinan"].includes(k.toLowerCase())
       )
     : null;
   const pastorName = pastorNameKey && selectedFeature ? String(selectedFeature.properties[pastorNameKey]) : null;
+
+  const getDrawerLayerLabel = () => {
+    if (!selectedFeature) return "";
+    if (selectedFeature.layerLabel === "Titik Gereja") return t("dashboard.church_point") || "Titik Gereja";
+    if (selectedFeature.layerLabel === "Batas Mada") return isEn ? "Regional Boundaries (MADA)" : "Batas Mada";
+    if (selectedFeature.layerLabel === "Batas Wilayah") return isEn ? "District Boundaries (MAWIL)" : "Batas Wilayah";
+    return selectedFeature.layerLabel;
+  };
 
   return (
     <>
@@ -390,17 +405,17 @@ function ChurchDetailDrawer({
             <div className="flex items-center justify-between bg-blue-950 p-4 rounded-t-2xl sm:rounded-none text-white">
             <div className="min-w-0">
               <span className="text-[9px] uppercase tracking-wider font-semibold text-slate-300">
-                {selectedFeature.layerLabel}
+                {getDrawerLayerLabel()}
               </span>
               <h2 className="text-sm font-bold truncate">
-                {selectedFeature.properties.name || selectedFeature.properties.nama || "Detail Objek"}
+                {selectedFeature.properties.name || selectedFeature.properties.nama || t("dashboard.detail_object") || "Detail Objek"}
               </h2>
             </div>
             <button
               type="button"
               onClick={onClose}
-              aria-label="Tutup Detail"
-              className="rounded-lg p-1.5 hover:bg-white/10 transition-colors"
+              aria-label={isEn ? "Close Details" : "Tutup Detail"}
+              className="rounded-lg p-1.5 hover:bg-white/10 transition-colors cursor-pointer"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -429,14 +444,14 @@ function ChurchDetailDrawer({
                 {isRoutingLoading ? (
                   <>
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    <span>Mencari Rute Tercepat...</span>
+                    <span>{t("dashboard.finding_route") || "Mencari Rute Tercepat..."}</span>
                   </>
                 ) : (
                   <>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
                     </svg>
-                    <span>Petunjuk Arah & Rute Tercepat</span>
+                    <span>{t("dashboard.directions_btn") || "Petunjuk Arah & Rute Tercepat"}</span>
                   </>
                 )}
               </button>
@@ -445,7 +460,7 @@ function ChurchDetailDrawer({
             {pastorName ? (
               <div className="border-b border-slate-100 pb-3">
                 <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">
-                  Gembala Sidang / Pendeta
+                  {t("dashboard.pastor") || "Gembala Sidang / Pendeta"}
                 </span>
                 <p className="text-sm font-bold text-blue-950 mt-0.5">
                   {pastorName}
@@ -463,7 +478,7 @@ function ChurchDetailDrawer({
         </>
       ) : (
         <div className="flex flex-col items-center justify-center h-full text-slate-400">
-          <p className="text-xs">Pilih titik pada peta untuk melihat detail</p>
+          <p className="text-xs">{t("dashboard.drawer_empty") || "Pilih titik pada peta untuk melihat detail"}</p>
         </div>
       )}
     </div>
@@ -474,64 +489,285 @@ function ChurchDetailDrawer({
 interface DashboardHeaderProps {
   readonly sidebarOpen: boolean;
   readonly onToggleSidebar: () => void;
+  readonly mobileNavOpen: boolean;
+  readonly onToggleMobileNav: () => void;
+  readonly summary?: {
+    jumlahMada: number;
+    jumlahWilayah: number;
+    totalGereja: number;
+    gerejaTerfilter: number;
+  };
+  readonly onResetFilters?: () => void;
 }
 
-function DashboardHeader({ sidebarOpen, onToggleSidebar }: DashboardHeaderProps) {
-  return (
-    <header className="h-16 sm:h-[72px] shrink-0 bg-[#0f1d3d] px-3 sm:px-4 lg:px-8 flex items-center justify-between shadow-md relative z-30">
-      <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          aria-label={sidebarOpen ? "Tutup panel samping" : "Buka panel samping"}
-          className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-white/10 text-white/80 transition-colors hover:bg-white/20 hover:text-white cursor-pointer shrink-0"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5">
-            {sidebarOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
-            )}
-          </svg>
-        </button>
+function DashboardHeader({
+  sidebarOpen,
+  onToggleSidebar,
+  mobileNavOpen,
+  onToggleMobileNav,
+  summary,
+  onResetFilters,
+}: DashboardHeaderProps) {
+  const { t, i18n } = useTranslation();
+  const isEn = i18n.language === "en";
 
-        <Link href="/" className="landing-navbar__brand min-w-0">
-          <div className="landing-navbar__logo-wrap h-8 w-8 sm:h-10 sm:w-10">
+  return (
+    <>
+      <header className="h-16 sm:h-[72px] shrink-0 bg-[#0f1d3d] px-3 sm:px-4 lg:px-8 flex items-center justify-between shadow-md relative z-[1000]">
+        {/* Kiri: Brand GGP */}
+        <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
+          {/* Logo & Judul Dashboard */}
+          <Link href="/" className="flex items-center gap-2.5 min-w-0 group text-white">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl overflow-hidden flex items-center justify-center shrink-0">
+              <img
+                src="/images/Logo GGP2.png"
+                alt="Logo GGP"
+                className="h-8 sm:h-10 w-auto object-contain group-hover:scale-105 transition-transform"
+              />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="font-extrabold text-xs sm:text-sm text-white tracking-tight leading-tight truncate max-w-[145px] xs:max-w-[200px] sm:max-w-none">
+                Gereja Gerakan Pentakosta
+              </span>
+              <span className="hidden sm:block text-[10px] text-slate-300 font-medium">
+                {t("dashboard.subtitle") || "Dashboard Pemetaan Geospasial"}
+              </span>
+            </div>
+          </Link>
+        </div>
+
+        {/* Kanan - Layar Desktop (md+): Menu Navigasi Lengkap */}
+        <div className="hidden md:flex items-center gap-1 lg:gap-2 shrink-0">
+          <Link
+            href="/"
+            className="landing-navbar__link text-xs px-2.5 lg:px-3.5 py-1.5"
+          >
+            {t("nav.home") || "Beranda"}
+          </Link>
+
+          <Link
+            href="/pengurus"
+            className="landing-navbar__link text-xs px-2.5 lg:px-3.5 py-1.5"
+          >
+            {t("nav.leadership") || "Pengurus Pusat"}
+          </Link>
+
+          <Link
+            href="/dashboard"
+            className="landing-navbar__link landing-navbar__link--active text-xs px-2.5 lg:px-3.5 py-1.5"
+          >
+            {t("nav.dashboard") || "Dashboard"}
+          </Link>
+
+          <Link
+            href="/admin"
+            className="landing-navbar__link text-xs px-2.5 lg:px-3.5 py-1.5"
+          >
+            {t("nav.admin") || "Admin"}
+          </Link>
+
+          <div className="ml-1 pl-1 border-l border-white/10">
+            <LanguageSwitcher variant="compact" />
+          </div>
+        </div>
+
+        {/* Kanan - Layar Mobile (< md): Tombol Hamburger Menu Buka/Tutup */}
+        <div className="flex md:hidden items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={onToggleMobileNav}
+            aria-label={mobileNavOpen ? (isEn ? "Close navigation menu" : "Tutup menu navigasi") : (isEn ? "Open navigation menu" : "Buka menu navigasi")}
+            aria-expanded={mobileNavOpen}
+            className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl transition-all cursor-pointer ${
+              mobileNavOpen
+                ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400/50"
+                : "bg-white/10 text-white/90 hover:bg-white/20 hover:text-white"
+            }`}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
+              {mobileNavOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+              )}
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      {/* ======================= MOBILE NAVIGATION DRAWER & BACKDROP (< md) ======================= */}
+      {/* Backdrop */}
+      {mobileNavOpen && (
+        <div
+          onClick={onToggleMobileNav}
+          className="fixed inset-0 z-[1300] bg-slate-950/65 backdrop-blur-xs transition-opacity md:hidden cursor-pointer animate-fade-in"
+        />
+      )}
+
+      {/* Drawer Panel */}
+      <div
+        className={`fixed inset-y-0 right-0 z-[1310] w-[300px] max-w-[85vw] bg-[#0c1731] border-l border-white/10 shadow-2xl flex flex-col p-5 text-white transition-transform duration-300 ease-out md:hidden overflow-y-auto thin-scroll ${
+          mobileNavOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+        }`}
+      >
+        {/* Header Drawer */}
+        <div className="flex items-center justify-between pb-4 border-b border-white/10">
+          <div className="flex items-center gap-2.5">
             <img
               src="/images/Logo GGP2.png"
               alt="Logo GGP"
-              className="h-8 sm:h-10 w-auto object-contain shrink-0"
+              className="h-8 w-auto object-contain shrink-0"
             />
+            <div>
+              <span className="font-bold text-sm text-white block leading-tight">
+                Gereja Gerakan Pentakosta
+              </span>
+              <span className="text-[10px] text-blue-300 block">
+                {isEn ? "Navigation Menu" : "Menu Navigasi"}
+              </span>
+            </div>
           </div>
-          <div className="landing-navbar__text min-w-0">
-            <span className="landing-navbar__title text-xs sm:text-sm font-bold truncate">
-              Gereja Gerakan Pentakosta
+          <button
+            type="button"
+            onClick={onToggleMobileNav}
+            aria-label={isEn ? "Close navigation menu" : "Tutup menu navigasi"}
+            className="rounded-xl p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* List Navigasi */}
+        <div className="py-4 space-y-1.5 flex-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-3 mb-2">
+            {isEn ? "Page Navigation" : "Navigasi Halaman"}
+          </span>
+
+          <Link
+            href="/"
+            onClick={onToggleMobileNav}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-blue-400 shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+            </svg>
+            <span>{t("nav.home") || "Beranda"}</span>
+          </Link>
+
+          <Link
+            href="/pengurus"
+            onClick={onToggleMobileNav}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-emerald-400 shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.999-3.199a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+            </svg>
+            <span>{t("nav.leadership") || "Pengurus Pusat"}</span>
+          </Link>
+
+          <Link
+            href="/dashboard"
+            onClick={onToggleMobileNav}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-md shadow-blue-600/30"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-white shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+            </svg>
+            <div className="flex items-center justify-between flex-1">
+              <span>{t("nav.dashboard") || "Dashboard"}</span>
+              <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full font-bold">{isEn ? "Active" : "Aktif"}</span>
+            </div>
+          </Link>
+
+          <Link
+            href="/admin"
+            onClick={onToggleMobileNav}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-amber-400 shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            <span>{t("nav.admin") || "Admin"}</span>
+          </Link>
+
+          {/* Pengalih Bahasa di Drawer */}
+          <div className="pt-3 mt-3 border-t border-white/10 px-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+              Bahasa / Language
             </span>
-            <span className="landing-navbar__subtitle hidden sm:block text-[10px]">
-              Dashboard Pemetaan 
-            </span>
+            <LanguageSwitcher variant="compact" />
           </div>
-        </Link>
-      </div>
 
-      <div className="landing-navbar__links shrink-0 items-center gap-1 sm:gap-2">
-        <Link href="/" className="landing-navbar__link text-xs px-2 sm:px-4 py-1.5 sm:py-2">
-          Home
-        </Link>
+          {/* Ringkasan Statistik KPI */}
+          {summary && (
+            <div className="pt-3 mt-3 border-t border-white/10 px-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-2 mb-2">
+                {t("nav.quick_stats") || "Statistik Geospasial"}
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
+                  <span className="text-[9px] text-slate-400 block uppercase font-semibold">{t("dashboard.stats_church") || "Total Gereja"}</span>
+                  <span className="text-base font-black text-white font-mono">{summary.totalGereja}</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
+                  <span className="text-[9px] text-slate-400 block uppercase font-semibold">{t("dashboard.stats_filtered") || "Terfilter"}</span>
+                  <span className="text-base font-black text-blue-400 font-mono">{summary.gerejaTerfilter}</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
+                  <span className="text-[9px] text-slate-400 block uppercase font-semibold">{t("dashboard.stats_mada") || "Majelis Daerah"}</span>
+                  <span className="text-sm font-bold text-white font-mono">{summary.jumlahMada}</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
+                  <span className="text-[9px] text-slate-400 block uppercase font-semibold">{t("dashboard.stats_mawil") || "Majelis Wilayah"}</span>
+                  <span className="text-sm font-bold text-white font-mono">{summary.jumlahWilayah}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
-        <Link href="/dashboard" className="landing-navbar__link landing-navbar__link--active text-xs px-2 sm:px-4 py-1.5 sm:py-2">
-          Dashboard
-        </Link>
+          {/* Pintasan Aksi Cepat */}
+          <div className="pt-3 mt-3 border-t border-white/10 space-y-2">
+            <button
+              type="button"
+              onClick={() => {
+                onToggleMobileNav();
+                onToggleSidebar();
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white cursor-pointer transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4 text-blue-300 shrink-0">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0L21.75 16.5 12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3" />
+                </svg>
+                <span>{sidebarOpen ? (isEn ? "Close Layer Panel" : "Tutup Panel Layer") : (isEn ? "Open Layer Panel" : "Buka Panel Layer")}</span>
+              </span>
+              <span className="text-[10px] text-blue-300 font-bold uppercase">Layer</span>
+            </button>
 
-        <Link href="/admin" className="landing-navbar__link text-xs px-2 sm:px-4 py-1.5 sm:py-2">
-          Admin
-        </Link>
-
-        <div className="ml-1">
-          <LanguageSwitcher variant="compact" />
+            {onResetFilters && (
+              <button
+                type="button"
+                onClick={() => {
+                  onToggleMobileNav();
+                  onResetFilters();
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-slate-300 cursor-pointer transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4 text-slate-400 shrink-0">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                  <span>{t("dashboard.reset_map") || "Reset Tampilan Peta"}</span>
+                </span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase">{t("dashboard.reset") || "Reset"}</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </header>
+    </>
   );
 }
 
@@ -550,18 +786,20 @@ function MapToolOverlayBadges({
   poiError,
   onCloseTool,
 }: MapToolOverlayBadgesProps) {
+  const { t } = useTranslation();
+
   return (
     <>
       {layerLoading ? (
         <div className="pointer-events-none absolute left-1/2 top-3 z-400 -translate-x-1/2 rounded-full bg-white/90 px-4 py-1.5 text-xs font-medium text-slate-600 shadow-xs">
-          Memuat layer…
+          {t("dashboard.loading_layer") || "Memuat layer…"}
         </div>
       ) : null}
 
       {activeTool === "zoombox" ? (
         <div className="pointer-events-none absolute bottom-3 left-1/2 z-400 -translate-x-1/2 rounded-2xl bg-white px-4 py-2 shadow-xs">
           <p className="text-[11px] text-slate-500">
-            Tarik kotak di peta untuk memperbesar ke area tersebut.
+            {t("dashboard.zoombox_hint") || "Tarik kotak di peta untuk memperbesar ke area tersebut."}
           </p>
         </div>
       ) : null}
@@ -571,14 +809,14 @@ function MapToolOverlayBadges({
           {measure && measure.points > 0 ? (
             <div className="flex items-center gap-4">
               <span className="text-[11px] text-slate-500">
-                Jarak{" "}
+                {t("dashboard.distance") || "Jarak"}{" "}
                 <strong className="font-mono text-slate-800">
                   {formatArea(measure.distanceM / 1000)} km
                 </strong>
               </span>
               {measure.points >= 3 ? (
                 <span className="text-[11px] text-slate-500">
-                  Luas{" "}
+                  {t("dashboard.area") || "Luas"}{" "}
                   <strong className="font-mono text-slate-800">
                     {formatArea(measure.areaM2 / 10000)} ha
                   </strong>
@@ -587,14 +825,14 @@ function MapToolOverlayBadges({
               <button
                 type="button"
                 onClick={onCloseTool}
-                className="pointer-events-auto rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-200"
+                className="pointer-events-auto rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-200 cursor-pointer"
               >
-                Selesai
+                {t("dashboard.done") || "Selesai"}
               </button>
             </div>
           ) : (
             <p className="text-[11px] text-slate-500">
-              Klik pada peta untuk mulai mengukur. Klik titik lagi untuk menambah segmen, klik ganda atau tombol Selesai untuk mengakhiri.
+              {t("dashboard.measure_hint") || "Klik pada peta untuk mulai mengukur. Klik titik lagi untuk menambah segmen, klik ganda atau tombol Selesai untuk mengakhiri."}
             </p>
           )}
         </div>
@@ -627,6 +865,9 @@ function PhotoLightboxModal({
   onClose,
   onNavigate,
 }: PhotoLightboxModalProps) {
+  const { i18n } = useTranslation();
+  const isEn = i18n.language === "en";
+
   if (!activePhotoModal) return null;
 
   return (
@@ -636,8 +877,8 @@ function PhotoLightboxModal({
           <button
             type="button"
             onClick={onTogglePlaying}
-            title={isPlaying ? "Pause Autoplay" : "Play Autoplay"}
-            className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors flex items-center justify-center"
+            title={isPlaying ? (isEn ? "Pause Autoplay" : "Jeda Putar Otomatis") : (isEn ? "Play Autoplay" : "Putar Otomatis")}
+            className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors flex items-center justify-center cursor-pointer"
           >
             {isPlaying ? (
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
@@ -654,7 +895,8 @@ function PhotoLightboxModal({
         <button
           type="button"
           onClick={onClose}
-          className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors"
+          aria-label={isEn ? "Close photo viewer" : "Tutup peninjau foto"}
+          className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors cursor-pointer"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-6 w-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -666,7 +908,8 @@ function PhotoLightboxModal({
         <button
           type="button"
           onClick={() => onNavigate("prev")}
-          className="absolute left-4 z-20 rounded-full bg-white/10 p-3 text-white hover:bg-white/20 transition-colors"
+          aria-label={isEn ? "Previous photo" : "Foto sebelumnya"}
+          className="absolute left-4 z-20 rounded-full bg-white/10 p-3 text-white hover:bg-white/20 transition-colors cursor-pointer"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-6 w-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -677,7 +920,7 @@ function PhotoLightboxModal({
       <div className="relative max-h-[85vh] max-w-[90vw] overflow-hidden rounded-2xl shadow-2xl bg-slate-900 flex items-center justify-center">
         <img
           src={activePhotoModal.urls[activePhotoModal.currentIndex]}
-          alt={`Foto ${activePhotoModal.currentIndex + 1}`}
+          alt={`${isEn ? "Photo" : "Foto"} ${activePhotoModal.currentIndex + 1}`}
           className="max-h-[85vh] max-w-[90vw] object-contain select-none"
         />
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs text-white">
@@ -689,7 +932,8 @@ function PhotoLightboxModal({
         <button
           type="button"
           onClick={() => onNavigate("next")}
-          className="absolute right-4 z-20 rounded-full bg-white/10 p-3 text-white hover:bg-white/20 transition-colors"
+          aria-label={isEn ? "Next photo" : "Foto selanjutnya"}
+          className="absolute right-4 z-20 rounded-full bg-white/10 p-3 text-white hover:bg-white/20 transition-colors cursor-pointer"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-6 w-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -712,6 +956,7 @@ export default function DashboardShell() {
   const [measure, setMeasure] = useState<MeasureResult>(null);
   const [layerLoading, setLayerLoading] = useState(false);
   const [sidebarToggled, setSidebarToggled] = useState<boolean | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState<{
     properties: Record<string, any>;
     layerLabel: string;
@@ -1032,11 +1277,15 @@ export default function DashboardShell() {
       <DashboardHeader
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarToggled(!sidebarOpen)}
+        mobileNavOpen={mobileNavOpen}
+        onToggleMobileNav={() => setMobileNavOpen((prev) => !prev)}
+        summary={summary}
+        onResetFilters={handleReset}
       />
 
       {/* ------------------------------------------------------------- filter & stats bar */}
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-2 overflow-x-auto thin-scroll">
-        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+      <div className="flex shrink-0 items-center justify-between gap-2 sm:gap-3 border-b border-slate-200 bg-slate-50 px-2.5 sm:px-4 py-2 relative z-[950]">
+        <div className="flex items-center gap-2 sm:gap-2.5 flex-1 min-w-0">
           <FilterBar
             filters={filters}
             onChange={handleFiltersChange}
@@ -1060,9 +1309,12 @@ export default function DashboardShell() {
           type="button"
           onClick={handleReset}
           title="Kembalikan filter ke tampilan awal"
-          className="h-9 shrink-0 rounded-xl border border-slate-200 bg-white px-3 text-[10px] font-semibold uppercase tracking-wide text-slate-500 shadow-xs transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 cursor-pointer"
+          className="h-9 shrink-0 rounded-xl border border-slate-200 bg-white px-2.5 sm:px-3 text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-slate-500 shadow-xs transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 cursor-pointer flex items-center gap-1.5"
         >
-          Reset
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5 text-slate-400">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
+          <span className="hidden sm:inline">Reset</span>
         </button>
       </div>
 
@@ -1115,7 +1367,7 @@ export default function DashboardShell() {
               <img
                 src="/images/Logo GGP2.png"
                 alt="Logo GGP"
-                className="h-10 sm:h-16 w-auto object-contain shrink-0 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
+                className="h-8 sm:h-14 w-auto object-contain shrink-0 opacity-80 sm:opacity-90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
               />
             </div>
 
@@ -1129,6 +1381,8 @@ export default function DashboardShell() {
                 onLocateUser={handleLocateUser}
                 isLocating={isLocating}
                 userLocation={userLocation}
+                sidebarOpen={sidebarOpen}
+                onToggleSidebar={() => setSidebarToggled(!sidebarOpen)}
               />
             </div>
 

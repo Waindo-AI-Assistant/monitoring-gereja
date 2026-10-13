@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { RouteResult } from "@/lib/routing";
 import { getGoogleMapsDirectionsUrl } from "@/lib/routing";
 
@@ -15,6 +16,7 @@ export default function RouteInfoCard({
   churchName,
   onClose,
 }: RouteInfoCardProps) {
+  const { t } = useTranslation();
   const [showSteps, setShowSteps] = useState(true);
 
   const googleMapsUrl = getGoogleMapsDirectionsUrl(
@@ -32,11 +34,11 @@ export default function RouteInfoCard({
           <div className="flex items-center gap-1.5">
             <span className="flex h-2.5 w-2.5 items-center justify-center rounded-full bg-blue-600 animate-pulse" />
             <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">
-              Navigasi Web Aktif
+              {t("dashboard.nav_active") || "Navigasi Web Aktif"}
             </span>
           </div>
           <h3 className="mt-0.5 text-sm font-black text-blue-950 line-clamp-1">
-            {churchName || "Gereja Tujuan"}
+            {churchName || t("dashboard.target_church") || "Gereja Tujuan"}
           </h3>
         </div>
 
@@ -63,7 +65,7 @@ export default function RouteInfoCard({
           </div>
           <div>
             <span className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              Estimasi Waktu
+              {t("dashboard.est_time") || "Estimasi Waktu"}
             </span>
             <span className="text-sm font-black text-blue-950">
               {route.durationFormatted}
@@ -79,7 +81,7 @@ export default function RouteInfoCard({
           </div>
           <div>
             <span className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              Jarak Tempuh
+              {t("dashboard.travel_dist") || "Jarak Tempuh"}
             </span>
             <span className="text-sm font-black text-blue-950 font-mono">
               {route.distanceFormatted}
@@ -93,14 +95,14 @@ export default function RouteInfoCard({
         <div className="mb-3">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-              Panduan Belokan ({route.steps.length} Langkah):
+              {t("dashboard.turn_by_turn") || "Panduan Belokan"} ({route.steps.length} {t("dashboard.steps") || "Langkah"}):
             </span>
             <button
               type="button"
               onClick={() => setShowSteps(!showSteps)}
-              className="text-[10px] font-bold text-blue-600 hover:underline"
+              className="text-[10px] font-bold text-blue-600 hover:underline cursor-pointer"
             >
-              {showSteps ? "Sembunyikan" : "Tampilkan"}
+              {showSteps ? (t("dashboard.hide") || "Sembunyikan") : (t("dashboard.show") || "Tampilkan")}
             </button>
           </div>
 
@@ -131,7 +133,7 @@ export default function RouteInfoCard({
 
       {/* Auxiliary Google Maps Link */}
       <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-        <span className="text-[10px] text-slate-400">Rute ditampilkan langsung di peta web</span>
+        <span className="text-[10px] text-slate-400">{t("dashboard.route_on_map") || "Rute ditampilkan langsung di peta web"}</span>
         <a
           href={googleMapsUrl}
           target="_blank"
@@ -139,7 +141,7 @@ export default function RouteInfoCard({
           title="Buka navigasi suara di Google Maps"
           className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
         >
-          <span>Opsi Google Maps</span>
+          <span>{t("dashboard.gmaps_option") || "Opsi Google Maps"}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3 w-3">
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
           </svg>

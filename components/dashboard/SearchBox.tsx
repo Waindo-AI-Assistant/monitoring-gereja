@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 type SearchBoxProps = {
   pois: any[];
@@ -9,6 +10,7 @@ type SearchBoxProps = {
 };
 
 export default function SearchBox({ pois, onSelectPOI, className = "relative w-full sm:w-64 shrink-0" }: SearchBoxProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -86,7 +88,7 @@ export default function SearchBox({ pois, onSelectPOI, className = "relative w-f
         </svg>
         <input
           type="text"
-          placeholder="CARI NAMA GEREJA..."
+          placeholder={t("dashboard.search_placeholder") || "CARI NAMA GEREJA..."}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -114,7 +116,7 @@ export default function SearchBox({ pois, onSelectPOI, className = "relative w-f
       </div>
 
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute left-0 z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg shadow-black/10 animate-fade-in">
+        <div className="absolute left-0 top-full z-[600] mt-1.5 w-full min-w-[240px] sm:min-w-[280px] max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-2xl ring-1 ring-black/5 animate-fade-in thin-scroll">
           {suggestions.map((poi, idx) => {
             const isActive = idx === activeIndex;
             return (

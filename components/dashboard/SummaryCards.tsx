@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { formatInt, type Summary } from "@/lib/stats";
 
 type SummaryCardsProps = {
@@ -13,26 +14,28 @@ type Card = {
 };
 
 export default function SummaryCards({ summary }: SummaryCardsProps) {
+  const { t } = useTranslation();
+
   const cards: Card[] = [
     {
-      label: "Total Mada",
+      label: t("dashboard.stats_mada") || "Total Mada",
       value: formatInt(summary.jumlahMada),
-      hint: "Jumlah Majelis Daerah yang terdaftar",
+      hint: t("dashboard.stats_hint_mada") || "Jumlah Majelis Daerah yang terdaftar",
     },
     {
-      label: "Total Mawil",
+      label: t("dashboard.stats_mawil") || "Total Mawil",
       value: formatInt(summary.jumlahWilayah),
-      hint: "Jumlah Majelis Wilayah yang terdaftar pada Mada aktif",
+      hint: t("dashboard.stats_hint_mawil") || "Jumlah Majelis Wilayah yang terdaftar pada Mada aktif",
     },
     {
-      label: "Total Gereja",
+      label: t("dashboard.stats_church") || "Total Gereja",
       value: formatInt(summary.totalGereja),
-      hint: "Total seluruh titik plot gereja di Geodatabase",
+      hint: t("dashboard.stats_hint_church") || "Total seluruh titik plot gereja di Geodatabase",
     },
     {
-      label: "Gereja Terfilter",
+      label: t("dashboard.stats_filtered") || "Gereja Terfilter",
       value: formatInt(summary.gerejaTerfilter),
-      hint: "Jumlah titik gereja yang lolos filter aktif",
+      hint: t("dashboard.stats_hint_filtered") || "Jumlah titik gereja yang lolos filter aktif",
     },
   ];
 

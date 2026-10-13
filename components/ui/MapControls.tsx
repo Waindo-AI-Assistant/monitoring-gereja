@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import type { MapTool } from "@/components/map/MapView";
 
 type MapControlsProps = {
@@ -11,10 +12,12 @@ type MapControlsProps = {
   onLocateUser?: () => void;
   isLocating?: boolean;
   userLocation?: [number, number] | null;
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 };
 
 const iconButtonBase =
-  "flex h-10 w-10 items-center justify-center text-blue-950 transition-colors duration-200 hover:bg-blue-50";
+  "flex h-10 w-10 items-center justify-center text-blue-950 transition-colors duration-200 hover:bg-blue-50 cursor-pointer";
 const iconButtonActive = "bg-blue-600 text-white hover:bg-blue-700";
 
 export default function MapControls({
@@ -26,14 +29,24 @@ export default function MapControls({
   onLocateUser,
   isLocating,
   userLocation,
+  sidebarOpen,
+  onToggleSidebar,
 }: MapControlsProps) {
+  const { t } = useTranslation();
+
   /** Klik alat yang sedang aktif akan mematikannya. */
   const toggle = (tool: Exclude<MapTool, null>) =>
     onToolChange(activeTool === tool ? null : tool);
 
   return (
     <div className="pointer-events-auto flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm shadow-blue-900/10">
-      <button type="button" onClick={onZoomIn} title="Perbesar peta" aria-label="Perbesar peta" className={iconButtonBase}>
+      <button
+        type="button"
+        onClick={onZoomIn}
+        title={t("dashboard.zoom_in") || "Perbesar peta"}
+        aria-label={t("dashboard.zoom_in") || "Perbesar peta"}
+        className={iconButtonBase}
+      >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="h-5 w-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
         </svg>
@@ -41,7 +54,13 @@ export default function MapControls({
 
       <div className="h-px bg-slate-100" />
 
-      <button type="button" onClick={onZoomOut} title="Perkecil peta" aria-label="Perkecil peta" className={iconButtonBase}>
+      <button
+        type="button"
+        onClick={onZoomOut}
+        title={t("dashboard.zoom_out") || "Perkecil peta"}
+        aria-label={t("dashboard.zoom_out") || "Perkecil peta"}
+        className={iconButtonBase}
+      >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="h-5 w-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
         </svg>
@@ -55,8 +74,8 @@ export default function MapControls({
           <button
             type="button"
             onClick={onLocateUser}
-            title={userLocation ? "Fokus ke lokasi saya saat ini" : "Aktifkan deteksi lokasi saya (GPS)"}
-            aria-label="Lokasi Saya"
+            title={userLocation ? (t("dashboard.locate_me") || "Fokus ke lokasi saya saat ini") : (t("dashboard.locate_me_on") || "Aktifkan deteksi lokasi saya (GPS)")}
+            aria-label={t("dashboard.locate_me") || "Lokasi Saya"}
             className={`${iconButtonBase} ${userLocation ? "text-blue-600 hover:bg-blue-50" : ""} ${
               isLocating ? "animate-pulse bg-blue-50 text-blue-600" : ""
             }`}
@@ -71,11 +90,30 @@ export default function MapControls({
         </>
       )}
 
+      {/* Tombol Panel Layer & Peta Dasar */}
+      {onToggleSidebar && (
+        <>
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            title={t("dashboard.layer_panel") || "Panel Layer & Peta Dasar"}
+            aria-label={t("dashboard.layer_panel") || "Panel Layer & Peta Dasar"}
+            aria-pressed={sidebarOpen}
+            className={`${iconButtonBase} ${sidebarOpen ? iconButtonActive : ""}`}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="h-5 w-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0L21.75 16.5 12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3" />
+            </svg>
+          </button>
+          <div className="h-px bg-slate-100" />
+        </>
+      )}
+
       <button
         type="button"
         onClick={() => toggle("zoombox")}
-        title="Zoom ke area: tarik kotak di peta"
-        aria-label="Zoom ke area (zoom kotak)"
+        title={t("dashboard.zoombox_title") || "Zoom ke area: tarik kotak di peta"}
+        aria-label={t("dashboard.zoombox_title") || "Zoom ke area (zoom kotak)"}
         aria-pressed={activeTool === "zoombox"}
         className={`${iconButtonBase} ${activeTool === "zoombox" ? iconButtonActive : ""}`}
       >
@@ -90,8 +128,8 @@ export default function MapControls({
       <button
         type="button"
         onClick={() => toggle("measure")}
-        title="Ukur jarak & luas: klik titik-titik di peta"
-        aria-label="Alat ukur"
+        title={t("dashboard.measure_title") || "Ukur jarak & luas"}
+        aria-label={t("dashboard.measure_title") || "Alat ukur"}
         aria-pressed={activeTool === "measure"}
         className={`${iconButtonBase} ${activeTool === "measure" ? iconButtonActive : ""}`}
       >
@@ -106,8 +144,8 @@ export default function MapControls({
       <button
         type="button"
         onClick={onReset}
-        title="Reset ke tampilan awal"
-        aria-label="Reset tampilan peta"
+        title={t("dashboard.reset_map") || "Reset ke tampilan awal"}
+        aria-label={t("dashboard.reset_map") || "Reset tampilan peta"}
         className={iconButtonBase}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="h-5 w-5">

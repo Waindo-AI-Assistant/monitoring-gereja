@@ -247,11 +247,66 @@ export const ATTRIBUTE_LABELS: Record<string, string> = {
   FCODE: "Kode Unsur (FCODE)",
   Shape_Leng: "Panjang Keliling (Derajat)",
   Shape_Area: "Luas Area (Derajat²)",
-  OBJECTID: "ID Objek",
   UUPP: "Undang-Undang / Peraturan",
   TIPADM: "Tipe Administrasi",
   luas: "Luas Area (Km²)",
 };
+
+export const ATTRIBUTE_LABELS_EN: Record<string, string> = {
+  panjang_m: "Length (m)",
+  penutup_lahan: "Land Cover Class",
+  fungsi_kawasan: "Forest Zone Function",
+  no_sk: "Decree No. (SK)",
+  tgl_sk: "Decree Date",
+  kategori: "Category",
+  osm_id: "OSM ID",
+  osm_type: "OSM Type",
+  name: "Church / Congregation Name",
+  amenity: "Amenity",
+  leisure: "Leisure",
+  building: "Building",
+  place: "Place",
+  power: "Power",
+  railway: "Railway",
+  admin_leve: "Admin Level",
+  nama_pendeta: "Senior Pastor Name",
+  no_hp_wa: "Phone / WhatsApp",
+  alamat_gereja: "Church Address",
+  tahun_berdiri: "Year Established",
+  jumlah_jemaat: "Congregation Size",
+  jam_operasional: "Service Hours",
+  status: "Property Status",
+  mawil: "District Council (MAWIL)",
+  kode_mada: "MADA Code",
+  nama_mada: "Regional Council (MADA)",
+  tipe_wilayah: "Region Category",
+  daerah_khusus: "Special Regional Council",
+  wilayah_khusus: "Special District Council",
+  no: "No.",
+  x: "X (Longitude)",
+  y: "Y (Latitude)",
+  WADMKK: "Regency / City",
+  WADMPR: "Province",
+  WADMKC: "Sub-district",
+  WADMKD: "Village / Ward",
+  NAMOBJ: "Object / Region Name",
+  LUASWH: "Area Size (Ha)",
+  REMARK: "Remarks",
+  METADATA: "Data Source / Metadata",
+  SRS_ID: "Coordinate System (SRS ID)",
+  FCODE: "Feature Code (FCODE)",
+  Shape_Leng: "Perimeter Length (Deg)",
+  Shape_Area: "Area (Deg²)",
+  OBJECTID: "Object ID",
+  luas: "Area (Sq Km)",
+};
+
+export function getAttributeLabel(key: string, isEn?: boolean): string {
+  if (isEn && ATTRIBUTE_LABELS_EN[key]) {
+    return ATTRIBUTE_LABELS_EN[key];
+  }
+  return ATTRIBUTE_LABELS[key] ?? key.replace(/_/g, " ");
+}
 
 /** Atribut gereja terurut yang akan ditampilkan pada UI ketika diklik */
 export const GEREJA_ORDERED_FIELDS = [
