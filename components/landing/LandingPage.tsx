@@ -166,9 +166,9 @@ export default function LandingPage() {
             <Link href="/dashboard" className="landing-navbar__link">
               {t("nav.dashboard")}
             </Link>
-            <a href="#kontak" className="landing-navbar__link">
+            {/* <a href="#kontak" className="landing-navbar__link">
               {t("nav.contact")}
-            </a>
+            </a> */}
             <Link href="/admin" className="landing-navbar__link">
               {t("nav.admin") || "Admin"}
             </Link>
@@ -286,7 +286,7 @@ export default function LandingPage() {
             <span>{t("nav.dashboard")}</span>
           </Link>
 
-          <a
+          {/* <a
             href="#kontak"
             onClick={() => setMobileMenuOpen(false)}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
@@ -295,7 +295,7 @@ export default function LandingPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
             </svg>
             <span>{t("nav.contact")}</span>
-          </a>
+          </a> */}
 
           <Link
             href="/admin"
@@ -351,7 +351,7 @@ export default function LandingPage() {
               >
                 <div className="flex items-center justify-center gap-1.5 w-full">
                   <span className="landing-hero__stat-value landing-hero__stat-value--period group-hover:text-blue-700 transition-colors text-center">
-                    {t("hero.stats_mp_val")}
+                    {t("hero.stats_mp")}
                   </span>
                   <svg
                     className="w-3.5 h-3.5 text-blue-500 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0"
@@ -363,7 +363,7 @@ export default function LandingPage() {
                   </svg>
                 </div>
                 <span className="landing-hero__stat-label group-hover:text-blue-600 transition-colors text-center">
-                  {t("hero.stats_mp")}
+                  {t("hero.stats_mp_val")}
                 </span>
               </Link>
               <div className="landing-hero__stat-divider" />

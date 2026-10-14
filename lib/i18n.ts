@@ -48,7 +48,7 @@ export const resources = {
       },
       preview: {
         label: "Jelajahi wilayah pelayanan",
-        description: "Lihat sebaran gereja GGP dari Sumatra hingga Papua. Temukan lokasi gereja dan informasi jemaat melalui peta interaktif.",
+        description: "Lihat sebaran gereja GGP di seluruh Indonesia. Temukan lokasi gereja dan informasi jemaat melalui peta interaktif.",
         caption: "Sebaran gereja GGP di seluruh Indonesia",
         hint: "Peta interaktif, pencarian gereja, dan filter wilayah.",
       },
@@ -70,7 +70,7 @@ export const resources = {
         location_title: "Lokasi Sekretariat",
         contact_title: "Hubungi Kami",
         phone_label: "Telp",
-        copyright: "© {{year}} PENTAKOSTA • Department Digitalisasi GGP. All rights reserved.",
+        copyright: "© {{year}} PENTAKOSTA • Departemen Digitalisasi GGP. All rights reserved.",
       },
       lang: {
         switch_title: "Pilih Bahasa",
