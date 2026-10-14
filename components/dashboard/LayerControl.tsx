@@ -76,13 +76,30 @@ export default function LayerControl({
                   />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1.5">
-                      <span
-                        className="h-2.5 w-2.5 shrink-0 rounded-sm border border-black/10"
-                        style={{ backgroundColor: layer.color }}
-                      />
+                      {layer.id === "batas_provinsi" ? (
+                        <span
+                          className="h-3 w-3 shrink-0 rounded-xs border-2 border-slate-400 bg-white shadow-xs"
+                          title={isEn ? "White Line" : "Garis Putih"}
+                        />
+                      ) : (
+                        <span
+                          className="h-3 w-3 shrink-0 rounded-xs border border-black/15 shadow-xs"
+                          style={{ backgroundColor: layer.color }}
+                        />
+                      )}
                       <span className="truncate text-xs font-medium text-slate-700">
                         {getLayerLabel(layer)}
                       </span>
+                      {layer.id === "batas_provinsi" && (
+                        <span className="text-[10px] text-slate-400 font-normal shrink-0">
+                          ({isEn ? "White" : "Putih"})
+                        </span>
+                      )}
+                      {layer.id === "batas_kabupaten" && (
+                        <span className="text-[10px] text-slate-400 font-normal shrink-0">
+                          ({isEn ? "Yellow" : "Kuning"})
+                        </span>
+                      )}
                     </span>
                   </span>
                 </label>

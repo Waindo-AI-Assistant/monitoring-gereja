@@ -252,7 +252,11 @@ function drawTileFeature(ctx: CanvasRenderingContext2D, feature: any, size: { x:
   ctx.stroke();
 }
 
-function createVectorTileLayer(L: any, geojsonData: any, options: { color: string; weight: number }) {
+function createVectorTileLayer(
+  L: any,
+  geojsonData: any,
+  options: { color: string; weight: number; dashArray?: number[]; isBatasMada?: boolean }
+) {
   const tileIndex = geojsonvt(geojsonData, {
     maxZoom: 18,
     tolerance: 3,
@@ -279,8 +283,41 @@ function createVectorTileLayer(L: any, geojsonData: any, options: { color: strin
         return tile;
       }
 
+      const isBatasMada = Boolean(options.isBatasMada);
+      const isZoomedOut = coords.z <= 7;
+
+      // Bobot garis proporsional per level zoom agar di zoom out garis batas provinsi tidak terlalu tebal
+      let strokeWidth = options.weight;
+      if (isBatasMada) {
+        if (coords.z <= 5) strokeWidth = 1.8;
+        else if (coords.z <= 7) strokeWidth = 2.2;
+        else strokeWidth = 2.8;
+      }
+
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      // 1. Gambar subtle dark casing outline untuk Batas Mada agar kontras tajam di atas citra satelit
+      if (isBatasMada) {
+        ctx.strokeStyle = "rgba(15, 23, 42, 0.45)";
+        ctx.lineWidth = strokeWidth + 1.6;
+        ctx.setLineDash([]);
+        for (const feature of tileData.features) {
+          drawTileFeature(ctx, feature, size);
+        }
+      }
+
+      // 2. Gambar garis utama
       ctx.strokeStyle = options.color;
-      ctx.lineWidth = options.weight;
+      ctx.lineWidth = strokeWidth;
+
+      // Di zoom out (<= 7), buat solid agar tidak pecah/berbintik di ribuan pulau Indonesia.
+      // Di zoom in (>= 8), aktifkan pola putus-putus khas [9, 5].
+      if (options.dashArray && options.dashArray.length > 0 && !isZoomedOut) {
+        ctx.setLineDash(options.dashArray);
+      } else {
+        ctx.setLineDash([]);
+      }
 
       for (const feature of tileData.features) {
         drawTileFeature(ctx, feature, size);
@@ -419,7 +456,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
 
         const map = L.map(containerRef.current, {
           zoomControl: false,
-          attributionControl: true,
+          attributionControl: false,
           preferCanvas: true,
           minZoom: MIN_ZOOM,
           maxZoom: MAX_ZOOM,
@@ -670,6 +707,9 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
 
     // Tangkap klik pada canvas layer menggunakan titik koordinat
     const onMapClick = (e: LeafletNamespace.LeafletMouseEvent) => {
+      // Jika ada alat ukur atau zoombox yang sedang aktif, jangan proses klik poligon
+      if (activeToolRef.current) return;
+
       for (const layer of LAYERS) {
         if (layer.kind !== "polygon" || !visibleLayers[layer.id]) continue;
         const data = dataCacheRef.current[layer.id];
@@ -685,12 +725,14 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
             map.removeLayer(highlightLayerRef.current);
           }
           import("leaflet").then(({ default: L }) => {
+            const isBatasMada = layer.id === "batas_provinsi";
             const highlight = L.geoJSON(clickedFeature, {
               style: {
-                color: "#f43f5e",
-                weight: 3,
-                fillColor: "#f43f5e",
-                fillOpacity: 0.15,
+                color: isBatasMada ? "#ffffff" : "#facc15",
+                dashArray: isBatasMada ? "9, 5" : undefined,
+                weight: 3.5,
+                fillColor: isBatasMada ? "#ffffff" : "#facc15",
+                fillOpacity: 0.12,
               }
             });
             highlight.bindPopup(popupHtml(layer, (clickedFeature.properties ?? {}) as Record<string, unknown>), {
@@ -702,6 +744,12 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
           });
           return;
         }
+      }
+
+      // Jika klik di area kosong tanpa poligon, bersihkan highlight aktif
+      if (highlightLayerRef.current) {
+        map.removeLayer(highlightLayerRef.current);
+        highlightLayerRef.current = null;
       }
     };
 
@@ -745,12 +793,15 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
         const features = data.features.filter((f) => filterFeatureByScope(f, layer.id, filters));
 
         if (layer.kind === "polygon") {
+          const isBatasMada = layer.id === "batas_provinsi";
           const vtLayer = createVectorTileLayer(
             L,
             { type: "FeatureCollection", features },
             {
               color: layer.color,
               weight: getLayerWeight(layer.id),
+              dashArray: isBatasMada ? [9, 5] : undefined,
+              isBatasMada,
             }
           );
           vtLayer.setZIndex(getLayerZIndex(layer.id));
@@ -763,7 +814,7 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
               pointToLayer: (feature, latlng) => {
                 const icon = L.divIcon({
                   className: "custom-image-pin",
-                  html: `<img src="/images/pin gereja.png" alt="Pin Gereja" style="width: 48px; height: 48px; object-fit: contain;" />`,
+                  html: `<img src="/images/pin gereja.png" alt="Pin Gereja" draggable="false" style="width: 48px; height: 48px; object-fit: contain; pointer-events: none; user-select: none; -webkit-user-drag: none;" />`,
                   iconSize: [48, 48],
                   iconAnchor: [24, 48],
                   popupAnchor: [0, -48],
@@ -775,14 +826,16 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
                   maxWidth: 320,
                 });
                 lyr.on("click", (e: any) => {
-                  if (activeToolRef.current === "measure") {
-                    map.fire("click", { latlng: e.latlng, originalEvent: e.originalEvent });
-                  } else {
-                    onFeatureSelect?.((feature.properties ?? {}) as Record<string, any>, layer.label);
+                  if (activeToolRef.current) {
+                    if (activeToolRef.current === "measure") {
+                      map.fire("click", { latlng: e.latlng, originalEvent: e.originalEvent });
+                    }
+                    return;
                   }
+                  onFeatureSelect?.((feature.properties ?? {}) as Record<string, any>, layer.label);
                 });
                 lyr.on("popupopen", () => {
-                  if (activeToolRef.current === "measure") {
+                  if (activeToolRef.current) {
                     lyr.closePopup();
                   }
                 });
@@ -1042,38 +1095,33 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
 
     const container = containerRef.current!;
     container.classList.add("tool-active");
+    container.classList.add("tool-zoombox-active");
     map.dragging.disable();
 
     let startPoint: LeafletNamespace.Point | null = null;
     let overlay: HTMLDivElement | null = null;
 
-    function onMouseDown(e: LeafletNamespace.LeafletMouseEvent) {
-      if (e.originalEvent.button !== 0) return;
-      startPoint = map.mouseEventToContainerPoint(e.originalEvent);
-      overlay = document.createElement("div");
-      overlay.className = "zoombox-overlay";
-      overlay.style.left = `${startPoint.x}px`;
-      overlay.style.top = `${startPoint.y}px`;
-      overlay.style.width = "0px";
-      overlay.style.height = "0px";
-      container.appendChild(overlay);
+    const cleanupOverlay = () => {
+      if (overlay) {
+        overlay.remove();
+        overlay = null;
+      }
+      startPoint = null;
+    };
 
-      map.on("mousemove", onMouseMove);
-      map.on("mouseup", onMouseUp);
-    }
-
-    function onMouseMove(e: LeafletNamespace.LeafletMouseEvent) {
+    const onGlobalMouseMove = (e: MouseEvent) => {
       if (!overlay || !startPoint) return;
-      const current = map.mouseEventToContainerPoint(e.originalEvent);
+      const current = map.mouseEventToContainerPoint(e);
       overlay.style.left = `${Math.min(current.x, startPoint.x)}px`;
       overlay.style.top = `${Math.min(current.y, startPoint.y)}px`;
       overlay.style.width = `${Math.abs(current.x - startPoint.x)}px`;
       overlay.style.height = `${Math.abs(current.y - startPoint.y)}px`;
-    }
+    };
 
-    function onMouseUp(e: LeafletNamespace.LeafletMouseEvent) {
+    const onGlobalMouseUp = (e: MouseEvent) => {
+      window.removeEventListener("mousemove", onGlobalMouseMove);
       if (startPoint) {
-        const current = map.mouseEventToContainerPoint(e.originalEvent);
+        const current = map.mouseEventToContainerPoint(e);
         if (
           Math.abs(current.x - startPoint.x) > CLICK_SLOP_PX &&
           Math.abs(current.y - startPoint.y) > CLICK_SLOP_PX
@@ -1090,26 +1138,46 @@ const MapView = forwardRef<MapHandle, MapViewProps>(function MapView(
             [corner1.lat, corner1.lng],
             [corner2.lat, corner2.lng],
           ]);
+          onToolFinished();
         }
       }
-      map.off("mousemove", onMouseMove);
-      map.off("mouseup", onMouseUp);
-      if (overlay) {
-        overlay.remove();
-        overlay = null;
-      }
-      startPoint = null;
-    }
+      cleanupOverlay();
+    };
+
+    const onMouseDown = (e: LeafletNamespace.LeafletMouseEvent) => {
+      if (e.originalEvent.button !== 0) return;
+      e.originalEvent.preventDefault?.();
+      e.originalEvent.stopPropagation?.();
+
+      startPoint = map.mouseEventToContainerPoint(e.originalEvent);
+      overlay = document.createElement("div");
+      overlay.className = "zoombox-overlay";
+      overlay.style.position = "absolute";
+      overlay.style.pointerEvents = "none";
+      overlay.style.zIndex = "1000";
+      overlay.style.border = "2px dashed #2563eb";
+      overlay.style.backgroundColor = "rgba(37, 99, 235, 0.15)";
+      overlay.style.borderRadius = "4px";
+      overlay.style.left = `${startPoint.x}px`;
+      overlay.style.top = `${startPoint.y}px`;
+      overlay.style.width = "0px";
+      overlay.style.height = "0px";
+      container.appendChild(overlay);
+
+      window.addEventListener("mousemove", onGlobalMouseMove);
+      window.addEventListener("mouseup", onGlobalMouseUp, { once: true });
+    };
 
     map.on("mousedown", onMouseDown);
 
     return () => {
       map.off("mousedown", onMouseDown);
-      map.off("mousemove", onMouseMove);
-      map.off("mouseup", onMouseUp);
-      overlay?.remove();
+      window.removeEventListener("mousemove", onGlobalMouseMove);
+      window.removeEventListener("mouseup", onGlobalMouseUp);
+      cleanupOverlay();
       map.dragging.enable();
       container.classList.remove("tool-active");
+      container.classList.remove("tool-zoombox-active");
     };
   }, [activeTool, mapReady, onToolFinished]);
 

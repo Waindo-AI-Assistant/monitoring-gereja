@@ -1135,10 +1135,25 @@ body {
   box-shadow: none;
 }
 
+/* Hilangkan watermark / tulisan Leaflet di peta */
+.leaflet-control-attribution {
+  display: none !important;
+}
+
 /* Kursor saat alat ukur / zoom kotak aktif — dibedakan dari mode geser peta
    agar jelas bahwa klik-drag sekarang punya arti lain. */
 .tool-active {
   cursor: crosshair !important;
+}
+
+/* Kotak seleksi perbesar (zoombox overlay) */
+.zoombox-overlay {
+  position: absolute !important;
+  pointer-events: none !important;
+  z-index: 1000 !important;
+  border: 2px dashed #2563eb !important;
+  background-color: rgba(37, 99, 235, 0.15) !important;
+  border-radius: 4px;
 }
 
 /* Scrollbar tipis untuk panel samping yang padat. */
@@ -1301,6 +1316,12 @@ body {
   border: 2px dashed #2563eb; /* Royal Blue */
   background: rgba(37, 99, 235, 0.15);
   pointer-events: none;
+}
+
+/* Ketika zoombox aktif, nonaktifkan interaksi pada marker dan popup agar drag box tidak terhalang */
+.tool-zoombox-active .leaflet-marker-pane,
+.tool-zoombox-active .leaflet-popup-pane {
+  pointer-events: none !important;
 }
 
 /* Measure Tool Overlay */

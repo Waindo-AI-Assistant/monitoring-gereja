@@ -85,6 +85,7 @@ export default function CoordinatePickerModal({
           center: [currentLat, currentLng],
           zoom: initialZoom,
           zoomControl: false,
+          attributionControl: false,
         });
 
         // Add zoom control at bottom right

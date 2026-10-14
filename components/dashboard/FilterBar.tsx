@@ -315,7 +315,7 @@ export default function FilterBar({
       />
 
       {/* 2. Tombol Popover Filter Wilayah (Desktop & Mobile) */}
-      <div ref={containerRef} className={`relative shrink-0 ${isOpen ? "z-50" : "z-10"}`}>
+      <div ref={containerRef} className={`relative shrink-0 ${isOpen ? "z-[1300]" : "z-10"}`}>
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
@@ -352,7 +352,7 @@ export default function FilterBar({
 
         {/* ============================================================== DESKTOP FLOATING POPOVER (md+) */}
         {isOpen && (
-          <div className="hidden md:block absolute left-0 top-full mt-2 z-[1000] w-[380px] rounded-2xl border border-slate-200 bg-white p-4.5 shadow-2xl animate-fade-in ring-1 ring-black/5">
+          <div className="hidden md:block absolute left-0 top-full mt-2 z-[1350] w-[380px] rounded-2xl border border-slate-200 bg-white p-4.5 shadow-2xl animate-fade-in ring-1 ring-black/5">
             <FilterContent
               filters={filters}
               onChange={onChange}

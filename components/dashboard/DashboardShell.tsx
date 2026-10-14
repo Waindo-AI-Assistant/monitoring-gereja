@@ -1286,7 +1286,7 @@ export default function DashboardShell() {
       />
 
       {/* ------------------------------------------------------------- filter & stats bar */}
-      <div className="flex shrink-0 items-center justify-between gap-2 sm:gap-3 border-b border-slate-200 bg-slate-50 px-2.5 sm:px-4 py-2 relative z-[950]">
+      <div className="flex shrink-0 items-center justify-between gap-2 sm:gap-3 border-b border-slate-200 bg-slate-50 px-2.5 sm:px-4 py-2 relative z-[1200]">
         <div className="flex items-center gap-2 sm:gap-2.5 flex-1 min-w-0">
           <FilterBar
             filters={filters}
