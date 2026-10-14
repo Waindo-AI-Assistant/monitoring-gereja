@@ -600,143 +600,11 @@ export default function AdminPage() {
             </Link>
           </div>
 
-          {/* Desktop Nav Links (lg+) */}
-          <div className="hidden lg:flex items-center gap-2 sm:gap-3 shrink-0">
-            <div className="landing-navbar__links flex items-center gap-1">
-              <Link href="/" className="landing-navbar__link text-xs px-3 py-1.5">
-                {t("nav.home") || "Beranda"}
-              </Link>
-              <Link href="/pengurus" className="landing-navbar__link text-xs px-3 py-1.5">
-                {t("nav.leadership") || "Pengurus Pusat"}
-              </Link>
-              <Link href="/dashboard" className="landing-navbar__link text-xs px-3 py-1.5">
-                {t("nav.dashboard") || "Dashboard"}
-              </Link>
-              <Link href="/admin" className="landing-navbar__link landing-navbar__link--active text-xs px-3 py-1.5">
-                {t("nav.admin") || "Admin"}
-              </Link>
-            </div>
-            <div className="ml-1 pl-1 border-l border-white/10">
-              <LanguageSwitcher variant="compact" />
-            </div>
-          </div>
-
-          {/* Mobile Actions (< lg): Hamburger */}
-          <div className="flex lg:hidden items-center shrink-0">
-            <button
-              type="button"
-              onClick={() => setMobileNavOpen(!mobileNavOpen)}
-              aria-label={mobileNavOpen ? "Tutup menu" : "Buka menu"}
-              aria-expanded={mobileNavOpen}
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer border ${
-                mobileNavOpen
-                  ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400/50 border-blue-500"
-                  : "bg-white/10 text-white hover:bg-white/20 border-white/15"
-              }`}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
-                {mobileNavOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
-                )}
-              </svg>
-            </button>
+          {/* Language Switcher */}
+          <div className="flex items-center shrink-0">
+            <LanguageSwitcher variant="compact" />
           </div>
         </header>
-
-        {/* Mobile Backdrop (< lg) */}
-        {mobileNavOpen && (
-          <div
-            onClick={() => setMobileNavOpen(false)}
-            className="fixed inset-0 z-[1300] bg-slate-950/65 backdrop-blur-xs lg:hidden cursor-pointer animate-fade-in"
-          />
-        )}
-
-        {/* Mobile Drawer (< lg) */}
-        <div
-          className={`fixed inset-y-0 right-0 z-[1310] w-[300px] max-w-[85vw] bg-[#0c1731] border-l border-white/10 shadow-2xl flex flex-col p-5 text-white transition-transform duration-300 ease-out lg:hidden overflow-y-auto thin-scroll ${
-            mobileNavOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
-          }`}
-        >
-          <div className="flex items-center justify-between pb-4 border-b border-white/10">
-            <div className="flex items-center gap-2.5">
-              <img
-                src="/images/Logo GGP2.png"
-                alt="Logo GGP"
-                className="h-8 w-auto object-contain shrink-0"
-              />
-              <div>
-                <span className="font-bold text-sm text-white block leading-tight">
-                  Gereja Gerakan Pentakosta
-                </span>
-                <span className="text-[10px] text-blue-300 block">
-                  Panel Administrasi
-                </span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setMobileNavOpen(false)}
-              aria-label="Tutup menu navigasi"
-              className="rounded-xl p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="py-4 space-y-1.5 flex-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-1 mb-2">
-              Halaman Sistem
-            </span>
-
-            <Link
-              href="/"
-              onClick={() => setMobileNavOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-white shrink-0">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-              </svg>
-              <span>{t("nav.home") || "Beranda"}</span>
-            </Link>
-
-            <Link
-              href="/pengurus"
-              onClick={() => setMobileNavOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-emerald-400 shrink-0">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.999-3.199a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-              </svg>
-              <span>{t("nav.leadership") || "Pengurus Pusat"}</span>
-            </Link>
-
-            <Link
-              href="/dashboard"
-              onClick={() => setMobileNavOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-blue-400 shrink-0">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
-              </svg>
-              <span>{t("nav.dashboard") || "Dashboard Peta"}</span>
-            </Link>
-
-            <Link
-              href="/admin"
-              onClick={() => setMobileNavOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-md shadow-blue-600/30"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-white shrink-0">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-              </svg>
-              <span>{t("nav.admin") || "Admin"}</span>
-            </Link>
-          </div>
-        </div>
 
         {/* Center Content Form */}
         <div className="flex-1 flex flex-col justify-center items-center p-4 my-auto">
@@ -888,22 +756,6 @@ export default function AdminPage() {
 
         {/* Desktop Controls (lg+) */}
         <div className="hidden lg:flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Main Page Links */}
-          <div className="landing-navbar__links flex items-center gap-1">
-            <Link href="/" className="landing-navbar__link text-xs px-3 py-1.5">
-              {t("nav.home") || "Home"}
-            </Link>
-            <Link href="/pengurus" className="landing-navbar__link text-xs px-3 py-1.5">
-              {t("nav.leadership") || "Pengurus"}
-            </Link>
-            <Link href="/dashboard" className="landing-navbar__link text-xs px-3 py-1.5">
-              {t("nav.dashboard") || "Dashboard"}
-            </Link>
-            <Link href="/admin" className="landing-navbar__link landing-navbar__link--active text-xs px-3 py-1.5">
-              {t("nav.admin") || "Admin"}
-            </Link>
-          </div>
-
           <div>
             <LanguageSwitcher variant="compact" />
           </div>
@@ -1175,51 +1027,12 @@ export default function AdminPage() {
         </div>
 
         {/* Site Navigation Links */}
-        <div className="py-4 space-y-1.5 flex-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-1 mb-2">
-            Halaman Sistem
+        {/* Language Switcher */}
+        <div className="py-4 border-b border-white/10 px-1 flex-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+            Bahasa / Language
           </span>
-
-          <Link
-            href="/"
-            onClick={() => setMobileNavOpen(false)}
-            className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-white shrink-0">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-            </svg>
-            <span>{t("nav.home") || "Beranda"}</span>
-          </Link>
-
-          <Link
-            href="/pengurus"
-            onClick={() => setMobileNavOpen(false)}
-            className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-emerald-400 shrink-0">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.999-3.199a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-            </svg>
-            <span>{t("nav.leadership") || "Pengurus Pusat"}</span>
-          </Link>
-
-          <Link
-            href="/dashboard"
-            onClick={() => setMobileNavOpen(false)}
-            className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-blue-400 shrink-0">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
-            </svg>
-            <span>{t("nav.dashboard") || "Dashboard Peta"}</span>
-          </Link>
-
-          {/* Language Switcher */}
-          <div className="pt-3 mt-2 border-t border-white/10 px-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-              Bahasa / Language
-            </span>
-            <LanguageSwitcher variant="compact" />
-          </div>
+          <LanguageSwitcher variant="compact" />
         </div>
 
         {/* Drawer Footer: Logout */}
