@@ -202,25 +202,25 @@ export default function PengurusPage() {
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
       {/* ==================== NAVBAR ==================== */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 mr-2 sm:mr-4 group">
             <img
               src="/images/Logo GGP2.png"
               alt="Logo GGP"
-              className="h-10 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
+              className="h-8 sm:h-10 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform"
             />
-            <div className="flex flex-col">
-              <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 leading-tight">
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="font-extrabold text-xs sm:text-base tracking-tight text-slate-900 leading-tight truncate block">
                 Gereja Gerakan Pentakosta
               </span>
-              <span className="text-[11px] sm:text-xs text-slate-500 font-medium tracking-wide">
+              <span className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide hidden sm:block truncate">
                 Sinode Majelis Pusat (2021 – 2026)
               </span>
             </div>
           </Link>
 
-          {/* Desktop Nav Links (md+) */}
-          <nav className="hidden md:flex items-center gap-1 sm:gap-4">
+          {/* Desktop Nav Links (lg+) */}
+          <nav className="hidden lg:flex items-center gap-1 sm:gap-4 shrink-0">
             <Link
               href="/"
               className="px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-blue-700 hover:bg-slate-100 transition-colors"
@@ -236,23 +236,29 @@ export default function PengurusPage() {
             >
               {t("nav.dashboard")}
             </Link>
+            <Link
+              href="/admin"
+              className="px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-blue-700 hover:bg-slate-100 transition-colors"
+            >
+              {t("nav.admin") || "Admin"}
+            </Link>
 
             <div className="ml-2">
               <LanguageSwitcher variant="compact" />
             </div>
           </nav>
 
-          {/* Mobile Hamburger Button (< md) */}
-          <div className="flex md:hidden items-center gap-2">
+          {/* Mobile Hamburger Button (< lg) */}
+          <div className="flex lg:hidden items-center shrink-0">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? "Tutup menu" : "Buka menu"}
               aria-expanded={mobileMenuOpen}
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer ${
+              className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer border ${
                 mobileMenuOpen
-                  ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400/50"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400/50 border-blue-500"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200"
               }`}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
@@ -265,21 +271,22 @@ export default function PengurusPage() {
             </button>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Backdrop */}
-        {mobileMenuOpen && (
-          <div
-            onClick={() => setMobileMenuOpen(false)}
-            className="fixed inset-0 z-[1300] bg-slate-950/65 backdrop-blur-xs md:hidden cursor-pointer animate-fade-in"
-          />
-        )}
-
-        {/* Mobile Navigation Drawer */}
+      {/* Mobile Backdrop (< lg) */}
+      {mobileMenuOpen && (
         <div
-          className={`fixed inset-y-0 right-0 z-[1310] w-[290px] max-w-[85vw] bg-[#0c1731] border-l border-white/10 shadow-2xl flex flex-col p-5 text-white transition-transform duration-300 ease-out md:hidden overflow-y-auto thin-scroll ${
-            mobileMenuOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
-          }`}
-        >
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 z-[1300] bg-slate-950/65 backdrop-blur-xs lg:hidden cursor-pointer animate-fade-in"
+        />
+      )}
+
+      {/* Mobile Navigation Drawer (< lg) */}
+      <div
+        className={`fixed inset-y-0 right-0 z-[1310] w-[290px] max-w-[85vw] bg-[#0c1731] border-l border-white/10 shadow-2xl flex flex-col p-5 text-white transition-transform duration-300 ease-out lg:hidden overflow-y-auto thin-scroll ${
+          mobileMenuOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+        }`}
+      >
           {/* Header */}
           <div className="flex items-center justify-between pb-4 border-b border-white/10">
             <div className="flex items-center gap-2.5">
@@ -348,6 +355,17 @@ export default function PengurusPage() {
               <span>{t("nav.dashboard")}</span>
             </Link>
 
+            <Link
+              href="/admin"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-purple-400 shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+              <span>{t("nav.admin") || "Admin"}</span>
+            </Link>
+
             <div className="pt-3 mt-3 border-t border-white/10 px-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
                 Bahasa / Language
@@ -356,7 +374,6 @@ export default function PengurusPage() {
             </div>
           </div>
         </div>
-      </header>
 
       {/* ==================== HERO SECTION ==================== */}
       <section className="relative overflow-hidden bg-gradient-to-b from-blue-950 via-slate-900 to-slate-900 text-white py-16 sm:py-20 px-4 sm:px-6 lg:px-8">

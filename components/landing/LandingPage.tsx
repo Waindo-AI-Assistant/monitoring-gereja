@@ -138,25 +138,25 @@ export default function LandingPage() {
       <nav
         className={`landing-navbar ${scrolled ? "landing-navbar--scrolled" : ""}`}
       >
-        <div className="landing-navbar__inner px-4 sm:px-6">
-          <Link href="/" className="landing-navbar__brand flex items-center gap-3">
+        <div className="landing-navbar__inner px-3 sm:px-6 lg:px-8">
+          <Link href="/" className="landing-navbar__brand flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 mr-2 sm:mr-4">
             <img
               src="/images/Logo GGP2.png"
               alt="Logo GGP"
-              className="h-10 w-auto object-contain shrink-0"
+              className="h-8 sm:h-10 w-auto object-contain shrink-0"
             />
-            <div className="landing-navbar__text">
-              <span className="landing-navbar__title text-sm sm:text-base">
+            <div className="landing-navbar__text min-w-0 flex-1">
+              <span className="landing-navbar__title text-xs sm:text-base font-extrabold truncate block">
                 {t("nav.title")}
               </span>
-              <span className="landing-navbar__subtitle hidden sm:block text-[11px]">
+              <span className="landing-navbar__subtitle hidden sm:block text-[11px] truncate">
                 {t("nav.subtitle")}
               </span>
             </div>
           </Link>
 
-          {/* Desktop Nav Links (md+) */}
-          <div className="landing-navbar__links hidden md:flex items-center gap-1 sm:gap-2">
+          {/* Desktop Nav Links (lg+) */}
+          <div className="landing-navbar__links hidden lg:flex items-center gap-1 xl:gap-2 shrink-0">
             <Link href="/" className="landing-navbar__link landing-navbar__link--active">
               {t("nav.home")}
             </Link>
@@ -169,6 +169,9 @@ export default function LandingPage() {
             <a href="#kontak" className="landing-navbar__link">
               {t("nav.contact")}
             </a>
+            <Link href="/admin" className="landing-navbar__link">
+              {t("nav.admin") || "Admin"}
+            </Link>
 
             {/* Multi-language Selector */}
             <div className="ml-1 sm:ml-2">
@@ -176,17 +179,17 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Mobile Hamburger Button (< md) */}
-          <div className="flex md:hidden items-center gap-2">
+          {/* Mobile Hamburger Button (< lg) */}
+          <div className="flex lg:hidden items-center shrink-0">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? "Tutup menu" : "Buka menu"}
               aria-expanded={mobileMenuOpen}
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer ${
+              className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer border ${
                 mobileMenuOpen
-                  ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400/50"
-                  : "bg-white/10 text-white/90 hover:bg-white/20 hover:text-white"
+                  ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400/50 border-blue-500"
+                  : "bg-white/10 text-white hover:bg-white/20 border-white/15"
               }`}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
@@ -199,109 +202,120 @@ export default function LandingPage() {
             </button>
           </div>
         </div>
+      </nav>
 
-        {/* Mobile Backdrop */}
-        {mobileMenuOpen && (
-          <div
-            onClick={() => setMobileMenuOpen(false)}
-            className="fixed inset-0 z-[1300] bg-slate-950/65 backdrop-blur-xs md:hidden cursor-pointer animate-fade-in"
-          />
-        )}
-
-        {/* Mobile Navigation Drawer */}
+      {/* Mobile Backdrop (< lg) */}
+      {mobileMenuOpen && (
         <div
-          className={`fixed inset-y-0 right-0 z-[1310] w-[290px] max-w-[85vw] bg-[#0c1731] border-l border-white/10 shadow-2xl flex flex-col p-5 text-white transition-transform duration-300 ease-out md:hidden overflow-y-auto thin-scroll ${
-            mobileMenuOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
-          }`}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-white/10">
-            <div className="flex items-center gap-2.5">
-              <img
-                src="/images/Logo GGP2.png"
-                alt="Logo GGP"
-                className="h-8 w-auto object-contain shrink-0"
-              />
-              <div>
-                <span className="font-bold text-sm text-white block leading-tight">
-                  Gereja Gerakan Pentakosta
-                </span>
-                <span className="text-[10px] text-blue-300 block">
-                  Menu Navigasi
-                </span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(false)}
-              aria-label="Tutup menu navigasi"
-              className="rounded-xl p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 z-[1300] bg-slate-950/65 backdrop-blur-xs lg:hidden cursor-pointer animate-fade-in"
+        />
+      )}
 
-          {/* Links */}
-          <div className="py-4 space-y-1.5 flex-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-3 mb-2">
-              Menu Utama
-            </span>
-
-            <Link
-              href="/"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-md shadow-blue-600/30"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-white shrink-0">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-              </svg>
-              <span>{t("nav.home")}</span>
-            </Link>
-
-            <Link
-              href="/pengurus"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-emerald-400 shrink-0">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.999-3.199a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-              </svg>
-              <span>{t("nav.leadership")}</span>
-            </Link>
-
-            <Link
-              href="/dashboard"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-blue-400 shrink-0">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
-              </svg>
-              <span>{t("nav.dashboard")}</span>
-            </Link>
-
-            <a
-              href="#kontak"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-amber-400 shrink-0">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
-              </svg>
-              <span>{t("nav.contact")}</span>
-            </a>
-
-            <div className="pt-3 mt-3 border-t border-white/10 px-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-                Bahasa / Language
+      {/* Mobile Navigation Drawer (< lg) */}
+      <div
+        className={`fixed inset-y-0 right-0 z-[1310] w-[290px] max-w-[85vw] bg-[#0c1731] border-l border-white/10 shadow-2xl flex flex-col p-5 text-white transition-transform duration-300 ease-out lg:hidden overflow-y-auto thin-scroll ${
+          mobileMenuOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+        }`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between pb-4 border-b border-white/10">
+          <div className="flex items-center gap-2.5">
+            <img
+              src="/images/Logo GGP2.png"
+              alt="Logo GGP"
+              className="h-8 w-auto object-contain shrink-0"
+            />
+            <div>
+              <span className="font-bold text-sm text-white block leading-tight">
+                Gereja Gerakan Pentakosta
               </span>
-              <LanguageSwitcher variant="compact" />
+              <span className="text-[10px] text-blue-300 block">
+                Menu Navigasi
+              </span>
             </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Tutup menu navigasi"
+            className="rounded-xl p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Links */}
+        <div className="py-4 space-y-1.5 flex-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-3 mb-2">
+            Menu Utama
+          </span>
+
+          <Link
+            href="/"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-md shadow-blue-600/30"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-white shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+            </svg>
+            <span>{t("nav.home")}</span>
+          </Link>
+
+          <Link
+            href="/pengurus"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-emerald-400 shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.999-3.199a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+            </svg>
+            <span>{t("nav.leadership")}</span>
+          </Link>
+
+          <Link
+            href="/dashboard"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-blue-400 shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+            </svg>
+            <span>{t("nav.dashboard")}</span>
+          </Link>
+
+          <a
+            href="#kontak"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-amber-400 shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+            </svg>
+            <span>{t("nav.contact")}</span>
+          </a>
+
+          <Link
+            href="/admin"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-purple-400 shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            <span>{t("nav.admin") || "Admin"}</span>
+          </Link>
+
+          <div className="pt-3 mt-3 border-t border-white/10 px-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+              Bahasa / Language
+            </span>
+            <LanguageSwitcher variant="compact" />
           </div>
         </div>
-      </nav>
+      </div>
 
       {/* ============================== HERO ================================ */}
       <section className="landing-hero">
@@ -490,8 +504,8 @@ export default function LandingPage() {
                   href="mailto:sekretariatmajelispusat@gmail.com"
                   className="landing-footer__link"
                 >
-                  <IconEmail className="landing-footer__svg-icon" />
-                  <span>sekretariatmajelispusat@gmail.com</span>
+                  <IconEmail className="landing-footer__svg-icon shrink-0" />
+                  <span className="break-all">sekretariatmajelispusat@gmail.com</span>
                 </a>
               </li>
             </ul>

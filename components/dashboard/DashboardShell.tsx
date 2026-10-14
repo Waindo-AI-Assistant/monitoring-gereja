@@ -515,29 +515,29 @@ function DashboardHeader({
     <>
       <header className="h-16 sm:h-[72px] shrink-0 bg-[#0f1d3d] px-3 sm:px-4 lg:px-8 flex items-center justify-between shadow-md relative z-[1000]">
         {/* Kiri: Brand GGP */}
-        <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3.5 min-w-0 flex-1 mr-2 sm:mr-4">
           {/* Logo & Judul Dashboard */}
-          <Link href="/" className="flex items-center gap-2.5 min-w-0 group text-white">
+          <Link href="/" className="flex items-center gap-2.5 min-w-0 flex-1 group text-white">
             <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl overflow-hidden flex items-center justify-center shrink-0">
               <img
                 src="/images/Logo GGP2.png"
                 alt="Logo GGP"
-                className="h-8 sm:h-10 w-auto object-contain group-hover:scale-105 transition-transform"
+                className="h-8 sm:h-10 w-auto object-contain group-hover:scale-105 transition-transform shrink-0"
               />
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="font-extrabold text-xs sm:text-sm text-white tracking-tight leading-tight truncate max-w-[145px] xs:max-w-[200px] sm:max-w-none">
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="font-extrabold text-xs sm:text-sm text-white tracking-tight leading-tight truncate block">
                 Gereja Gerakan Pentakosta
               </span>
-              <span className="hidden sm:block text-[10px] text-slate-300 font-medium">
+              <span className="hidden sm:block text-[10px] text-slate-300 font-medium truncate">
                 {t("dashboard.subtitle") || "Dashboard Pemetaan Geospasial"}
               </span>
             </div>
           </Link>
         </div>
 
-        {/* Kanan - Layar Desktop (md+): Menu Navigasi Lengkap */}
-        <div className="hidden md:flex items-center gap-1 lg:gap-2 shrink-0">
+        {/* Kanan - Layar Desktop (lg+): Menu Navigasi Lengkap */}
+        <div className="hidden lg:flex items-center gap-1 lg:gap-2 shrink-0">
           <Link
             href="/"
             className="landing-navbar__link text-xs px-2.5 lg:px-3.5 py-1.5"
@@ -571,17 +571,17 @@ function DashboardHeader({
           </div>
         </div>
 
-        {/* Kanan - Layar Mobile (< md): Tombol Hamburger Menu Buka/Tutup */}
-        <div className="flex md:hidden items-center gap-2 shrink-0">
+        {/* Kanan - Layar Mobile (< lg): Tombol Hamburger Menu Buka/Tutup */}
+        <div className="flex lg:hidden items-center shrink-0">
           <button
             type="button"
             onClick={onToggleMobileNav}
             aria-label={mobileNavOpen ? (isEn ? "Close navigation menu" : "Tutup menu navigasi") : (isEn ? "Open navigation menu" : "Buka menu navigasi")}
             aria-expanded={mobileNavOpen}
-            className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl transition-all cursor-pointer ${
+            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer border ${
               mobileNavOpen
-                ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400/50"
-                : "bg-white/10 text-white/90 hover:bg-white/20 hover:text-white"
+                ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400/50 border-blue-500"
+                : "bg-white/10 text-white hover:bg-white/20 border-white/15"
             }`}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
@@ -595,18 +595,18 @@ function DashboardHeader({
         </div>
       </header>
 
-      {/* ======================= MOBILE NAVIGATION DRAWER & BACKDROP (< md) ======================= */}
+      {/* ======================= MOBILE NAVIGATION DRAWER & BACKDROP (< lg) ======================= */}
       {/* Backdrop */}
       {mobileNavOpen && (
         <div
           onClick={onToggleMobileNav}
-          className="fixed inset-0 z-[1300] bg-slate-950/65 backdrop-blur-xs transition-opacity md:hidden cursor-pointer animate-fade-in"
+          className="fixed inset-0 z-[1300] bg-slate-950/65 backdrop-blur-xs transition-opacity lg:hidden cursor-pointer animate-fade-in"
         />
       )}
 
       {/* Drawer Panel */}
       <div
-        className={`fixed inset-y-0 right-0 z-[1310] w-[300px] max-w-[85vw] bg-[#0c1731] border-l border-white/10 shadow-2xl flex flex-col p-5 text-white transition-transform duration-300 ease-out md:hidden overflow-y-auto thin-scroll ${
+        className={`fixed inset-y-0 right-0 z-[1310] w-[300px] max-w-[85vw] bg-[#0c1731] border-l border-white/10 shadow-2xl flex flex-col p-5 text-white transition-transform duration-300 ease-out lg:hidden overflow-y-auto thin-scroll ${
           mobileNavOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
         }`}
       >

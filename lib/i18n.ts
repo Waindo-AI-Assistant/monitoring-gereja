@@ -65,7 +65,7 @@ export const resources = {
       },
       footer: {
         brand_name: "Gereja Gerakan Pentakosta",
-        brand_sub: "Sistem Informasi Spasial",
+        brand_sub: "Dashboard Pemetaan Sebaran Data Gereja",
         brand_desc: "Platform geospasial berbasis peta digital untuk mendukung pemantauan jemaat, analisis sebaran gereja, pelayanan jemaat, dan infrastruktur wilayah pelayanan.",
         location_title: "Lokasi Sekretariat",
         contact_title: "Hubungi Kami",

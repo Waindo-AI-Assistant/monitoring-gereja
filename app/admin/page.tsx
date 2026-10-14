@@ -8,6 +8,7 @@ import CoordinatePickerModal from "@/components/map/CoordinatePickerModal";
 import ImageUploadInput from "@/components/ui/ImageUploadInput";
 import { exportGeoJSON, exportCSV } from "@/lib/export";
 import "@/lib/i18n";
+import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 type SafeUser = {
@@ -19,6 +20,9 @@ type SafeUser = {
 };
 
 export default function AdminPage() {
+  const { t, i18n } = useTranslation();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
   // ------------------------------------------------------------- STATE AUTH
   const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -562,7 +566,7 @@ export default function AdminPage() {
   // =========================================================================
   if (!currentUser) {
     return (
-      <div className="min-h-screen flex flex-col justify-center items-center bg-slate-50 p-4 font-sans text-slate-800">
+      <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-800">
         {/* Toast Notification */}
         {toastMessage && (
           <div className="fixed top-6 right-6 z-50 rounded-2xl bg-blue-600 text-white px-5 py-3 shadow-xl text-sm font-semibold flex items-center gap-2 animate-bounce">
@@ -573,114 +577,265 @@ export default function AdminPage() {
           </div>
         )}
 
-        <div className="w-full max-w-md">
-          {/* Logo & Header */}
-          <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-3 transition-transform hover:scale-105">
-              <div className="relative h-14 w-14 drop-shadow-md">
+        {/* Top Navbar Header */}
+        <header className="h-16 sm:h-[72px] shrink-0 bg-[#0f1d3d] px-3 sm:px-6 flex items-center justify-between shadow-md sticky top-0 z-30">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 mr-2 sm:mr-4">
+            <Link href="/" className="landing-navbar__brand min-w-0 flex-1">
+              <div className="landing-navbar__logo-wrap h-8 w-8 sm:h-10 sm:w-10 shrink-0">
                 <img
                   src="/images/Logo GGP2.png"
                   alt="Logo GGP"
-                  className="w-full h-full object-contain"
+                  className="h-8 sm:h-10 w-auto object-contain shrink-0"
                 />
               </div>
-              <div className="text-left">
-                <h1 className="text-lg font-black tracking-tight text-blue-950">GEREJA GERAKAN PENTAKOSTA</h1>
-                <p className="text-xs font-semibold text-slate-500">Sistem Informasi Geospasial</p>
+              <div className="landing-navbar__text min-w-0 flex-1">
+                <span className="landing-navbar__title text-xs sm:text-base font-extrabold truncate block">
+                  Gereja Gerakan Pentakosta
+                </span>
+                <span className="landing-navbar__subtitle hidden sm:block text-[10px] truncate">
+                  {t("dashboard.subtitle") || "Dashboard Pemetaan Geospasial"}
+                </span>
               </div>
             </Link>
           </div>
 
-          {/* Form Card */}
-          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl shadow-slate-200/50">
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-slate-900">Login Administrator</h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Masukkan akun kredensial Anda untuk mengakses panel manajemen.
-              </p>
-            </div>
-
-            {loginError && (
-              <div className="mb-5 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-center gap-2">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0">
-                  <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clipRule="evenodd" />
-                </svg>
-                {loginError}
-              </div>
-            )}
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
-                  Username
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    required
-                    value={loginUsername}
-                    onChange={(e) => setLoginUsername(e.target.value)}
-                    placeholder="admin"
-                    className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15 outline-none transition-all"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showLoginPass ? "text" : "password"}
-                    required
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full h-11 px-3.5 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15 outline-none transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowLoginPass(!showLoginPass)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    {showLoginPass ? (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loginLoading}
-                className="w-full h-11 mt-2 rounded-xl bg-blue-600 text-white font-bold text-sm shadow-md shadow-blue-600/25 hover:bg-blue-700 hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                {loginLoading ? (
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                ) : (
-                  <>
-                    <span>Masuk ke Panel</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                    </svg>
-                  </>
-                )}
-              </button>
-            </form>
-
-            <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-              <Link href="/" className="hover:text-blue-600 transition-colors flex items-center gap-1 font-medium">
-                <span>← Kembali ke Peta</span>
+          {/* Desktop Nav Links (lg+) */}
+          <div className="hidden lg:flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="landing-navbar__links flex items-center gap-1">
+              <Link href="/" className="landing-navbar__link text-xs px-3 py-1.5">
+                {t("nav.home") || "Beranda"}
               </Link>
-              <span className="text-[11px] text-slate-400">GGP Monitoring v2.0</span>
+              <Link href="/pengurus" className="landing-navbar__link text-xs px-3 py-1.5">
+                {t("nav.leadership") || "Pengurus Pusat"}
+              </Link>
+              <Link href="/dashboard" className="landing-navbar__link text-xs px-3 py-1.5">
+                {t("nav.dashboard") || "Dashboard"}
+              </Link>
+              <Link href="/admin" className="landing-navbar__link landing-navbar__link--active text-xs px-3 py-1.5">
+                {t("nav.admin") || "Admin"}
+              </Link>
+            </div>
+            <div className="ml-1 pl-1 border-l border-white/10">
+              <LanguageSwitcher variant="compact" />
+            </div>
+          </div>
+
+          {/* Mobile Actions (< lg): Hamburger */}
+          <div className="flex lg:hidden items-center shrink-0">
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(!mobileNavOpen)}
+              aria-label={mobileNavOpen ? "Tutup menu" : "Buka menu"}
+              aria-expanded={mobileNavOpen}
+              className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer border ${
+                mobileNavOpen
+                  ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400/50 border-blue-500"
+                  : "bg-white/10 text-white hover:bg-white/20 border-white/15"
+              }`}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
+                {mobileNavOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+                )}
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        {/* Mobile Backdrop (< lg) */}
+        {mobileNavOpen && (
+          <div
+            onClick={() => setMobileNavOpen(false)}
+            className="fixed inset-0 z-[1300] bg-slate-950/65 backdrop-blur-xs lg:hidden cursor-pointer animate-fade-in"
+          />
+        )}
+
+        {/* Mobile Drawer (< lg) */}
+        <div
+          className={`fixed inset-y-0 right-0 z-[1310] w-[300px] max-w-[85vw] bg-[#0c1731] border-l border-white/10 shadow-2xl flex flex-col p-5 text-white transition-transform duration-300 ease-out lg:hidden overflow-y-auto thin-scroll ${
+            mobileNavOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+          }`}
+        >
+          <div className="flex items-center justify-between pb-4 border-b border-white/10">
+            <div className="flex items-center gap-2.5">
+              <img
+                src="/images/Logo GGP2.png"
+                alt="Logo GGP"
+                className="h-8 w-auto object-contain shrink-0"
+              />
+              <div>
+                <span className="font-bold text-sm text-white block leading-tight">
+                  Gereja Gerakan Pentakosta
+                </span>
+                <span className="text-[10px] text-blue-300 block">
+                  Panel Administrasi
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(false)}
+              aria-label="Tutup menu navigasi"
+              className="rounded-xl p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="py-4 space-y-1.5 flex-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-1 mb-2">
+              Halaman Sistem
+            </span>
+
+            <Link
+              href="/"
+              onClick={() => setMobileNavOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-white shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+              </svg>
+              <span>{t("nav.home") || "Beranda"}</span>
+            </Link>
+
+            <Link
+              href="/pengurus"
+              onClick={() => setMobileNavOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-emerald-400 shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.999-3.199a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+              </svg>
+              <span>{t("nav.leadership") || "Pengurus Pusat"}</span>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              onClick={() => setMobileNavOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-blue-400 shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+              </svg>
+              <span>{t("nav.dashboard") || "Dashboard Peta"}</span>
+            </Link>
+
+            <Link
+              href="/admin"
+              onClick={() => setMobileNavOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-md shadow-blue-600/30"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-white shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+              <span>{t("nav.admin") || "Admin"}</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Center Content Form */}
+        <div className="flex-1 flex flex-col justify-center items-center p-4 my-auto">
+          <div className="w-full max-w-md my-auto py-8">
+            {/* Form Card */}
+            <div className="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200 shadow-xl shadow-slate-200/50">
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
+                    Administrator
+                  </span>
+                </div>
+                <h2 className="text-xl font-bold text-slate-900">Login Administrator</h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Masukkan akun kredensial Anda untuk mengakses panel manajemen.
+                </p>
+              </div>
+
+              {loginError && (
+                <div className="mb-5 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0">
+                    <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clipRule="evenodd" />
+                  </svg>
+                  {loginError}
+                </div>
+              )}
+
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+                    Username
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      value={loginUsername}
+                      onChange={(e) => setLoginUsername(e.target.value)}
+                      placeholder="admin"
+                      className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showLoginPass ? "text" : "password"}
+                      required
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full h-11 px-3.5 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15 outline-none transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginPass(!showLoginPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showLoginPass ? (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loginLoading}
+                  className="w-full h-11 mt-2 rounded-xl bg-blue-600 text-white font-bold text-sm shadow-md shadow-blue-600/25 hover:bg-blue-700 hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {loginLoading ? (
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  ) : (
+                    <>
+                      <span>Masuk ke Panel</span>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                      </svg>
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                <Link href="/" className="hover:text-blue-600 transition-colors flex items-center gap-1 font-medium">
+                  <span>← Kembali ke Peta</span>
+                </Link>
+                <span className="text-[11px] text-slate-400">GGP Monitoring v2.0</span>
+              </div>
             </div>
           </div>
         </div>
@@ -705,58 +860,61 @@ export default function AdminPage() {
 
       {/* Top Navbar */}
       <header className="h-16 sm:h-[72px] shrink-0 bg-[#0f1d3d] px-3 sm:px-6 flex items-center justify-between shadow-md sticky top-0 z-30">
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-          <Link href="/" className="landing-navbar__brand min-w-0">
-            <div className="landing-navbar__logo-wrap h-8 w-8 sm:h-10 sm:w-10">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 mr-2 sm:mr-4">
+          <Link href="/" className="landing-navbar__brand min-w-0 flex-1">
+            <div className="landing-navbar__logo-wrap h-8 w-8 sm:h-10 sm:w-10 shrink-0">
               <img
                 src="/images/Logo GGP2.png"
                 alt="Logo GGP"
                 className="h-8 sm:h-10 w-auto object-contain shrink-0"
               />
             </div>
-            <div className="landing-navbar__text min-w-0">
+            <div className="landing-navbar__text min-w-0 flex-1">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="landing-navbar__title text-xs sm:text-base truncate">
+                <span className="landing-navbar__title text-xs sm:text-base font-extrabold truncate block">
                   Gereja Gerakan Pentakosta
                 </span>
                 <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase bg-white/10 text-blue-200 border border-white/20 shrink-0">
                   {currentUser.role}
                 </span>
               </div>
-              <span className="landing-navbar__subtitle hidden sm:block text-[10px]">
-                Dashboard Pemetaan 
+              <span className="landing-navbar__subtitle hidden sm:block text-[10px] truncate">
+                {t("dashboard.subtitle") || "Dashboard Pemetaan Geospasial"}
               </span>
             </div>
           </Link>
         </div>
 
-        {/* Tab Navigation & User Controls */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Desktop Controls (lg+) */}
+        <div className="hidden lg:flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Main Page Links */}
-          <div className="landing-navbar__links hidden lg:flex items-center gap-1">
+          <div className="landing-navbar__links flex items-center gap-1">
             <Link href="/" className="landing-navbar__link text-xs px-3 py-1.5">
-              Home
+              {t("nav.home") || "Home"}
+            </Link>
+            <Link href="/pengurus" className="landing-navbar__link text-xs px-3 py-1.5">
+              {t("nav.leadership") || "Pengurus"}
             </Link>
             <Link href="/dashboard" className="landing-navbar__link text-xs px-3 py-1.5">
-              Dashboard
+              {t("nav.dashboard") || "Dashboard"}
             </Link>
             <Link href="/admin" className="landing-navbar__link landing-navbar__link--active text-xs px-3 py-1.5">
-              Admin
+              {t("nav.admin") || "Admin"}
             </Link>
           </div>
 
-          <div className="hidden sm:block">
+          <div>
             <LanguageSwitcher variant="compact" />
           </div>
 
-          <div className="h-6 w-px bg-white/20 hidden lg:block" />
+          <div className="h-6 w-px bg-white/20" />
 
           {/* Admin Tabs Switch */}
-          <div className="flex items-center bg-white/10 p-0.5 sm:p-1 rounded-xl border border-white/15">
+          <div className="flex items-center bg-white/10 p-1 rounded-xl border border-white/15">
             <button
               type="button"
               onClick={() => setActiveTab("churches")}
-              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === "churches"
                   ? "bg-blue-600 text-white shadow-xs"
                   : "text-white/70 hover:text-white hover:bg-white/10"
@@ -765,14 +923,13 @@ export default function AdminPage() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5 shrink-0">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.333A1.5 1.5 0 0018 9H6a1.5 1.5 0 00-1.5 1.5V21" />
               </svg>
-              <span className="hidden xs:inline">Master Data</span>
-              <span className="xs:hidden">Data</span>
+              <span>Master Data</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab("users")}
-              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === "users"
                   ? "bg-blue-600 text-white shadow-xs"
                   : "text-white/70 hover:text-white hover:bg-white/10"
@@ -781,15 +938,14 @@ export default function AdminPage() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5 shrink-0">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
               </svg>
-              <span className="hidden xs:inline">Pengguna</span>
-              <span className="xs:hidden">User</span>
+              <span>Pengguna</span>
             </button>
           </div>
 
-          <div className="h-6 w-px bg-white/20 hidden md:block" />
+          <div className="h-6 w-px bg-white/20" />
 
           {/* User Profile */}
-          <div className="text-right hidden md:block">
+          <div className="text-right">
             <p className="text-xs font-bold text-white leading-tight">{currentUser.name}</p>
             <p className="text-[10px] text-slate-300 font-mono">@{currentUser.username}</p>
           </div>
@@ -798,15 +954,236 @@ export default function AdminPage() {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex items-center gap-1 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-xs font-semibold text-rose-200 hover:bg-rose-600 hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-xs font-semibold text-rose-200 hover:bg-rose-600 hover:text-white transition-colors cursor-pointer"
           >
-            <span className="hidden xs:inline">Keluar</span>
+            <span>Keluar</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
             </svg>
           </button>
         </div>
+
+        {/* Mobile Controls (< lg) */}
+        <div className="flex lg:hidden items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Quick Tab Switch */}
+          <div className="flex items-center bg-white/10 p-0.5 rounded-xl border border-white/15">
+            <button
+              type="button"
+              onClick={() => setActiveTab("churches")}
+              className={`px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                activeTab === "churches"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-white/70 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3 h-3 shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.333A1.5 1.5 0 0018 9H6a1.5 1.5 0 00-1.5 1.5V21" />
+              </svg>
+              <span className="hidden xs:inline">Data</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("users")}
+              className={`px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                activeTab === "users"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-white/70 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3 h-3 shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+              </svg>
+              <span className="hidden xs:inline">User</span>
+            </button>
+          </div>
+
+          {/* Mobile Hamburger Drawer Trigger */}
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(!mobileNavOpen)}
+            aria-label={mobileNavOpen ? "Tutup menu admin" : "Buka menu admin"}
+            aria-expanded={mobileNavOpen}
+            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer border ${
+              mobileNavOpen
+                ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400/50 border-blue-500"
+                : "bg-white/10 text-white hover:bg-white/20 border-white/15"
+            }`}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
+              {mobileNavOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+              )}
+            </svg>
+          </button>
+        </div>
       </header>
+
+      {/* Mobile Backdrop */}
+      {mobileNavOpen && (
+        <div
+          onClick={() => setMobileNavOpen(false)}
+          className="fixed inset-0 z-[1300] bg-slate-950/65 backdrop-blur-xs lg:hidden cursor-pointer animate-fade-in"
+        />
+      )}
+
+      {/* Mobile Drawer */}
+      <div
+        className={`fixed inset-y-0 right-0 z-[1310] w-[300px] max-w-[85vw] bg-[#0c1731] border-l border-white/10 shadow-2xl flex flex-col p-5 text-white transition-transform duration-300 ease-out lg:hidden overflow-y-auto thin-scroll ${
+          mobileNavOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+        }`}
+      >
+        {/* Drawer Header */}
+        <div className="flex items-center justify-between pb-4 border-b border-white/10">
+          <div className="flex items-center gap-2.5">
+            <img
+              src="/images/Logo GGP2.png"
+              alt="Logo GGP"
+              className="h-8 w-auto object-contain shrink-0"
+            />
+            <div>
+              <span className="font-bold text-sm text-white block leading-tight">
+                Gereja Gerakan Pentakosta
+              </span>
+              <span className="text-[10px] text-blue-300 block">
+                Panel Administrasi
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(false)}
+            aria-label="Tutup menu navigasi"
+            className="rounded-xl p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* User Profile Card */}
+        <div className="my-4 p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-inner">
+            {currentUser.name.slice(0, 2).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-xs text-white truncate block">{currentUser.name}</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-blue-500/30 text-blue-300 border border-blue-400/30 shrink-0">
+                {currentUser.role}
+              </span>
+            </div>
+            <span className="text-[11px] text-slate-300 font-mono truncate block">@{currentUser.username}</span>
+          </div>
+        </div>
+
+        {/* Tab Selection */}
+        <div className="space-y-1.5 pb-4 border-b border-white/10">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-1 mb-2">
+            Modul Admin
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("churches");
+              setMobileNavOpen(false);
+            }}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+              activeTab === "churches"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                : "text-white/80 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.333A1.5 1.5 0 0018 9H6a1.5 1.5 0 00-1.5 1.5V21" />
+            </svg>
+            <span>Master Data Gereja</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("users");
+              setMobileNavOpen(false);
+            }}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+              activeTab === "users"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                : "text-white/80 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+            </svg>
+            <span>Kelola Akun Pengguna</span>
+          </button>
+        </div>
+
+        {/* Site Navigation Links */}
+        <div className="py-4 space-y-1.5 flex-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-1 mb-2">
+            Halaman Sistem
+          </span>
+
+          <Link
+            href="/"
+            onClick={() => setMobileNavOpen(false)}
+            className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-white shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+            </svg>
+            <span>{t("nav.home") || "Beranda"}</span>
+          </Link>
+
+          <Link
+            href="/pengurus"
+            onClick={() => setMobileNavOpen(false)}
+            className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-emerald-400 shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.999-3.199a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+            </svg>
+            <span>{t("nav.leadership") || "Pengurus Pusat"}</span>
+          </Link>
+
+          <Link
+            href="/dashboard"
+            onClick={() => setMobileNavOpen(false)}
+            className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-blue-400 shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+            </svg>
+            <span>{t("nav.dashboard") || "Dashboard Peta"}</span>
+          </Link>
+
+          {/* Language Switcher */}
+          <div className="pt-3 mt-2 border-t border-white/10 px-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+              Bahasa / Language
+            </span>
+            <LanguageSwitcher variant="compact" />
+          </div>
+        </div>
+
+        {/* Drawer Footer: Logout */}
+        <div className="pt-4 border-t border-white/10">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+            </svg>
+            <span>Keluar dari Sesi Admin</span>
+          </button>
+        </div>
+      </div>
 
       {/* Main Content Area */}
       <main className="flex-1 p-3.5 sm:p-6 max-w-7xl w-full mx-auto space-y-4 sm:space-y-6">
@@ -901,12 +1278,12 @@ export default function AdminPage() {
                 </div>
 
                 {/* Mobile Filter Toggle & Action Buttons */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0">
                   {/* Mobile Filter Toggle Button */}
                   <button
                     type="button"
                     onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-                    className={`sm:hidden h-9 px-3 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    className={`sm:hidden h-9 px-2.5 sm:px-3 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                       activeAdminFilterCount > 0 || isMobileFilterOpen
                         ? "border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500/20"
                         : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
@@ -930,7 +1307,7 @@ export default function AdminPage() {
                       showToast(`Berhasil mengunduh ${filteredChurches.length} data dalam format GeoJSON.`);
                     }}
                     title="Unduh GeoJSON"
-                    className="h-9 px-2.5 sm:px-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 font-bold text-xs shadow-xs hover:bg-emerald-600 hover:text-white flex items-center gap-1 transition-all cursor-pointer"
+                    className="h-9 px-2 sm:px-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 font-bold text-xs shadow-xs hover:bg-emerald-600 hover:text-white flex items-center gap-1 transition-all cursor-pointer"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -945,7 +1322,7 @@ export default function AdminPage() {
                       showToast(`Berhasil mengunduh ${filteredChurches.length} data dalam format CSV.`);
                     }}
                     title="Unduh CSV"
-                    className="h-9 px-2.5 sm:px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-bold text-xs shadow-xs hover:bg-slate-100 flex items-center gap-1 transition-all cursor-pointer"
+                    className="h-9 px-2 sm:px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-bold text-xs shadow-xs hover:bg-slate-100 flex items-center gap-1 transition-all cursor-pointer"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
@@ -956,7 +1333,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => setIsAddModalOpen(true)}
-                    className="h-9 px-3 sm:px-4 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm hover:bg-blue-700 flex items-center gap-1.5 transition-all cursor-pointer"
+                    className="h-9 px-2.5 sm:px-4 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm hover:bg-blue-700 flex items-center gap-1.5 transition-all cursor-pointer"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -1124,7 +1501,7 @@ export default function AdminPage() {
                           )}
 
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-sm text-blue-950 truncate">
+                            <h4 className="font-bold text-sm text-blue-950 line-clamp-2 leading-snug">
                               {p.name || p.nama || "-"}
                             </h4>
                             <p className="text-xs text-slate-600 font-medium truncate mt-0.5">
@@ -1133,7 +1510,7 @@ export default function AdminPage() {
                             <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                                 p.status === "Milik Sendiri"
-                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                   ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                   : p.status === "Sewa"
                                   ? "bg-amber-50 text-amber-700 border border-amber-200"
                                   : p.status === "Pinjam"
@@ -1164,7 +1541,7 @@ export default function AdminPage() {
                           {p.alamat_gereja && (
                             <div className="flex items-start justify-between gap-2 pt-1 border-t border-slate-200/50">
                               <span className="text-slate-400 font-medium shrink-0">Alamat:</span>
-                              <span className="text-slate-700 text-right truncate">{p.alamat_gereja}</span>
+                              <span className="text-slate-700 text-right line-clamp-2 leading-tight break-words">{p.alamat_gereja}</span>
                             </div>
                           )}
                         </div>
@@ -1375,7 +1752,7 @@ export default function AdminPage() {
         {activeTab === "users" && (
           <div className="space-y-6">
             {/* Header & Actions */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
               <div>
                 <h2 className="text-base font-bold text-slate-900">Kelola Akun Administrator</h2>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -1386,7 +1763,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setIsAddUserModalOpen(true)}
-                className="h-10 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm hover:bg-blue-700 flex items-center gap-2 transition-all cursor-pointer"
+                className="h-10 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm hover:bg-blue-700 flex items-center justify-center gap-2 transition-all cursor-pointer w-full sm:w-auto"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
@@ -1606,7 +1983,7 @@ export default function AdminPage() {
       ========================================================================= */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
-          <div className="relative bg-white rounded-2xl sm:rounded-3xl w-full max-w-2xl border border-slate-200 shadow-2xl p-4 sm:p-6 my-auto max-h-[94vh] sm:max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-white rounded-2xl sm:rounded-3xl w-full max-w-2xl border border-slate-200 shadow-2xl p-4 sm:p-6 my-auto max-h-[92dvh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Tambah Data Gereja Baru</h3>
@@ -1943,7 +2320,7 @@ export default function AdminPage() {
       ========================================================================= */}
       {isAddUserModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-md border border-slate-200 shadow-2xl p-4 sm:p-6 my-auto max-h-[94vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-md border border-slate-200 shadow-2xl p-4 sm:p-6 my-auto max-h-[92dvh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
                 <h3 className="text-base font-bold text-slate-900">Tambah Akun Pengguna</h3>
@@ -2041,7 +2418,7 @@ export default function AdminPage() {
       ========================================================================= */}
       {isEditUserModalOpen && editingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-md border border-slate-200 shadow-2xl p-4 sm:p-6 my-auto max-h-[94vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-md border border-slate-200 shadow-2xl p-4 sm:p-6 my-auto max-h-[92dvh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
                 <h3 className="text-base sm:text-lg font-bold text-slate-900">Edit Data Pengguna</h3>
