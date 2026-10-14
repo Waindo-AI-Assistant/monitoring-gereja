@@ -70,7 +70,7 @@ export const resources = {
         location_title: "Lokasi Sekretariat",
         contact_title: "Hubungi Kami",
         phone_label: "Telp",
-        copyright: "© {{year}} PENTAKOSTA • Departemen Digitalisasi GGP. All rights reserved.",
+        copyright: "© {{year}} Departemen Digitalisasi GGP. All rights reserved.",
       },
       lang: {
         switch_title: "Pilih Bahasa",
@@ -210,7 +210,7 @@ export const resources = {
         location_title: "Secretariat Location",
         contact_title: "Contact Us",
         phone_label: "Phone",
-        copyright: "© {{year}} PENTAKOSTA • Department Digitalisasi GGP. All rights reserved.",
+        copyright: "© {{year}} Department Digitalisasi GGP. All rights reserved.",
       },
       lang: {
         switch_title: "Select Language",
