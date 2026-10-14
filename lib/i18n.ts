@@ -61,7 +61,7 @@ export const resources = {
         f2_title: "Multi-Layer Geospasial",
         f2_desc: "Tampilkan berbagai data spasial seperti batas wilayah MADA, MAWIL, jalan, dan fasilitas pelayanan.",
         f3_title: "Pencarian & Analisis Cepat",
-        f3_desc: "Temukan lokasi gereja, hitung rute perjalanan, dan analisa distribusi jemaat dalam hitungan detik.",
+        f3_desc: "Temukan lokasi gereja, analisis rute perjalanan, dan petakan persebaran jemaat dalam hitungan detik.",
       },
       footer: {
         brand_name: "Gereja Gerakan Pentakosta",
