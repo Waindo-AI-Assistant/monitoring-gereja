@@ -1,3 +1,4 @@
+import { requirePermission } from "@/lib/authorization";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
@@ -5,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
+    const { error: accessError } = await requirePermission(req, "churches.update");
+    if (accessError) return accessError;
     const body = await req.json();
     const { fid, name, updatedProperties } = body;
 

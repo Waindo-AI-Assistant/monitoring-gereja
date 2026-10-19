@@ -1,16 +1,9 @@
+import { requirePermission } from "@/lib/authorization";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
-import { verifySessionToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-function authenticateAdmin(req: NextRequest) {
-  const cookieToken = req.cookies.get("admin_session")?.value;
-  const authHeader = req.headers.get("Authorization")?.replace("Bearer ", "");
-  const token = cookieToken || authHeader;
-  if (!token) return null;
-  return verifySessionToken(token);
-}
 
 const GEOJSON_PATH = path.join(process.cwd(), "public", "data", "poi.geojson");
 
@@ -30,10 +23,8 @@ async function safeWriteGeoJSON(filePath: string, data: any): Promise<boolean> {
 // GET: Fetch all church records
 export async function GET(req: NextRequest) {
   try {
-    const admin = authenticateAdmin(req);
-    if (!admin) {
-      return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 401 });
-    }
+    const { error: accessError } = await requirePermission(req, "churches.view");
+    if (accessError) return accessError;
 
     // 1. Coba baca dari PostgreSQL via Prisma
     try {
@@ -109,10 +100,8 @@ export async function GET(req: NextRequest) {
 // POST: Add a new church record
 export async function POST(req: NextRequest) {
   try {
-    const admin = authenticateAdmin(req);
-    if (!admin) {
-      return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 401 });
-    }
+    const { error: accessError } = await requirePermission(req, "churches.create");
+    if (accessError) return accessError;
 
     const churchData = await req.json();
     if (!churchData.name) {
@@ -215,10 +204,8 @@ export async function POST(req: NextRequest) {
 // PUT: Update an existing church record
 export async function PUT(req: NextRequest) {
   try {
-    const admin = authenticateAdmin(req);
-    if (!admin) {
-      return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 401 });
-    }
+    const { error: accessError } = await requirePermission(req, "churches.update");
+    if (accessError) return accessError;
 
     const { fid, name, updatedProperties } = await req.json();
     if (!updatedProperties) {
@@ -325,10 +312,8 @@ export async function PUT(req: NextRequest) {
 // DELETE: Remove a church record
 export async function DELETE(req: NextRequest) {
   try {
-    const admin = authenticateAdmin(req);
-    if (!admin) {
-      return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 401 });
-    }
+    const { error: accessError } = await requirePermission(req, "churches.delete");
+    if (accessError) return accessError;
 
     const { fid, name } = await req.json();
     if (fid === undefined && !name) {

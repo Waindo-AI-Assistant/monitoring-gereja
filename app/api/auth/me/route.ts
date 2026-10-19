@@ -1,17 +1,10 @@
+import { getRolePermissions } from "@/lib/permission-store";
 import { NextRequest, NextResponse } from "next/server";
-import { verifySessionToken } from "@/lib/auth";
+import { getRequestUser } from "@/lib/authorization";
 
 export async function GET(req: NextRequest) {
   try {
-    const cookieToken = req.cookies.get("admin_session")?.value;
-    const authHeader = req.headers.get("Authorization")?.replace("Bearer ", "");
-    const token = cookieToken || authHeader;
-
-    if (!token) {
-      return NextResponse.json({ authenticated: false }, { status: 401 });
-    }
-
-    const user = verifySessionToken(token);
+    const user = await getRequestUser(req);
     if (!user) {
       return NextResponse.json({ authenticated: false }, { status: 401 });
     }
@@ -19,7 +12,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       authenticated: true,
       user,
-    });
+      permissions: await getRolePermissions(user.role),
+    }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return NextResponse.json({ authenticated: false }, { status: 500 });
   }

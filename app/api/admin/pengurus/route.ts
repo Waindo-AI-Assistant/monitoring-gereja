@@ -1,24 +1,15 @@
+import { requirePermission } from "@/lib/authorization";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
-import { verifySessionToken } from "@/lib/auth";
 
-function authenticateAdmin(req: NextRequest) {
-  const cookieToken = req.cookies.get("admin_session")?.value;
-  const authHeader = req.headers.get("Authorization")?.replace("Bearer ", "");
-  const token = cookieToken || authHeader;
-  if (!token) return null;
-  return verifySessionToken(token);
-}
 
 const PENGURUS_PATH = path.join(process.cwd(), "public", "data", "pengurus.json");
 
 export async function GET(req: NextRequest) {
   try {
-    const admin = authenticateAdmin(req);
-    if (!admin) {
-      return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 401 });
-    }
+    const { error: accessError } = await requirePermission(req, "pengurus.view");
+    if (accessError) return accessError;
 
     const fileData = await fs.readFile(PENGURUS_PATH, "utf-8");
     const data = JSON.parse(fileData);
@@ -34,10 +25,8 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const admin = authenticateAdmin(req);
-    if (!admin) {
-      return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 401 });
-    }
+    const { error: accessError } = await requirePermission(req, "pengurus.update");
+    if (accessError) return accessError;
 
     const body = await req.json();
     const fileData = await fs.readFile(PENGURUS_PATH, "utf-8");

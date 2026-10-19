@@ -347,6 +347,64 @@ docker-compose exec web node prisma/seed.js
 ```
 Aplikasi akan aktif di `http://localhost:3000` dan panel admin di `http://localhost:3000/admin`.
 
+#### Login, role, dan hak akses
+
+Dashboard `/dashboard` memerlukan login melalui `/admin`. Pada Next.js 16,
+proteksi middleware berada di `proxy.ts`; halaman dan API juga memeriksa akun
+serta role terbaru di server.
+
+Pengaturan awal (sebelum diubah oleh superadmin):
+
+| Role | Lihat dashboard | Kelola gereja, pengurus, pengguna |
+|---|---|---|
+| Superadmin (`superadmin`) | Ya | Ya |
+| Biasa (`biasa`) | Ya | Tidak |
+| Kepengurusan (`kepengurusan`) | Ya | Tidak |
+| Harian Pusat (`harian_pusat`) | Ya | Tidak |
+
+Superadmin memilih role akun melalui menu **Pengguna** dan mengatur izin setiap
+role melalui menu **Hak Akses**. Centang izin lalu klik **Simpan Hak Akses**.
+Pengaturan disimpan di tabel PostgreSQL `role_permissions` dan tidak direset oleh seed.
+
+- Dashboard: lihat.
+- Data gereja: lihat, tambah, edit, hapus.
+- Pengurus pusat: lihat dan edit (termasuk mengosongkan nama pejabat).
+- Pengguna: lihat, tambah, edit, hapus.
+
+Izin tambah/edit/hapus membutuhkan izin lihat pada fitur yang sama. Panel otomatis
+menyesuaikan menu dan tombol saat halaman dimuat ulang; API memeriksa izin terkini
+pada setiap request, termasuk session yang masih aktif. Role tanpa izin dashboard
+maupun panel diarahkan ke halaman akses ditolak. Halaman publik dan berkas data
+publik tetap dapat diakses seperti sebelumnya.
+
+Akses superadmin selalu penuh dan tidak dapat dimatikan. Pengaturan hak akses,
+perubahan role akun, dan pengelolaan akun superadmin hanya untuk superadmin.
+Jika pembuatan akun didelegasikan ke role lain, akun baru mendapat role `biasa`.
+Role lama `admin` diperlakukan sebagai `biasa`.
+
+Seed membuat akun `digitalgpp` dengan password awal `digitalggp` dan role `biasa`.
+Jika akun sudah ada, seed memastikan role-nya `biasa` tanpa mereset password.
+Akun superadmin yang sudah ada tetap tersedia. Izin role `biasa` mengikuti
+pengaturan yang disimpan client; secara default hanya dashboard.
+
+Setelah memperbarui source di laptop atau server:
+
+```bash
+docker compose up --build -d
+docker compose exec web npx prisma db push
+docker compose exec web npx prisma db seed
+```
+
+Di container `web`, `DATABASE_URL` harus menunjuk `db:5432`, misalnya
+`postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public`.
+Port host `POSTGRES_PORT` digunakan untuk koneksi dari luar container.
+
+Jalankan pemeriksaan proteksi akses tanpa mengubah database:
+
+```bash
+node --test tests/auth.test.cjs
+```
+
 ### 2. Menjalankan secara Lokal
 ```bash
 # 1. Install dependencies

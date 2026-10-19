@@ -1,3 +1,4 @@
+import { requirePermission } from "@/lib/authorization";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
@@ -5,6 +6,8 @@ import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
+    const { error: accessError } = await requirePermission(req, ["churches.create", "churches.update", "pengurus.update"]);
+    if (accessError) return accessError;
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 

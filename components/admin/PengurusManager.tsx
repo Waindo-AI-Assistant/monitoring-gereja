@@ -19,6 +19,7 @@ export interface PengurusPosition {
 }
 
 interface PengurusManagerProps {
+  canEdit?: boolean;
   onShowToast: (message: string) => void;
 }
 
@@ -61,7 +62,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string
   },
 };
 
-export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
+export default function PengurusManager({ onShowToast, canEdit = false }: PengurusManagerProps) {
   const [data, setData] = useState<PengurusPosition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -525,7 +526,7 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
                         {/* Aksi */}
                         <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
-                            <button
+                            <button style={!canEdit ? { display: "none" } : undefined}
                               type="button"
                               onClick={() => handleOpenEdit(item)}
                               className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white font-bold text-xs transition-colors cursor-pointer"
@@ -534,7 +535,7 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
                               Edit
                             </button>
                             {hasName && (
-                              <button
+                              <button style={!canEdit ? { display: "none" } : undefined}
                                 type="button"
                                 onClick={() => handleClearName(item)}
                                 className="p-1.5 rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
@@ -580,7 +581,7 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
                       </div>
 
                       {/* Edit Button */}
-                      <button
+                      <button style={!canEdit ? { display: "none" } : undefined}
                         type="button"
                         onClick={() => handleOpenEdit(item)}
                         className="px-3 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-xs hover:bg-blue-700 transition-colors cursor-pointer shrink-0"
@@ -609,14 +610,14 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
                               Belum Ada Nama
                             </span>
                             <span className="text-[10px] text-slate-400 block">
-                              Klik Edit untuk mengisi nama pejabat
+                              {canEdit ? "Klik Edit untuk mengisi nama pejabat" : "Nama pejabat belum diisi"}
                             </span>
                           </div>
                         )}
                       </div>
 
                       {hasName && (
-                        <button
+                        <button style={!canEdit ? { display: "none" } : undefined}
                           type="button"
                           onClick={() => handleClearName(item)}
                           className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"

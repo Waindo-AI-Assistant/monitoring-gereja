@@ -1,23 +1,15 @@
+import { isRole } from "@/lib/roles";
+import { requirePermission } from "@/lib/authorization";
 import { NextRequest, NextResponse } from "next/server";
-import { getUsers, saveUsers, hashPassword, verifySessionToken, User, SafeUser } from "@/lib/auth";
+import { getUsers, saveUsers, hashPassword, User, SafeUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 
-function getAuthenticatedAdmin(req: NextRequest): SafeUser | null {
-  const token =
-    req.cookies.get("admin_session")?.value ||
-    req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-
-  if (!token) return null;
-  return verifySessionToken(token);
-}
 
 export async function GET(req: NextRequest) {
   try {
-    const admin = getAuthenticatedAdmin(req);
-    if (!admin) {
-      return NextResponse.json({ error: "Sesi tidak valid atau belum login." }, { status: 401 });
-    }
+    const { error: accessError } = await requirePermission(req, "users.view");
+    if (accessError) return accessError;
 
     const users = await getUsers();
     const safeUsers: SafeUser[] = users.map((u) => ({
@@ -37,10 +29,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const admin = getAuthenticatedAdmin(req);
-    if (!admin) {
-      return NextResponse.json({ error: "Akses ditolak. Sesi tidak valid." }, { status: 401 });
-    }
+    const { user: actor, error: accessError } = await requirePermission(req, "users.create");
+    if (accessError) return accessError;
 
     const { name, username, password, role } = await req.json();
 
@@ -78,7 +68,13 @@ export async function POST(req: NextRequest) {
     }
 
     const { hash, salt } = hashPassword(password);
-    const assignedRole = role === "superadmin" ? "superadmin" : "admin";
+    if (role !== undefined && !isRole(role)) {
+      return NextResponse.json({ error: "Role tidak valid." }, { status: 400 });
+    }
+    const assignedRole = role ?? "biasa";
+    if (actor.role !== "superadmin" && assignedRole !== "biasa") {
+      return NextResponse.json({ error: "Penentuan role akun hanya untuk superadmin." }, { status: 403 });
+    }
 
     const newUser: User = {
       id: "user-" + crypto.randomBytes(6).toString("hex"),
@@ -137,10 +133,8 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const admin = getAuthenticatedAdmin(req);
-    if (!admin) {
-      return NextResponse.json({ error: "Akses ditolak. Sesi tidak valid." }, { status: 401 });
-    }
+    const { user: admin, error: accessError } = await requirePermission(req, "users.delete");
+    if (accessError) return accessError;
 
     const { searchParams } = new URL(req.url);
     const targetId = searchParams.get("id");
@@ -164,10 +158,14 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Pengguna tidak ditemukan." }, { status: 404 });
     }
 
+    if (admin.role !== "superadmin" && users[userIndex].role === "superadmin") {
+      return NextResponse.json({ error: "Akun superadmin hanya dapat dikelola superadmin." }, { status: 403 });
+    }
+
     // Protection for primary superadmin
-    if (users[userIndex].username === "admin" && users[userIndex].role === "superadmin") {
+    if (users[userIndex].role === "superadmin" && users.filter((user) => user.role === "superadmin").length <= 1) {
       return NextResponse.json(
-        { error: "Akun Super Administrator utama sistem tidak boleh dihapus." },
+        { error: "Superadmin terakhir tidak boleh dihapus." },
         { status: 403 }
       );
     }
@@ -199,10 +197,8 @@ export async function DELETE(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const admin = getAuthenticatedAdmin(req);
-    if (!admin) {
-      return NextResponse.json({ error: "Akses ditolak. Sesi tidak valid." }, { status: 401 });
-    }
+    const { user: actor, error: accessError } = await requirePermission(req, "users.update");
+    if (accessError) return accessError;
 
     const { id, name, username, password, role } = await req.json();
 
@@ -217,7 +213,10 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Pengguna tidak ditemukan." }, { status: 404 });
     }
 
-    const targetUser = users[userIndex];
+    const targetUser = { ...users[userIndex] };
+    if (actor.role !== "superadmin" && (targetUser.role === "superadmin" || (role !== undefined && role !== targetUser.role))) {
+      return NextResponse.json({ error: "Mengubah akun superadmin atau role akun hanya untuk superadmin." }, { status: 403 });
+    }
 
     // Check if new username is already used by another account
     if (username && username.trim().toLowerCase() !== targetUser.username.toLowerCase()) {
@@ -237,7 +236,13 @@ export async function PUT(req: NextRequest) {
       targetUser.name = name.trim();
     }
 
-    if (role && (role === "admin" || role === "superadmin")) {
+    if (role !== undefined) {
+      if (!isRole(role)) {
+        return NextResponse.json({ error: "Role tidak valid." }, { status: 400 });
+      }
+      if (targetUser.role === "superadmin" && role !== "superadmin" && users.filter((user) => user.role === "superadmin").length <= 1) {
+        return NextResponse.json({ error: "Role superadmin terakhir tidak boleh diturunkan." }, { status: 400 });
+      }
       targetUser.role = role;
     }
 

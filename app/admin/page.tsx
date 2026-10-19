@@ -10,13 +10,16 @@ import { exportGeoJSON, exportCSV } from "@/lib/export";
 import "@/lib/i18n";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import AccessControl from "@/components/admin/AccessControl";
+import { ROLES, ROLE_LABELS, type Role } from "@/lib/roles";
+import { defaultPermissions, hasPermission, canAccessAdmin, landingPath, type Permissions, type Permission } from "@/lib/permissions";
 import PengurusManager from "@/components/admin/PengurusManager";
 
 type SafeUser = {
   id: string;
   name: string;
   username: string;
-  role: string;
+  role: Role;
   createdAt?: string;
 };
 
@@ -27,6 +30,9 @@ export default function AdminPage() {
   // ------------------------------------------------------------- STATE AUTH
   const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [permissions, setPermissions] = useState<Permissions>(defaultPermissions);
+  const allowed = (permission: Permission) => hasPermission(permissions, permission);
+  const initialTab = (granted: Permissions) => granted["churches.view"] ? "churches" : granted["pengurus.view"] ? "pengurus" : "users";
 
   // Form Login
   const [loginUsername, setLoginUsername] = useState("");
@@ -36,7 +42,7 @@ export default function AdminPage() {
   const [loginError, setLoginError] = useState("");
 
   // Navigation Tab
-  const [activeTab, setActiveTab] = useState<"churches" | "users" | "pengurus">("churches");
+  const [activeTab, setActiveTab] = useState<"churches" | "users" | "pengurus" | "access">("churches");
 
   // ------------------------------------------------------------- STATE DATA GEREJA
   const [churches, setChurches] = useState<any[]>([]);
@@ -92,7 +98,7 @@ export default function AdminPage() {
     name: "",
     username: "",
     password: "",
-    role: "admin" as "admin" | "superadmin",
+    role: "biasa" as Role,
   });
   const [addUserLoading, setAddUserLoading] = useState(false);
   const [addUserError, setAddUserError] = useState("");
@@ -102,7 +108,7 @@ export default function AdminPage() {
     id: string;
     name: string;
     username: string;
-    role: "admin" | "superadmin";
+    role: Role;
     password: string;
   } | null>(null);
   const [editUserLoading, setEditUserLoading] = useState(false);
@@ -116,6 +122,12 @@ export default function AdminPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.authenticated && data.user) {
+            if (!canAccessAdmin(data.permissions)) {
+              window.location.replace(landingPath(data.permissions));
+              return;
+            }
+            setPermissions(data.permissions);
+            setActiveTab(initialTab(data.permissions));
             setCurrentUser(data.user);
           }
         }
@@ -130,7 +142,7 @@ export default function AdminPage() {
 
   // Fetch church records when authenticated
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser || !permissions["churches.view"]) return;
 
     async function loadChurches() {
       setLoadingData(true);
@@ -147,11 +159,11 @@ export default function AdminPage() {
       }
     }
     loadChurches();
-  }, [currentUser]);
+  }, [currentUser, permissions]);
 
   // Fetch users list when tab is 'users'
   useEffect(() => {
-    if (!currentUser || activeTab !== "users") return;
+    if (!currentUser || activeTab !== "users" || !permissions["users.view"]) return;
 
     async function loadUsers() {
       setLoadingUsers(true);
@@ -168,7 +180,7 @@ export default function AdminPage() {
       }
     }
     loadUsers();
-  }, [currentUser, activeTab]);
+  }, [currentUser, activeTab, permissions]);
 
   // Show toast notification
   const showToast = (msg: string) => {
@@ -197,6 +209,13 @@ export default function AdminPage() {
         throw new Error(data.error || "Login gagal.");
       }
 
+      const destination = new URLSearchParams(window.location.search).get("next");
+      if (!canAccessAdmin(data.permissions) || (destination?.startsWith("/dashboard") && data.permissions["dashboard.view"])) {
+        window.location.assign(landingPath(data.permissions));
+        return;
+      }
+      setPermissions(data.permissions);
+      setActiveTab(initialTab(data.permissions));
       setCurrentUser(data.user);
       showToast(`Selamat datang kembali, ${data.user.name}!`);
     } catch (err: any) {
@@ -346,7 +365,7 @@ export default function AdminPage() {
         name: "",
         username: "",
         password: "",
-        role: "admin",
+        role: "biasa",
       });
       showToast(data.message || "Pengguna baru berhasil ditambahkan!");
     } catch (err: any) {
@@ -383,7 +402,7 @@ export default function AdminPage() {
       id: u.id,
       name: u.name,
       username: u.username,
-      role: u.role as "admin" | "superadmin",
+      role: u.role,
       password: "",
     });
     setEditUserError("");
@@ -617,9 +636,9 @@ export default function AdminPage() {
                     Administrator
                   </span>
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">Login Administrator</h2>
+                <h2 className="text-xl font-bold text-slate-900">Login Akun</h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Masukkan akun kredensial Anda untuk mengakses panel manajemen.
+                  Masuk untuk mengakses dashboard dan fitur sesuai hak akses akun.
                 </p>
               </div>
 
@@ -690,7 +709,7 @@ export default function AdminPage() {
                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                   ) : (
                     <>
-                      <span>Masuk ke Panel</span>
+                      <span>Masuk</span>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                       </svg>
@@ -744,7 +763,7 @@ export default function AdminPage() {
                   Gereja Gerakan Pentakosta
                 </span>
                 <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase bg-white/10 text-blue-200 border border-white/20 shrink-0">
-                  {currentUser.role}
+                  {ROLE_LABELS[currentUser.role]}
                 </span>
               </div>
               <span className="landing-navbar__subtitle hidden sm:block text-[10px] truncate">
@@ -764,7 +783,7 @@ export default function AdminPage() {
 
           {/* Admin Tabs Switch */}
           <div className="flex items-center bg-white/10 p-1 rounded-xl border border-white/15">
-            <button
+            <button style={!(allowed("churches.view")) ? { display: "none" } : undefined}
               type="button"
               onClick={() => setActiveTab("churches")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
@@ -779,7 +798,7 @@ export default function AdminPage() {
               <span>Master Data</span>
             </button>
 
-            <button
+            <button style={!(allowed("pengurus.view")) ? { display: "none" } : undefined}
               type="button"
               onClick={() => setActiveTab("pengurus")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
@@ -794,7 +813,7 @@ export default function AdminPage() {
               <span>Pengurus Pusat</span>
             </button>
 
-            <button
+            <button style={!(allowed("users.view")) ? { display: "none" } : undefined}
               type="button"
               onClick={() => setActiveTab("users")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
@@ -807,6 +826,10 @@ export default function AdminPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
               </svg>
               <span>Pengguna</span>
+            </button>
+            <button style={!(currentUser.role === "superadmin") ? { display: "none" } : undefined} type="button" onClick={() => setActiveTab("access")} aria-pressed={activeTab === "access"}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${activeTab === "access" ? "bg-blue-600 text-white" : "text-white/70 hover:bg-white/10"}`}>
+              Hak Akses
             </button>
           </div>
 
@@ -835,7 +858,7 @@ export default function AdminPage() {
         <div className="flex lg:hidden items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Quick Tab Switch */}
           <div className="flex items-center bg-white/10 p-0.5 rounded-xl border border-white/15">
-            <button
+            <button style={!(allowed("churches.view")) ? { display: "none" } : undefined}
               type="button"
               onClick={() => setActiveTab("churches")}
               className={`px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
@@ -851,7 +874,7 @@ export default function AdminPage() {
               <span className="hidden xs:inline">Data</span>
             </button>
 
-            <button
+            <button style={!(allowed("pengurus.view")) ? { display: "none" } : undefined}
               type="button"
               onClick={() => setActiveTab("pengurus")}
               className={`px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
@@ -867,7 +890,7 @@ export default function AdminPage() {
               <span className="hidden xs:inline">Pengurus</span>
             </button>
 
-            <button
+            <button style={!(allowed("users.view")) ? { display: "none" } : undefined}
               type="button"
               onClick={() => setActiveTab("users")}
               className={`px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
@@ -881,6 +904,10 @@ export default function AdminPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
               </svg>
               <span className="hidden xs:inline">User</span>
+            </button>
+            <button style={!(currentUser.role === "superadmin") ? { display: "none" } : undefined} type="button" onClick={() => setActiveTab("access")} aria-pressed={activeTab === "access"}
+              className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${activeTab === "access" ? "bg-blue-600 text-white" : "text-white/70 hover:bg-white/10"}`}>
+              Hak Akses
             </button>
           </div>
 
@@ -959,7 +986,7 @@ export default function AdminPage() {
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-xs text-white truncate block">{currentUser.name}</span>
               <span className="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-blue-500/30 text-blue-300 border border-blue-400/30 shrink-0">
-                {currentUser.role}
+                {ROLE_LABELS[currentUser.role]}
               </span>
             </div>
             <span className="text-[11px] text-slate-300 font-mono truncate block">@{currentUser.username}</span>
@@ -971,7 +998,7 @@ export default function AdminPage() {
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-1 mb-2">
             Modul Admin
           </span>
-          <button
+          <button style={!(allowed("churches.view")) ? { display: "none" } : undefined}
             type="button"
             onClick={() => {
               setActiveTab("churches");
@@ -989,7 +1016,7 @@ export default function AdminPage() {
             <span>Master Data Gereja</span>
           </button>
 
-          <button
+          <button style={!(allowed("pengurus.view")) ? { display: "none" } : undefined}
             type="button"
             onClick={() => {
               setActiveTab("pengurus");
@@ -1007,7 +1034,7 @@ export default function AdminPage() {
             <span>Pengurus Pusat GGP</span>
           </button>
 
-          <button
+          <button style={!(allowed("users.view")) ? { display: "none" } : undefined}
             type="button"
             onClick={() => {
               setActiveTab("users");
@@ -1023,6 +1050,10 @@ export default function AdminPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
             </svg>
             <span>Kelola Akun Pengguna</span>
+          </button>
+          <button style={!(currentUser.role === "superadmin") ? { display: "none" } : undefined} type="button" onClick={() => { setActiveTab("access"); setMobileNavOpen(false); }} aria-pressed={activeTab === "access"}
+            className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold cursor-pointer ${activeTab === "access" ? "bg-blue-600 text-white" : "text-white/80 hover:bg-white/10"}`}>
+            Hak Akses
           </button>
         </div>
 
@@ -1055,7 +1086,7 @@ export default function AdminPage() {
         {/* =========================================================================
             TAB 1: MASTER DATA GEREJA
         ========================================================================= */}
-        {activeTab === "churches" && (
+        {activeTab === "churches" && allowed("churches.view") && (
           <>
             {/* KPI Cards Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
@@ -1195,7 +1226,7 @@ export default function AdminPage() {
                     <span className="hidden xs:inline">CSV</span>
                   </button>
 
-                  <button
+                  <button style={!(allowed("churches.create")) ? { display: "none" } : undefined}
                     type="button"
                     onClick={() => setIsAddModalOpen(true)}
                     className="h-9 px-2.5 sm:px-4 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm hover:bg-blue-700 flex items-center gap-1.5 transition-all cursor-pointer"
@@ -1413,7 +1444,7 @@ export default function AdminPage() {
 
                         {/* Action buttons */}
                         <div className="flex items-center gap-2 pt-1">
-                          <button
+                          <button style={!(allowed("churches.update")) ? { display: "none" } : undefined}
                             type="button"
                             onClick={() => setEditingChurch(p)}
                             className="flex-1 h-9 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
@@ -1423,7 +1454,7 @@ export default function AdminPage() {
                             </svg>
                             <span>Edit</span>
                           </button>
-                          <button
+                          <button style={!(allowed("churches.delete")) ? { display: "none" } : undefined}
                             type="button"
                             onClick={() => handleDeleteChurch(p.fid, p.name || p.nama)}
                             className="h-9 px-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-bold hover:bg-rose-100 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
@@ -1550,7 +1581,7 @@ export default function AdminPage() {
                             </td>
                             <td className="py-3 px-4 text-right">
                               <div className="flex items-center justify-end gap-1.5">
-                                <button
+                                <button style={!(allowed("churches.update")) ? { display: "none" } : undefined}
                                   type="button"
                                   onClick={() => setEditingChurch(p)}
                                   className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 text-slate-600 transition-all cursor-pointer"
@@ -1560,7 +1591,7 @@ export default function AdminPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                   </svg>
                                 </button>
-                                <button
+                                <button style={!(allowed("churches.delete")) ? { display: "none" } : undefined}
                                   type="button"
                                   onClick={() => handleDeleteChurch(p.fid, p.name || p.nama)}
                                   className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-600 transition-all cursor-pointer"
@@ -1614,18 +1645,18 @@ export default function AdminPage() {
         {/* =========================================================================
             TAB 2: MANAJEMEN PENGGUNA (USER MANAGEMENT)
         ========================================================================= */}
-        {activeTab === "users" && (
+        {activeTab === "users" && allowed("users.view") && (
           <div className="space-y-6">
             {/* Header & Actions */}
             <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
               <div>
-                <h2 className="text-base font-bold text-slate-900">Kelola Akun Administrator</h2>
+                <h2 className="text-base font-bold text-slate-900">Kelola Akun Pengguna</h2>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Daftar akun yang memiliki hak akses untuk mengubah data geodatabase jemaat GGP.
                 </p>
               </div>
 
-              <button
+              <button style={!(allowed("users.create")) ? { display: "none" } : undefined}
                 type="button"
                 onClick={() => setIsAddUserModalOpen(true)}
                 className="h-10 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm hover:bg-blue-700 flex items-center justify-center gap-2 transition-all cursor-pointer w-full sm:w-auto"
@@ -1682,7 +1713,7 @@ export default function AdminPage() {
                               ? "bg-purple-50 text-purple-700 border border-purple-200"
                               : "bg-blue-50 text-blue-700 border border-blue-200"
                           }`}>
-                            {u.role === "superadmin" ? "Super Admin" : "Administrator"}
+                            {ROLE_LABELS[u.role]}
                           </span>
                         </div>
 
@@ -1694,7 +1725,7 @@ export default function AdminPage() {
                           }) : "-"}</span>
 
                           <div className="flex items-center gap-1.5">
-                            <button
+                            <button style={!(allowed("users.update") && (currentUser.role === "superadmin" || u.role !== "superadmin")) ? { display: "none" } : undefined}
                               type="button"
                               onClick={() => handleOpenEditUser(u)}
                               className="px-2.5 py-1 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 cursor-pointer"
@@ -1702,7 +1733,7 @@ export default function AdminPage() {
                               Edit
                             </button>
                             {isSelf || isPrimarySuperadmin ? null : (
-                              <button
+                              <button style={!(allowed("users.delete") && (currentUser.role === "superadmin" || u.role !== "superadmin")) ? { display: "none" } : undefined}
                                 type="button"
                                 onClick={() => handleDeleteUser(u.id, u.username)}
                                 className="px-2.5 py-1 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 cursor-pointer"
@@ -1780,7 +1811,7 @@ export default function AdminPage() {
                                   ? "bg-purple-50 text-purple-700 border border-purple-200"
                                   : "bg-blue-50 text-blue-700 border border-blue-200"
                               }`}>
-                                {u.role === "superadmin" ? "Super Admin" : "Administrator"}
+                                {ROLE_LABELS[u.role]}
                               </span>
                             </td>
                             <td className="py-3.5 px-4 text-slate-500 font-mono">
@@ -1792,7 +1823,7 @@ export default function AdminPage() {
                             </td>
                             <td className="py-3.5 px-4 text-right">
                               <div className="flex items-center justify-end gap-1.5">
-                                <button
+                                <button style={!(allowed("users.update") && (currentUser.role === "superadmin" || u.role !== "superadmin")) ? { display: "none" } : undefined}
                                   type="button"
                                   onClick={() => handleOpenEditUser(u)}
                                   className="px-2.5 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs transition-colors inline-flex items-center gap-1 cursor-pointer"
@@ -1805,7 +1836,7 @@ export default function AdminPage() {
                                 </button>
 
                                 {isSelf || isPrimarySuperadmin ? null : (
-                                  <button
+                                  <button style={!(allowed("users.delete") && (currentUser.role === "superadmin" || u.role !== "superadmin")) ? { display: "none" } : undefined}
                                     type="button"
                                     onClick={() => handleDeleteUser(u.id, u.username)}
                                     className="px-2.5 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 font-semibold text-xs transition-colors inline-flex items-center gap-1 cursor-pointer"
@@ -1833,9 +1864,10 @@ export default function AdminPage() {
         {/* =========================================================================
             TAB 3: CMS STRUKTUR PENGURUS PUSAT (ORGANIZATIONAL CHART CMS)
         ========================================================================= */}
-        {activeTab === "pengurus" && (
-          <PengurusManager onShowToast={showToast} />
+        {activeTab === "pengurus" && allowed("pengurus.view") && (
+          <PengurusManager onShowToast={showToast} canEdit={allowed("pengurus.update")} />
         )}
+        {currentUser.role === "superadmin" && <div className={activeTab === "access" ? "" : "hidden"}><AccessControl /></div>}
       </main>
 
       {/* =========================================================================
@@ -2196,7 +2228,7 @@ export default function AdminPage() {
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
                 <h3 className="text-base font-bold text-slate-900">Tambah Akun Pengguna</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Buat akun admin baru untuk mengelola sistem.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Buat akun dan tentukan role pengguna.</p>
               </div>
               <button
                 type="button"
@@ -2255,12 +2287,12 @@ export default function AdminPage() {
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">Peran / Role *</label>
                 <select
+                  disabled={currentUser.role !== "superadmin"}
                   value={newUserData.role}
-                  onChange={(e) => setNewUserData({ ...newUserData, role: e.target.value as any })}
+                  onChange={(e) => setNewUserData({ ...newUserData, role: e.target.value as Role })}
                   className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
                 >
-                  <option value="admin">Administrator (Kelola Data Gereja)</option>
-                  <option value="superadmin">Super Administrator (Akses Penuh)</option>
+                  {ROLES.map((role) => <option key={role} value={role}>{ROLE_LABELS[role]}{role === "superadmin" ? " (Akses Penuh)" : " (Sesuai Hak Akses)"}</option>)}
                 </select>
               </div>
 
@@ -2357,12 +2389,12 @@ export default function AdminPage() {
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">Peran / Role *</label>
                 <select
+                  disabled={currentUser.role !== "superadmin"}
                   value={editingUser.role}
-                  onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value as any })}
+                  onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value as Role })}
                   className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
                 >
-                  <option value="admin">Administrator (Kelola Data Gereja)</option>
-                  <option value="superadmin">Super Administrator (Akses Penuh)</option>
+                  {ROLES.map((role) => <option key={role} value={role}>{ROLE_LABELS[role]}{role === "superadmin" ? " (Akses Penuh)" : " (Sesuai Hak Akses)"}</option>)}
                 </select>
               </div>
 

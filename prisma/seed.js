@@ -35,6 +35,23 @@ async function main() {
     console.log("ℹ️ User superadmin sudah ada di database.");
   }
 
+  // Legacy administrators are dashboard-only under the four-role policy.
+  await prisma.user.updateMany({ where: { role: "admin" }, data: { role: "biasa" } });
+
+  const digitalPassword = hashPassword("digitalggp");
+  await prisma.user.upsert({
+    where: { username: "digitalgpp" },
+    update: { role: "biasa" },
+    create: {
+      name: "Digital GPP",
+      username: "digitalgpp",
+      passwordHash: digitalPassword.hash,
+      salt: digitalPassword.salt,
+      role: "biasa",
+    },
+  });
+  console.log("✅ Akun digitalgpp tersedia dengan role biasa (akses dashboard).");
+
   // 2. Seed Churches from poi.geojson
   const churchCount = await prisma.church.count();
   if (churchCount === 0) {

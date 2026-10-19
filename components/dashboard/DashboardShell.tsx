@@ -487,6 +487,7 @@ function ChurchDetailDrawer({
 }
 
 interface DashboardHeaderProps {
+  readonly hasManagementAccess: boolean;
   readonly sidebarOpen: boolean;
   readonly onToggleSidebar: () => void;
   readonly mobileNavOpen: boolean;
@@ -501,6 +502,7 @@ interface DashboardHeaderProps {
 }
 
 function DashboardHeader({
+  hasManagementAccess,
   sidebarOpen,
   onToggleSidebar,
   mobileNavOpen,
@@ -559,12 +561,17 @@ function DashboardHeader({
             {t("nav.dashboard") || "Dashboard"}
           </Link>
 
-          <Link
+          {hasManagementAccess && (<Link
             href="/admin"
             className="landing-navbar__link text-xs px-2.5 lg:px-3.5 py-1.5"
           >
             {t("nav.admin") || "Admin"}
-          </Link>
+          </Link>)}
+          <button type="button" onClick={async () => {
+            const response = await fetch("/api/auth/logout", { method: "POST" });
+            if (response.ok) window.location.assign("/admin");
+          }} className="rounded-xl border border-white/20 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10 cursor-pointer">{isEn ? "Sign out" : "Keluar"}</button>
+
 
           <div className="ml-1 pl-1 border-l border-white/10">
             <LanguageSwitcher variant="compact" />
@@ -681,7 +688,7 @@ function DashboardHeader({
             </div>
           </Link>
 
-          <Link
+          {hasManagementAccess && (<Link
             href="/admin"
             onClick={onToggleMobileNav}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
@@ -690,7 +697,12 @@ function DashboardHeader({
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
             </svg>
             <span>{t("nav.admin") || "Admin"}</span>
-          </Link>
+          </Link>)}
+          <button type="button" onClick={async () => {
+            const response = await fetch("/api/auth/logout", { method: "POST" });
+            if (response.ok) window.location.assign("/admin");
+          }} className="rounded-xl border border-white/20 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10 cursor-pointer">{isEn ? "Sign out" : "Keluar"}</button>
+
 
           {/* Pengalih Bahasa di Drawer */}
           <div className="pt-3 mt-3 border-t border-white/10 px-2">
@@ -944,7 +956,7 @@ function PhotoLightboxModal({
   );
 }
 
-export default function DashboardShell() {
+export default function DashboardShell({ hasManagementAccess = false }: { hasManagementAccess?: boolean }) {
   const { t, i18n } = useTranslation();
   const isEn = i18n.language === "en";
   const mapRef = useRef<MapHandle | null>(null);
@@ -1277,6 +1289,7 @@ export default function DashboardShell() {
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-slate-100 font-sans text-slate-800">
       {/* ------------------------------------------------------------- header */}
       <DashboardHeader
+        hasManagementAccess={hasManagementAccess}
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarToggled(!sidebarOpen)}
         mobileNavOpen={mobileNavOpen}

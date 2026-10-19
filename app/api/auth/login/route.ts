@@ -1,3 +1,4 @@
+import { getRolePermissions } from "@/lib/permission-store";
 import { NextRequest, NextResponse } from "next/server";
 import { getUsers, verifyPassword, createSessionToken, SafeUser } from "@/lib/auth";
 
@@ -32,12 +33,14 @@ export async function POST(req: NextRequest) {
       createdAt: user.createdAt,
     };
 
+    const permissions = await getRolePermissions(user.role);
     const token = createSessionToken(safeUser);
 
     const response = NextResponse.json({
       success: true,
       message: "Login berhasil.",
       user: safeUser,
+      permissions,
       token,
     });
 
