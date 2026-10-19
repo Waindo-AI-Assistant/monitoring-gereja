@@ -125,24 +125,26 @@ export default function PengurusPage() {
 
   // Filtered list for table view
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      if (selectedKategori !== "ALL" && item.kategori !== selectedKategori) {
-        return false;
-      }
-      if (searchQuery.trim() !== "") {
-        const q = searchQuery.toLowerCase();
-        const j = (item.jabatan || "").toLowerCase();
-        const n = (item.nama || "").toLowerCase();
-        const s = (item.subBidang || "").toLowerCase();
-        const k = (item.kategori || "").toLowerCase();
-        return j.includes(q) || n.includes(q) || s.includes(q) || k.includes(q);
-      }
-      return true;
-    });
+    return data
+      .filter((item) => item.id !== "sidang-raya")
+      .filter((item) => {
+        if (selectedKategori !== "ALL" && item.kategori !== selectedKategori) {
+          return false;
+        }
+        if (searchQuery.trim() !== "") {
+          const q = searchQuery.toLowerCase();
+          const j = (item.jabatan || "").toLowerCase();
+          const n = (item.nama || "").toLowerCase();
+          const s = (item.subBidang || "").toLowerCase();
+          const k = (item.kategori || "").toLowerCase();
+          return j.includes(q) || n.includes(q) || s.includes(q) || k.includes(q);
+        }
+        return true;
+      });
   }, [data, selectedKategori, searchQuery]);
 
   // Statistics
-  const filledCount = useMemo(() => data.filter((p) => Boolean((p.nama || "").trim())).length, [data]);
+  const filledCount = useMemo(() => data.filter((p) => p.id !== "sidang-raya" && Boolean((p.nama || "").trim())).length, [data]);
 
   // Helper render node for chart
   const renderChartBox = (id: string, customTitle?: string, customWidthClass?: string) => {
@@ -457,11 +459,11 @@ export default function PengurusPage() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-sm bg-[#fff736] border border-slate-900 shrink-0" />
-                <span className="text-xs font-semibold text-slate-700">Sekretariat</span>
+                <span className="text-xs font-semibold text-slate-700">Staf Kantor</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-sm bg-white border border-slate-900 shrink-0" />
-                <span className="text-xs font-semibold text-slate-700">Badan Pengawas</span>
+                <span className="text-xs font-semibold text-slate-700">Badan Pemeriksa</span>
               </div>
             </div>
           </div>
@@ -547,7 +549,7 @@ export default function PengurusPage() {
                             </td>
                             <td className="py-3.5 px-6">
                               {hasName ? (
-                                <span className="font-extrabold text-slate-900 block">
+                                <span className="font-extrabold text-slate-900 block whitespace-pre-line leading-relaxed">
                                   {item.nama}
                                 </span>
                               ) : (

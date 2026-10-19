@@ -23,12 +23,22 @@ interface BaganStrukturProps {
 }
 
 export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps) {
-  const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [selectedPosition, setSelectedPosition] = useState<PengurusPosition | null>(null);
 
   const getPosition = (id: string, fallbackTitle: string, defaultKategori: string = "Majelis Lengkap") => {
+    let pos = dataMap.get(id);
+    if (!pos) {
+      if (id === "badan-pemeriksa-perbendaharaan") pos = dataMap.get("badan-pengawas-perbendaharaan");
+      else if (id === "badan-pengawas-perbendaharaan") pos = dataMap.get("badan-pemeriksa-perbendaharaan");
+      else if (id === "dept-organisasi-kelembagaan") pos = dataMap.get("dept-organisasi-keanggotaan");
+      else if (id === "dept-organisasi-keanggotaan") pos = dataMap.get("dept-organisasi-kelembagaan");
+      else if (id === "dept-hubungan-denominasi") pos = dataMap.get("dept-integrasi-denominasi");
+      else if (id === "dept-integrasi-denominasi") pos = dataMap.get("dept-hubungan-denominasi");
+      else if (id === "sekretaris-3") pos = dataMap.get("kominfo-1");
+      else if (id === "sekretaris-4") pos = dataMap.get("kominfo-2");
+    }
     return (
-      dataMap.get(id) || {
+      pos || {
         id,
         order: 99,
         jabatan: fallbackTitle,
@@ -49,8 +59,34 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
       minHeight?: string;
       isHeader?: boolean;
       defaultKategori?: string;
+      isDashed?: boolean;
+      compactText?: boolean;
+      isLabelOnly?: boolean;
     } = {}
   ) => {
+    if (options.isLabelOnly) {
+      return (
+        <div
+          style={{
+            backgroundColor: colorStyle.bg,
+            borderColor: colorStyle.border,
+            color: colorStyle.text,
+          }}
+          className={`w-full rounded-sm ${options.isDashed ? "border-[1.5px] border-dashed" : "border-[1.5px]"} shadow-[0_1px_2px_rgba(0,0,0,0.06)] flex items-center justify-center text-center select-none px-3 py-2 ${
+            options.minHeight || "min-h-[36px]"
+          }`}
+        >
+          <span
+            className={`font-black uppercase tracking-wider block leading-tight ${
+              options.isHeader ? "text-xs sm:text-sm" : "text-[10px] sm:text-[10.5px]"
+            }`}
+          >
+            {title}
+          </span>
+        </div>
+      );
+    }
+
     const item = getPosition(id, title, options.defaultKategori);
     const hasName = Boolean((item.nama || "").trim());
 
@@ -62,10 +98,10 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
           borderColor: colorStyle.border,
           color: colorStyle.text,
         }}
-        className={`w-full rounded-sm border-[1.5px] shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition-all duration-150 cursor-pointer hover:shadow-md hover:scale-[1.02] flex flex-col justify-center text-center select-none relative group px-2 py-1.5 ${
+        className={`w-full rounded-sm ${options.isDashed ? "border-[1.5px] border-dashed" : "border-[1.5px]"} shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition-all duration-150 cursor-pointer hover:shadow-md hover:scale-[1.01] flex flex-col justify-center text-center select-none relative group px-2 py-1.5 ${
           options.minHeight || "min-h-[42px]"
         }`}
-        title={`Klik untuk detail: ${item.jabatan}${hasName ? ` (${item.nama})` : " (Belum Ada Data)"}`}
+        title={`Klik untuk detail: ${item.jabatan}${hasName ? ` (${item.nama.replace(/\n/g, ', ')})` : " (Belum Ada Data)"}`}
       >
         <span
           className={`font-black uppercase tracking-tight block leading-tight ${
@@ -77,9 +113,32 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
 
         {hasName ? (
           <div className="mt-0.5 pt-0.5 border-t border-black/20">
-            <span className="font-extrabold text-slate-950 text-[10.5px] block truncate">
-              {item.nama}
-            </span>
+            {item.nama.includes("\n") ? (
+              <div className={`text-left ${options.compactText ? "space-y-0" : "space-y-0.5"} pt-0.5`}>
+                {item.nama.split("\n").map((line, idx) => (
+                  <span
+                    key={idx}
+                    className={`block font-medium text-slate-900 ${
+                      options.compactText
+                        ? "text-[8px] leading-tight"
+                        : "text-[8.5px] leading-snug"
+                    }`}
+                  >
+                    {line}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span
+                className={`font-extrabold text-slate-950 block leading-tight ${
+                  item.nama.length > 25
+                    ? "text-[9px] sm:text-[9.5px] line-clamp-2"
+                    : "text-[10px] sm:text-[10.5px] truncate"
+                }`}
+              >
+                {item.nama}
+              </span>
+            )}
           </div>
         ) : (
           <span className="text-[8.5px] font-medium text-slate-700/60 italic mt-0.5 block">
@@ -102,58 +161,12 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
 
   return (
     <div className="space-y-4">
-      {/* Zoom and Controls Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs sm:text-sm font-bold text-slate-800">
-            Bagan Struktur Organisasi 1:1 Resmi Sinode GGP
-          </span>
-          <span className="hidden md:inline-block text-xs text-slate-400">
-            • Klik pada kotak jabatan untuk melihat profil / mengisi nama di CMS
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
-          <button
-            type="button"
-            onClick={() => setZoomLevel((prev) => Math.max(0.6, Number((prev - 0.1).toFixed(2))))}
-            className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors flex items-center justify-center cursor-pointer shadow-xs"
-            title="Perkecil (-)"
-          >
-            -
-          </button>
-          <span className="w-14 text-center text-xs font-bold text-slate-700 font-mono">
-            {Math.round(zoomLevel * 100)}%
-          </span>
-          <button
-            type="button"
-            onClick={() => setZoomLevel((prev) => Math.min(1.4, Number((prev + 0.1).toFixed(2))))}
-            className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors flex items-center justify-center cursor-pointer shadow-xs"
-            title="Perbesar (+)"
-          >
-            +
-          </button>
-          <button
-            type="button"
-            onClick={() => setZoomLevel(1)}
-            className="px-2.5 h-8 rounded-lg bg-white border border-slate-200 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center cursor-pointer ml-1 shadow-xs"
-          >
-            Reset
-          </button>
-        </div>
-      </div>
-
       {/* Main Diagram Canvas Area */}
       <div className="relative rounded-3xl bg-white border border-slate-200 shadow-sm overflow-auto p-4 sm:p-8 thin-scroll">
         <div
           style={{
-            transform: `scale(${zoomLevel})`,
-            transformOrigin: "top center",
             width: "1220px",
-            height: "1060px",
-            marginBottom: zoomLevel > 1 ? `${(zoomLevel - 1) * 1060}px` : "0px",
-            transition: "transform 0.18s ease-out",
+            height: "1000px",
           }}
           className="relative mx-auto font-sans select-none"
         >
@@ -167,6 +180,9 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
             <h3 className="text-base font-black text-slate-900 tracking-wide uppercase font-outfit mt-0.5">
               MAJELIS PUSAT GEREJA GERAKAN PENTAKOSTA
             </h3>
+            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
+              Masa Bakti 2021 - 2026
+            </p>
           </div>
 
           {/* =========================================================================
@@ -174,149 +190,109 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
           ========================================================================= */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none z-0"
-            viewBox="0 0 1220 1060"
+            viewBox="0 0 1220 1000"
           >
-            {/* 1. Stem: Sidang Raya (bottom center 600, 106) -> Ketua Umum (top center 600, 150) */}
-            <line x1="600" y1="106" x2="600" y2="150" stroke="#1e293b" strokeWidth="1.75" />
+            {/* 1. Stem: Sidang Raya (bottom center 600, 136) -> Ketua Umum (top center 600, 160) */}
+            <line x1="600" y1="136" x2="600" y2="160" stroke="#1e293b" strokeWidth="1.75" />
 
-            {/* 2. Dewan Pembina Connection (Solid upper line & Dashed lower line) */}
-            {/* Solid line from stem (600, 122) to Dewan Pembina left edge (810, 122) */}
-            <line x1="600" y1="122" x2="810" y2="122" stroke="#1e293b" strokeWidth="1.75" />
-            {/* Dashed line directly underneath from stem (600, 134) to Dewan Pembina (810, 134) */}
+            {/* 2. Badan Pemeriksa Perbendaharaan -> Ketua Umum (Horizontal Dashed Line at y=183) */}
             <line
-              x1="600"
-              y1="134"
-              x2="810"
-              y2="134"
+              x1="410"
+              y1="183"
+              x2="440"
+              y2="183"
               stroke="#1e293b"
               strokeWidth="1.75"
               strokeDasharray="5 4"
             />
 
-            {/* 3. Badan Pengawas Perbendaharaan Connection (Dashed line) */}
-            {/* Starts from Ketua Umum top-left at (425, 160) -> goes left to (210, 160) -> drops to (210, 175) */}
-            <path
-              d="M 425 160 L 210 160 L 210 175"
-              fill="none"
+            {/* 3. Ketua Umum -> Dewan Pembina (Upper solid line & Lower dashed line) */}
+            <line x1="760" y1="178" x2="790" y2="178" stroke="#1e293b" strokeWidth="1.75" />
+            <line
+              x1="760"
+              y1="188"
+              x2="790"
+              y2="188"
               stroke="#1e293b"
               strokeWidth="1.75"
               strokeDasharray="5 4"
             />
 
-            {/* 4. Ketua Umum (bottom center 600, 196) -> Down to T-branch (600, 222) */}
-            <line x1="600" y1="196" x2="600" y2="222" stroke="#1e293b" strokeWidth="1.75" />
+            {/* 4. Ketua Umum (bottom center 600, 206) -> Down to T-branch (600, 288) */}
+            <line x1="600" y1="206" x2="600" y2="288" stroke="#1e293b" strokeWidth="1.75" />
 
-            {/* 5. T-branch to Sekretaris Umum (x=320) and Bendahara Umum (x=880) */}
-            <line x1="320" y1="222" x2="880" y2="222" stroke="#1e293b" strokeWidth="1.75" />
+            {/* 5. T-branch to Sekretaris Umum (x=320) and Bendahara Umum (x=880) at y=288 */}
+            <line x1="320" y1="288" x2="880" y2="288" stroke="#1e293b" strokeWidth="1.75" />
             {/* Drop into Sekretaris Umum */}
-            <line x1="320" y1="222" x2="320" y2="242" stroke="#1e293b" strokeWidth="1.75" />
+            <line x1="320" y1="288" x2="320" y2="305" stroke="#1e293b" strokeWidth="1.75" />
             {/* Drop into Bendahara Umum */}
-            <line x1="880" y1="222" x2="880" y2="242" stroke="#1e293b" strokeWidth="1.75" />
+            <line x1="880" y1="288" x2="880" y2="305" stroke="#1e293b" strokeWidth="1.75" />
 
             {/* 6. Central stem continues down through the middle (between Sekum & Bendum) */}
-            <line x1="600" y1="222" x2="600" y2="315" stroke="#1e293b" strokeWidth="1.75" />
+            <line x1="600" y1="288" x2="600" y2="365" stroke="#1e293b" strokeWidth="1.75" />
 
-            {/* 7. Horizontal bus bar across Ketua 1, Ketua 2, Ketua 3, Ketua 4 at y=315 */}
-            <line x1="310" y1="315" x2="890" y2="315" stroke="#1e293b" strokeWidth="1.75" />
+            {/* 7. Line from Sekretaris Umum ONLY to Sekretaris 1 */}
+            <path
+              d="M 230 326 L 133 326 L 133 385"
+              fill="none"
+              stroke="#1e293b"
+              strokeWidth="1.75"
+            />
+
+            {/* 8. Line from Bendahara Umum ONLY to Bendahara */}
+            <path
+              d="M 970 326 L 1080 326 L 1080 385"
+              fill="none"
+              stroke="#1e293b"
+              strokeWidth="1.75"
+            />
+
+            {/* 9. Horizontal bus bar across Ketua 1, Ketua 2, Ketua 3, Ketua 4 at y=365 */}
+            <line x1="322" y1="365" x2="882" y2="365" stroke="#1e293b" strokeWidth="1.75" />
             {/* Drops into Ketua 1-4 */}
-            <line x1="310" y1="315" x2="310" y2="335" stroke="#1e293b" strokeWidth="1.75" />
-            <line x1="490" y1="315" x2="490" y2="335" stroke="#1e293b" strokeWidth="1.75" />
-            <line x1="710" y1="315" x2="710" y2="335" stroke="#1e293b" strokeWidth="1.75" />
-            <line x1="890" y1="315" x2="890" y2="335" stroke="#1e293b" strokeWidth="1.75" />
+            <line x1="322" y1="365" x2="322" y2="385" stroke="#1e293b" strokeWidth="1.75" />
+            <line x1="502" y1="365" x2="502" y2="385" stroke="#1e293b" strokeWidth="1.75" />
+            <line x1="702" y1="365" x2="702" y2="385" stroke="#1e293b" strokeWidth="1.75" />
+            <line x1="882" y1="365" x2="882" y2="385" stroke="#1e293b" strokeWidth="1.75" />
 
-            {/* 8. Far Left Spine: exits left edge of Sekretaris Umum (230, 263) -> (40, 263) -> runs down to y=754 */}
-            <path
-              d="M 230 263 L 40 263 L 40 754"
-              fill="none"
-              stroke="#1e293b"
-              strokeWidth="1.75"
-            />
-            {/* Ticks from Left Spine (x=40) to each of the 9 boxes in Col 1 (x=55) */}
-            {[356, 406, 456, 506, 554, 604, 654, 704, 754].map((yTick, idx) => (
-              <line key={`tick-col1-${idx}`} x1="40" y1={yTick} x2="55" y2={yTick} stroke="#1e293b" strokeWidth="1.75" />
-            ))}
-
-            {/* 9. Col 2: Vertical spine drops from bottom-left of Ketua 1 at (240, 377) -> down to y=559 */}
-            <line x1="240" y1="377" x2="240" y2="559" stroke="#1e293b" strokeWidth="1.75" />
-            {/* Ticks from spine (x=240) to Col 2 boxes left edge (x=250) */}
-            {[415, 463, 511, 559].map((yTick, idx) => (
-              <line key={`tick-col2-${idx}`} x1="240" y1={yTick} x2="250" y2={yTick} stroke="#1e293b" strokeWidth="1.75" />
-            ))}
-
-            {/* 10. Col 3: Vertical spine drops from bottom-left of Ketua 2 at (420, 377) -> down to y=559 */}
-            <line x1="420" y1="377" x2="420" y2="559" stroke="#1e293b" strokeWidth="1.75" />
-            {/* Ticks from spine (x=420) to Col 3 boxes left edge (x=430) */}
-            {[415, 463, 511, 559].map((yTick, idx) => (
-              <line key={`tick-col3-${idx}`} x1="420" y1={yTick} x2="430" y2={yTick} stroke="#1e293b" strokeWidth="1.75" />
-            ))}
-
-            {/* 11. Col 4: Vertical spine drops from bottom-right of Ketua 3 at (785, 377) -> down to y=703 */}
-            <line x1="785" y1="377" x2="785" y2="703" stroke="#1e293b" strokeWidth="1.75" />
-            {/* Ticks from Col 4 boxes right edge (x=775) to spine (x=785) */}
-            {[415, 463, 511, 559, 607, 655, 703].map((yTick, idx) => (
-              <line key={`tick-col4-${idx}`} x1="775" y1={yTick} x2="785" y2={yTick} stroke="#1e293b" strokeWidth="1.75" />
-            ))}
-
-            {/* 12. Col 5: Vertical spine drops from bottom-right of Ketua 4 at (965, 377) -> down to y=703 */}
-            <line x1="965" y1="377" x2="965" y2="703" stroke="#1e293b" strokeWidth="1.75" />
-            {/* Ticks from Col 5 boxes right edge (x=955) to spine (x=965) */}
-            {[415, 463, 511, 559, 607, 655, 703].map((yTick, idx) => (
-              <line key={`tick-col5-${idx}`} x1="955" y1={yTick} x2="965" y2={yTick} stroke="#1e293b" strokeWidth="1.75" />
-            ))}
-
-            {/* 13. Col 6: Far Right Spine: exits right edge of Bendahara Umum (970, 263) -> (1170, 263) -> down to y=451 */}
-            <path
-              d="M 970 263 L 1170 263 L 1170 451"
-              fill="none"
-              stroke="#1e293b"
-              strokeWidth="1.75"
-            />
-            {/* Ticks from Col 6 boxes right edge (x=1155) to spine (x=1170) */}
-            {[355, 403, 451].map((yTick, idx) => (
-              <line key={`tick-col6-${idx}`} x1="1155" y1={yTick} x2="1170" y2={yTick} stroke="#1e293b" strokeWidth="1.75" />
-            ))}
+            {/* 10. Direct drops from each Ketua ONLY to their first department */}
+            {/* Ketua 1 -> Dept. Pemberdayaan Pendeta */}
+            <line x1="322" y1="427" x2="322" y2="445" stroke="#1e293b" strokeWidth="1.75" />
+            {/* Ketua 2 -> Dept. Organisasi & Kelembagaan */}
+            <line x1="502" y1="427" x2="502" y2="445" stroke="#1e293b" strokeWidth="1.75" />
+            {/* Ketua 3 -> Dept. Perintisan Jemaat Pedesaan */}
+            <line x1="702" y1="427" x2="702" y2="445" stroke="#1e293b" strokeWidth="1.75" />
+            {/* Ketua 4 -> Dept. Anak */}
+            <line x1="882" y1="427" x2="882" y2="445" stroke="#1e293b" strokeWidth="1.75" />
           </svg>
 
           {/* =========================================================================
-              BOX 1: SIDANG RAYA (Purple Box at top center)
+              BOX 1: SIDANG RAYA (Purple Box at top center - Label Only)
           ========================================================================= */}
-          <div className="absolute top-[70px] left-[440px] w-[320px] z-10">
+          <div className="absolute top-[102px] left-[450px] w-[300px] z-10">
             {renderBox(
               "sidang-raya",
               "SIDANG RAYA",
               COLORS.purple,
-              { isHeader: true, minHeight: "36px", defaultKategori: "Sidang Raya" }
+              { isHeader: true, minHeight: "36px", defaultKategori: "Sidang Raya", isLabelOnly: true }
             )}
           </div>
 
           {/* =========================================================================
-              BOX 2: DEWAN PEMBINA (Large Pale Yellow Box on right)
+              TOP ROW: BADAN PEMERIKSA (LEFT), KETUA UMUM (CENTER), DEWAN PEMBINA (RIGHT)
           ========================================================================= */}
-          <div className="absolute top-[100px] left-[810px] w-[330px] z-10">
+          {/* BADAN PEMERIKSA PERBENDAHARAAN (Persis di samping kiri Ketua Umum) */}
+          <div className="absolute top-[160px] left-[55px] w-[355px] z-10">
             {renderBox(
-              "dewan-pembina",
-              "DEWAN PEMBINA",
-              COLORS.yellowDewan,
-              { isHeader: true, minHeight: "95px", defaultKategori: "Dewan Pembina" }
-            )}
-          </div>
-
-          {/* =========================================================================
-              BOX 3: BADAN PENGAWAS PERBENDAHARAAN (White Box on left)
-          ========================================================================= */}
-          <div className="absolute top-[175px] left-[50px] w-[240px] z-10">
-            {renderBox(
-              "badan-pengawas-perbendaharaan",
-              "BADAN PENGAWAS PERBENDAHARAAN",
+              "badan-pemeriksa-perbendaharaan",
+              "BADAN PEMERIKSA PERBENDAHARAAN",
               COLORS.white,
-              { isHeader: true, minHeight: "60px", defaultKategori: "Badan Pengawas" }
+              { isHeader: true, minHeight: "75px", defaultKategori: "Badan Pengawas", isDashed: true, compactText: true }
             )}
           </div>
 
-          {/* =========================================================================
-              BOX 4: KETUA UMUM (Mint Green Box at center)
-          ========================================================================= */}
-          <div className="absolute top-[150px] left-[425px] w-[350px] z-10">
+          {/* KETUA UMUM (Mint Green Box at center) */}
+          <div className="absolute top-[160px] left-[440px] w-[320px] z-10">
             {renderBox(
               "ketua-umum",
               "KETUA UMUM",
@@ -325,11 +301,21 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
             )}
           </div>
 
+          {/* DEWAN PEMBINA (Persis di samping kanan Ketua Umum) */}
+          <div className="absolute top-[160px] left-[790px] w-[365px] z-10">
+            {renderBox(
+              "dewan-pembina",
+              "DEWAN PEMBINA",
+              COLORS.yellowDewan,
+              { isHeader: true, minHeight: "115px", defaultKategori: "Dewan Pembina", compactText: true }
+            )}
+          </div>
+
           {/* =========================================================================
               TIER 3: SEKRETARIS UMUM & BENDAHARA UMUM
           ========================================================================= */}
           {/* Sekretaris Umum */}
-          <div className="absolute top-[242px] left-[230px] w-[180px] z-10">
+          <div className="absolute top-[305px] left-[230px] w-[180px] z-10">
             {renderBox(
               "sekretaris-umum",
               "SEKRETARIS UMUM",
@@ -339,7 +325,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
           </div>
 
           {/* Bendahara Umum */}
-          <div className="absolute top-[242px] left-[790px] w-[180px] z-10">
+          <div className="absolute top-[305px] left-[790px] w-[180px] z-10">
             {renderBox(
               "bendahara-umum",
               "BENDAHARA UMUM",
@@ -351,16 +337,16 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
           {/* =========================================================================
               TIER 4: KETUA 1, 2, 3, 4 (ROW OF 4 GREEN BOXES)
           ========================================================================= */}
-          <div className="absolute top-[335px] left-[230px] w-[160px] z-10">
+          <div className="absolute top-[385px] left-[242px] w-[160px] z-10">
             {renderBox("ketua-1", "KETUA 1", COLORS.green, { defaultKategori: "Majelis Harian Pusat" })}
           </div>
-          <div className="absolute top-[335px] left-[410px] w-[160px] z-10">
+          <div className="absolute top-[385px] left-[422px] w-[160px] z-10">
             {renderBox("ketua-2", "KETUA 2", COLORS.green, { defaultKategori: "Majelis Harian Pusat" })}
           </div>
-          <div className="absolute top-[335px] left-[630px] w-[160px] z-10">
+          <div className="absolute top-[385px] left-[622px] w-[160px] z-10">
             {renderBox("ketua-3", "KETUA 3", COLORS.green, { defaultKategori: "Majelis Harian Pusat" })}
           </div>
-          <div className="absolute top-[335px] left-[810px] w-[160px] z-10">
+          <div className="absolute top-[385px] left-[802px] w-[160px] z-10">
             {renderBox("ketua-4", "KETUA 4", COLORS.green, { defaultKategori: "Majelis Harian Pusat" })}
           </div>
 
@@ -369,12 +355,12 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
           ========================================================================= */}
 
           {/* COLUMN 1: LEFT STACK (Under Sekretaris Umum) */}
-          <div className="absolute top-[335px] left-[55px] w-[155px] space-y-2 z-10">
+          <div className="absolute top-[385px] left-[55px] w-[155px] space-y-2 z-10">
             {/* Majelis Lengkap - Biru */}
             {renderBox("sekretaris-1", "SEKRETARIS 1", COLORS.blue)}
             {renderBox("sekretaris-2", "SEKRETARIS 2", COLORS.blue)}
-            {renderBox("kominfo-1", "KOMINFO 1", COLORS.blue)}
-            {renderBox("kominfo-2", "KOMINFO 2", COLORS.blue)}
+            {renderBox("sekretaris-3", "SEKRETARIS 3", COLORS.blue)}
+            {renderBox("sekretaris-4", "SEKRETARIS 4", COLORS.blue)}
 
             {/* Sekretariat - Kuning Terang */}
             <div className="pt-1 space-y-2">
@@ -387,7 +373,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
           </div>
 
           {/* COLUMN 2: UNDER KETUA 1 (4 Departemen - Biru) */}
-          <div className="absolute top-[395px] left-[250px] w-[145px] space-y-2 z-10">
+          <div className="absolute top-[445px] left-[250px] w-[145px] space-y-2 z-10">
             {renderBox("dept-pemberdayaan-pendeta", "DEPT. PEMBERDAYAAN PENDETA", COLORS.blue)}
             {renderBox("dept-pendidikan-teologi", "DEPT. PENDIDIKAN TEOLOGI", COLORS.blue)}
             {renderBox("dept-pembinaan", "DEPT. PEMBINAAN", COLORS.blue)}
@@ -395,15 +381,15 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
           </div>
 
           {/* COLUMN 3: UNDER KETUA 2 (4 Departemen - Biru) */}
-          <div className="absolute top-[395px] left-[430px] w-[145px] space-y-2 z-10">
-            {renderBox("dept-organisasi-keanggotaan", "DEPT. ORGANISASI & KEANGGOTAAN", COLORS.blue)}
+          <div className="absolute top-[445px] left-[430px] w-[145px] space-y-2 z-10">
+            {renderBox("dept-organisasi-kelembagaan", "DEPT. ORGANISASI & KELEMBAGAAN", COLORS.blue)}
             {renderBox("dept-penelitian-pengembangan", "DEPT. PENELITIAN & PENGEMBANGAN", COLORS.blue)}
-            {renderBox("dept-integrasi-denominasi", "DEPT. INTEGRASI DENOMINASI", COLORS.blue)}
+            {renderBox("dept-hubungan-denominasi", "DEPT. HUBUNGAN DENOMINASI", COLORS.blue)}
             {renderBox("dept-advokasi", "DEPT. ADVOKASI", COLORS.blue)}
           </div>
 
           {/* COLUMN 4: UNDER KETUA 3 (7 Departemen - Biru) */}
-          <div className="absolute top-[395px] left-[630px] w-[145px] space-y-2 z-10">
+          <div className="absolute top-[445px] left-[630px] w-[145px] space-y-2 z-10">
             {renderBox("dept-perintisan-jemaat-pedesaan", "DEPT. PERINTISAN JEMAAT PEDESAAN", COLORS.blue)}
             {renderBox("dept-perintisan-jemaat-perkotaan", "DEPT. PERINTISAN JEMAAT PERKOTAAN", COLORS.blue)}
             {renderBox("dept-perintisan-ggp-internasional", "DEPT. PERINTISAN GGP INTERNASIONAL", COLORS.blue)}
@@ -414,7 +400,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
           </div>
 
           {/* COLUMN 5: UNDER KETUA 4 (7 Departemen - Biru) */}
-          <div className="absolute top-[395px] left-[810px] w-[145px] space-y-2 z-10">
+          <div className="absolute top-[445px] left-[810px] w-[145px] space-y-2 z-10">
             {renderBox("dept-anak", "DEPT. ANAK", COLORS.blue)}
             {renderBox("dept-pemuda-remaja", "DEPT. PEMUDA REMAJA", COLORS.blue)}
             {renderBox("dept-pria", "DEPT. PRIA", COLORS.blue)}
@@ -425,35 +411,41 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
           </div>
 
           {/* COLUMN 6: UNDER BENDAHARA UMUM (3 Biro / Bidang - Biru) */}
-          <div className="absolute top-[335px] left-[1005px] w-[150px] space-y-2 z-10">
+          <div className="absolute top-[385px] left-[1005px] w-[150px] space-y-2 z-10">
             {renderBox("bendahara", "BENDAHARA", COLORS.blue)}
             {renderBox("kemitraan", "KEMITRAAN", COLORS.blue)}
             {renderBox("penganggaran", "PENGANGGARAN", COLORS.blue)}
           </div>
 
           {/* =========================================================================
-              CANVAS LEGEND (EXACT COLOR BOXES AT BOTTOM LEFT MATCHING ORIGINAL)
+              CANVAS LEGEND (HORIZONTAL ACROSS BOTTOM MATCHING OFFICIAL PDF 1:1)
           ========================================================================= */}
-          <div className="absolute top-[840px] left-[55px] p-3.5 bg-white/95 rounded-xl border border-slate-300 shadow-xs space-y-2 z-10 text-[11px]">
-            <div className="flex items-center gap-2.5">
+          <div className="absolute top-[960px] left-0 right-0 flex items-center justify-center gap-6 sm:gap-8 z-10 text-[11px] font-bold text-slate-800 uppercase tracking-tight select-none">
+            <div className="flex items-center gap-2">
               <span className="w-5 h-3.5 rounded-xs border border-slate-900 bg-[#9186b0] shrink-0" />
-              <span className="font-bold text-slate-800 uppercase tracking-tight">SIDANG RAYA</span>
+              <span>Sidang Raya</span>
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <span className="w-5 h-3.5 rounded-xs border border-slate-900 bg-[#74c8ae] shrink-0" />
-              <span className="font-bold text-slate-800 uppercase tracking-tight">MAJELIS HARIAN PUSAT</span>
+              <span>Majelis Harian Pusat</span>
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <span className="w-5 h-3.5 rounded-xs border border-slate-900 bg-[#aee0fa] shrink-0" />
-              <span className="font-bold text-slate-800 uppercase tracking-tight">MAJELIS LENGKAP</span>
+              <span>Majelis Lengkap</span>
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <span className="w-5 h-3.5 rounded-xs border border-slate-900 bg-[#fffde8] shrink-0" />
-              <span className="font-bold text-slate-800 uppercase tracking-tight">DEWAN PEMBINA</span>
+              <span>Dewan Pembina</span>
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <span className="w-5 h-3.5 rounded-xs border border-slate-900 bg-[#fff736] shrink-0" />
-              <span className="font-bold text-slate-800 uppercase tracking-tight">SEKRETARIAT</span>
+              <span>Staf Kantor</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-3.5 flex items-center justify-center shrink-0">
+                <span className="w-full border-t-[1.5px] border-dashed border-slate-900" />
+              </span>
+              <span>Garis Koordinasi</span>
             </div>
           </div>
         </div>
@@ -490,7 +482,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
               </span>
               {selectedPosition.nama ? (
                 <div>
-                  <span className="text-base font-extrabold text-slate-900 block">
+                  <span className="text-sm font-extrabold text-slate-900 block whitespace-pre-line leading-relaxed">
                     {selectedPosition.nama}
                   </span>
                 </div>

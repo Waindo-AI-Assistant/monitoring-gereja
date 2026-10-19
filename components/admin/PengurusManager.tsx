@@ -100,10 +100,11 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
     loadData();
   }, []);
 
-  // Stats calculation
+  // Stats calculation (excludes diagram label 'sidang-raya')
   const stats = useMemo(() => {
-    const total = data.length;
-    const filled = data.filter((item) => (item.nama || "").trim() !== "").length;
+    const list = data.filter((item) => item.id !== "sidang-raya");
+    const total = list.length;
+    const filled = list.filter((item) => (item.nama || "").trim() !== "").length;
     const empty = total - filled;
     const percent = total > 0 ? Math.round((filled / total) * 100) : 0;
     return { total, filled, empty, percent };
@@ -113,36 +114,38 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
   const categories = useMemo(() => {
     const set = new Set<string>();
     data.forEach((item) => {
-      if (item.kategori) set.add(item.kategori);
+      if (item.id !== "sidang-raya" && item.kategori) set.add(item.kategori);
     });
     return Array.from(set);
   }, [data]);
 
   // Filtered list
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      // Filter kategori
-      if (selectedKategori !== "ALL" && item.kategori !== selectedKategori) {
-        return false;
-      }
+    return data
+      .filter((item) => item.id !== "sidang-raya")
+      .filter((item) => {
+        // Filter kategori
+        if (selectedKategori !== "ALL" && item.kategori !== selectedKategori) {
+          return false;
+        }
 
-      // Filter status
-      const hasName = Boolean((item.nama || "").trim());
-      if (selectedStatus === "FILLED" && !hasName) return false;
-      if (selectedStatus === "EMPTY" && hasName) return false;
+        // Filter status
+        const hasName = Boolean((item.nama || "").trim());
+        if (selectedStatus === "FILLED" && !hasName) return false;
+        if (selectedStatus === "EMPTY" && hasName) return false;
 
-      // Filter search
-      if (searchQuery.trim() !== "") {
-        const q = searchQuery.toLowerCase();
-        const j = (item.jabatan || "").toLowerCase();
-        const n = (item.nama || "").toLowerCase();
-        const k = (item.kategori || "").toLowerCase();
-        const s = (item.subBidang || "").toLowerCase();
-        return j.includes(q) || n.includes(q) || k.includes(q) || s.includes(q);
-      }
+        // Filter search
+        if (searchQuery.trim() !== "") {
+          const q = searchQuery.toLowerCase();
+          const j = (item.jabatan || "").toLowerCase();
+          const n = (item.nama || "").toLowerCase();
+          const k = (item.kategori || "").toLowerCase();
+          const s = (item.subBidang || "").toLowerCase();
+          return j.includes(q) || n.includes(q) || k.includes(q) || s.includes(q);
+        }
 
-      return true;
-    });
+        return true;
+      });
   }, [data, selectedKategori, selectedStatus, searchQuery]);
 
   // Handle open edit modal
@@ -491,8 +494,8 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
                         <td className="py-3.5 px-6">
                           {hasName ? (
                             <div className="min-w-0">
-                              <span className="font-extrabold text-slate-900 block truncate">
-                                {item.nama}
+                              <span className="font-extrabold text-slate-900 block truncate" title={item.nama}>
+                                {item.nama.replace(/\n/g, " • ")}
                               </span>
                               {item.keterangan && (
                                 <span className="text-[11px] text-slate-400 truncate block max-w-xs">
@@ -591,8 +594,8 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
                       <div className="min-w-0">
                         {hasName ? (
                           <>
-                            <span className="font-extrabold text-sm text-slate-900 block truncate">
-                              {item.nama}
+                            <span className="font-extrabold text-sm text-slate-900 block truncate" title={item.nama}>
+                              {item.nama.replace(/\n/g, " • ")}
                             </span>
                             {item.keterangan && (
                               <span className="text-[11px] text-slate-500 block truncate">
@@ -682,16 +685,29 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                   Nama Lengkap Pejabat <span className="text-rose-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Pdt. Dicky Suwarta, M.Th."
-                  value={editingItem.nama || ""}
-                  onChange={(e) =>
-                    setEditingItem((prev) => (prev ? { ...prev, nama: e.target.value } : null))
-                  }
-                  autoFocus
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold"
-                />
+                {(editingItem.nama || "").includes("\n") || editingItem.id === "dewan-pembina" || editingItem.id === "badan-pemeriksa-perbendaharaan" ? (
+                  <textarea
+                    rows={5}
+                    placeholder="Nama pejabat / susunan dewan..."
+                    value={editingItem.nama || ""}
+                    onChange={(e) =>
+                      setEditingItem((prev) => (prev ? { ...prev, nama: e.target.value } : null))
+                    }
+                    autoFocus
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold font-sans leading-relaxed"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    placeholder="Contoh: Pdt. Dicky Suwarta"
+                    value={editingItem.nama || ""}
+                    onChange={(e) =>
+                      setEditingItem((prev) => (prev ? { ...prev, nama: e.target.value } : null))
+                    }
+                    autoFocus
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold"
+                  />
+                )}
                 <p className="text-[11px] text-slate-400 mt-1">
                   Variabel ini akan langsung tampil di halaman Pengurus Pusat. Kosongkan jika belum ditetapkan.
                 </p>
