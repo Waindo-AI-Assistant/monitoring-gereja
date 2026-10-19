@@ -181,7 +181,7 @@ export default function PengurusPage() {
         <div className="pt-1.5 border-t border-black/10 min-h-[32px] flex items-center justify-center">
           {hasName ? (
             <div className="flex flex-col items-center">
-              <span className="font-black text-xs text-slate-950 block leading-tight">
+              <span className="font-normal text-xs text-slate-950 block leading-tight">
                 {item.nama}
               </span>
             </div>
@@ -549,7 +549,7 @@ export default function PengurusPage() {
                             </td>
                             <td className="py-3.5 px-6">
                               {hasName ? (
-                                <span className="font-extrabold text-slate-900 block whitespace-pre-line leading-relaxed">
+                                <span className="font-normal text-slate-900 block whitespace-pre-line leading-relaxed">
                                   {item.nama}
                                 </span>
                               ) : (

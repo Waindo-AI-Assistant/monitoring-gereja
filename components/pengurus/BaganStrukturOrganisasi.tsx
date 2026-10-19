@@ -118,7 +118,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
                 {item.nama.split("\n").map((line, idx) => (
                   <span
                     key={idx}
-                    className={`block font-medium text-slate-900 ${
+                    className={`block font-normal text-slate-900 ${
                       options.compactText
                         ? "text-[8px] leading-tight"
                         : "text-[8.5px] leading-snug"
@@ -130,7 +130,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
               </div>
             ) : (
               <span
-                className={`font-extrabold text-slate-950 block leading-tight ${
+                className={`font-normal text-slate-950 block leading-tight ${
                   item.nama.length > 25
                     ? "text-[9px] sm:text-[9.5px] line-clamp-2"
                     : "text-[10px] sm:text-[10.5px] truncate"
@@ -482,7 +482,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
               </span>
               {selectedPosition.nama ? (
                 <div>
-                  <span className="text-sm font-extrabold text-slate-900 block whitespace-pre-line leading-relaxed">
+                  <span className="text-sm font-normal text-slate-900 block whitespace-pre-line leading-relaxed">
                     {selectedPosition.nama}
                   </span>
                 </div>

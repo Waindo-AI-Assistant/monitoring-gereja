@@ -494,7 +494,7 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
                         <td className="py-3.5 px-6">
                           {hasName ? (
                             <div className="min-w-0">
-                              <span className="font-extrabold text-slate-900 block truncate" title={item.nama}>
+                              <span className="font-normal text-slate-900 block truncate" title={item.nama}>
                                 {item.nama.replace(/\n/g, " • ")}
                               </span>
                               {item.keterangan && (
@@ -594,7 +594,7 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
                       <div className="min-w-0">
                         {hasName ? (
                           <>
-                            <span className="font-extrabold text-sm text-slate-900 block truncate" title={item.nama}>
+                            <span className="font-normal text-sm text-slate-900 block truncate" title={item.nama}>
                               {item.nama.replace(/\n/g, " • ")}
                             </span>
                             {item.keterangan && (
