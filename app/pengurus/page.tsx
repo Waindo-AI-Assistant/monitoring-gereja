@@ -182,11 +182,6 @@ export default function PengurusPage() {
               <span className="font-black text-xs text-slate-950 block leading-tight">
                 {item.nama}
               </span>
-              {item.gelar && (
-                <span className="text-[10px] font-bold text-slate-700 block">
-                  {item.gelar}
-                </span>
-              )}
             </div>
           ) : (
             <span className="text-[10px] font-medium text-slate-600/80 italic flex items-center gap-1">
@@ -236,12 +231,6 @@ export default function PengurusPage() {
               className="px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-blue-700 hover:bg-slate-100 transition-colors"
             >
               {t("nav.dashboard")}
-            </Link>
-            <Link
-              href="/admin"
-              className="px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-600 hover:text-blue-700 hover:bg-slate-100 transition-colors"
-            >
-              {t("nav.admin") || "Admin"}
             </Link>
 
             <div className="ml-2">
@@ -356,17 +345,6 @@ export default function PengurusPage() {
             <span>{t("nav.dashboard")}</span>
           </Link>
 
-          <Link
-            href="/admin"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-purple-400 shrink-0">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-            </svg>
-            <span>{t("nav.admin") || "Admin"}</span>
-          </Link>
-
           <div className="pt-3 mt-3 border-t border-white/10 px-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
               Bahasa / Language
@@ -441,17 +419,6 @@ export default function PengurusPage() {
                 <span>Tabel & Direktori ({data.length})</span>
               </button>
             </div>
-
-            <Link
-              href="/admin"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 text-xs sm:text-sm font-bold transition-all shadow-sm"
-              title="Masuk ke Panel CMS Admin untuk mengisi nama pejabat"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              <span>Kelola di CMS</span>
-            </Link>
           </div>
         </div>
       </section>
@@ -557,7 +524,6 @@ export default function PengurusPage() {
                         <th className="py-3.5 px-4">Jabatan Struktur</th>
                         <th className="py-3.5 px-4">Kategori & Naungan</th>
                         <th className="py-3.5 px-6">Nama Pejabat</th>
-                        <th className="py-3.5 px-4">Gelar</th>
                         <th className="py-3.5 px-4">Deskripsi / Peranan</th>
                       </tr>
                     </thead>
@@ -581,31 +547,15 @@ export default function PengurusPage() {
                             </td>
                             <td className="py-3.5 px-6">
                               {hasName ? (
-                                <div className="flex items-center gap-2.5">
-                                  {item.foto ? (
-                                    <img
-                                      src={item.foto}
-                                      alt={item.nama}
-                                      className="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0"
-                                    />
-                                  ) : (
-                                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-extrabold text-xs flex items-center justify-center shrink-0 border border-blue-200">
-                                      {item.nama.slice(0, 2).toUpperCase()}
-                                    </div>
-                                  )}
-                                  <span className="font-extrabold text-slate-900 block">
-                                    {item.nama}
-                                  </span>
-                                </div>
+                                <span className="font-extrabold text-slate-900 block">
+                                  {item.nama}
+                                </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
                                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                                   (Belum Ada Data)
                                 </span>
                               )}
-                            </td>
-                            <td className="py-3.5 px-4 text-xs font-semibold text-slate-600">
-                              {item.gelar || "-"}
                             </td>
                             <td className="py-3.5 px-4 text-xs text-slate-500 max-w-xs truncate">
                               {item.keterangan || item.subBidang || "-"}
@@ -639,9 +589,6 @@ export default function PengurusPage() {
             </Link>
             <Link href="/dashboard" className="hover:text-white transition-colors">
               Dashboard Peta
-            </Link>
-            <Link href="/admin" className="hover:text-white transition-colors">
-              CMS Admin
             </Link>
           </div>
         </div>

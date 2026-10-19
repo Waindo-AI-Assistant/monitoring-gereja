@@ -75,7 +75,6 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
   const [editingItem, setEditingItem] = useState<PengurusPosition | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [modalError, setModalError] = useState("");
 
   // Load Data
@@ -139,8 +138,7 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
         const n = (item.nama || "").toLowerCase();
         const k = (item.kategori || "").toLowerCase();
         const s = (item.subBidang || "").toLowerCase();
-        const g = (item.gelar || "").toLowerCase();
-        return j.includes(q) || n.includes(q) || k.includes(q) || s.includes(q) || g.includes(q);
+        return j.includes(q) || n.includes(q) || k.includes(q) || s.includes(q);
       }
 
       return true;
@@ -152,37 +150,6 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
     setEditingItem({ ...item });
     setModalError("");
     setIsEditModalOpen(true);
-  };
-
-  // Handle upload photo
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !editingItem) return;
-
-    setUploadingPhoto(true);
-    setModalError("");
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || "Gagal mengunggah foto.");
-      }
-
-      setEditingItem((prev) => (prev ? { ...prev, foto: json.url } : null));
-      onShowToast("Foto pejabat berhasil diunggah.");
-    } catch (err: any) {
-      setModalError(err.message || "Gagal mengunggah foto.");
-    } finally {
-      setUploadingPhoto(false);
-    }
   };
 
   // Handle save edit modal
@@ -334,7 +301,7 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
             </svg>
             <input
               type="text"
-              placeholder="Cari jabatan, nama pejabat, gelar, atau bidang..."
+              placeholder="Cari jabatan, nama pejabat, atau bidang..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
@@ -471,7 +438,6 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
                     <th className="py-3.5 px-4">Jabatan Struktur</th>
                     <th className="py-3.5 px-4">Kategori & Naungan</th>
                     <th className="py-3.5 px-6">Nama Pejabat (Variabel CMS)</th>
-                    <th className="py-3.5 px-4">Gelar / Kontak</th>
                     <th className="py-3.5 px-4 text-center">Status</th>
                     <th className="py-3.5 px-4 text-right">Aksi</th>
                   </tr>
@@ -524,28 +490,15 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
                         {/* Nama Pejabat (Variabel CMS) */}
                         <td className="py-3.5 px-6">
                           {hasName ? (
-                            <div className="flex items-center gap-3">
-                              {item.foto ? (
-                                <img
-                                  src={item.foto}
-                                  alt={item.nama}
-                                  className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0 shadow-xs"
-                                />
-                              ) : (
-                                <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-extrabold text-xs flex items-center justify-center shrink-0 border border-blue-200">
-                                  {item.nama.slice(0, 2).toUpperCase()}
-                                </div>
-                              )}
-                              <div className="min-w-0">
-                                <span className="font-extrabold text-slate-900 block truncate">
-                                  {item.nama}
+                            <div className="min-w-0">
+                              <span className="font-extrabold text-slate-900 block truncate">
+                                {item.nama}
+                              </span>
+                              {item.keterangan && (
+                                <span className="text-[11px] text-slate-400 truncate block max-w-xs">
+                                  {item.keterangan}
                                 </span>
-                                {item.keterangan && (
-                                  <span className="text-[11px] text-slate-400 truncate block max-w-xs">
-                                    {item.keterangan}
-                                  </span>
-                                )}
-                              </div>
+                              )}
                             </div>
                           ) : (
                             <div className="flex items-center gap-2">
@@ -555,24 +508,6 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
                               </span>
                             </div>
                           )}
-                        </td>
-
-                        {/* Gelar & Kontak */}
-                        <td className="py-3.5 px-4">
-                          <div className="flex flex-col text-xs text-slate-600">
-                            {item.gelar ? (
-                              <span className="font-semibold text-slate-800">
-                                {item.gelar}
-                              </span>
-                            ) : (
-                              <span className="text-slate-300">-</span>
-                            )}
-                            {item.noHpWa && (
-                              <span className="text-[11px] text-slate-500 font-mono">
-                                📞 {item.noHpWa}
-                              </span>
-                            )}
-                          </div>
                         </td>
 
                         {/* Status Terisi */}
@@ -653,42 +588,28 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
 
                     {/* Officer Details */}
                     <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        {item.foto ? (
-                          <img
-                            src={item.foto}
-                            alt={item.nama}
-                            className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
-                          />
+                      <div className="min-w-0">
+                        {hasName ? (
+                          <>
+                            <span className="font-extrabold text-sm text-slate-900 block truncate">
+                              {item.nama}
+                            </span>
+                            {item.keterangan && (
+                              <span className="text-[11px] text-slate-500 block truncate">
+                                {item.keterangan}
+                              </span>
+                            )}
+                          </>
                         ) : (
-                          <div className={`w-10 h-10 rounded-full font-extrabold text-xs flex items-center justify-center shrink-0 border ${
-                            hasName ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-amber-100 text-amber-800 border-amber-200"
-                          }`}>
-                            {hasName ? item.nama.slice(0, 2).toUpperCase() : "?"}
+                          <div>
+                            <span className="text-xs font-bold text-amber-700 block">
+                              Belum Ada Nama
+                            </span>
+                            <span className="text-[10px] text-slate-400 block">
+                              Klik Edit untuk mengisi nama pejabat
+                            </span>
                           </div>
                         )}
-                        <div className="min-w-0">
-                          {hasName ? (
-                            <>
-                              <span className="font-extrabold text-sm text-slate-900 block truncate">
-                                {item.nama}
-                              </span>
-                              <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                                {item.gelar && <span className="font-medium text-slate-700">{item.gelar}</span>}
-                                {item.noHpWa && <span>📞 {item.noHpWa}</span>}
-                              </div>
-                            </>
-                          ) : (
-                            <div>
-                              <span className="text-xs font-bold text-amber-700 block">
-                                Belum Ada Nama
-                              </span>
-                              <span className="text-[10px] text-slate-400 block">
-                                Klik Edit untuk mengisi nama pejabat
-                              </span>
-                            </div>
-                          )}
-                        </div>
                       </div>
 
                       {hasName && (
@@ -776,86 +697,7 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
                 </p>
               </div>
 
-              {/* Gelar Teologi / Akademik */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Gelar / Titel
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Contoh: M.Th. / S.Th."
-                    value={editingItem.gelar || ""}
-                    onChange={(e) =>
-                      setEditingItem((prev) => (prev ? { ...prev, gelar: e.target.value } : null))
-                    }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                  />
-                </div>
-
-                {/* No HP / WhatsApp */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    No. HP / WhatsApp
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Contoh: 08123456789"
-                    value={editingItem.noHpWa || ""}
-                    onChange={(e) =>
-                      setEditingItem((prev) => (prev ? { ...prev, noHpWa: e.target.value } : null))
-                    }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* Foto Pejabat (URL / Upload) */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Foto Pejabat (Opsional)
-                </label>
-                <div className="flex items-center gap-3">
-                  {editingItem.foto ? (
-                    <img
-                      src={editingItem.foto}
-                      alt="Preview"
-                      className="w-12 h-12 rounded-full object-cover border border-slate-200 shrink-0"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 font-bold text-xs flex items-center justify-center shrink-0 border border-slate-200">
-                      Foto
-                    </div>
-                  )}
-
-                  <div className="flex-1 space-y-1">
-                    <input
-                      type="text"
-                      placeholder="URL Foto atau unggah dari komputer..."
-                      value={editingItem.foto || ""}
-                      onChange={(e) =>
-                        setEditingItem((prev) => (prev ? { ...prev, foto: e.target.value } : null))
-                      }
-                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-blue-500"
-                    />
-                    <label className="inline-flex items-center gap-1.5 text-xs text-blue-600 font-semibold cursor-pointer hover:underline">
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                      </svg>
-                      <span>{uploadingPhoto ? "Mengunggah..." : "Pilih Berkas Foto (Maks 5MB)"}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePhotoUpload}
-                        disabled={uploadingPhoto}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Keterangan / Catatan Tugas */}
+              {/* Keterangan / Deskripsi Tugas */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                   Keterangan / Deskripsi Tugas
@@ -883,7 +725,7 @@ export default function PengurusManager({ onShowToast }: PengurusManagerProps) {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving || uploadingPhoto}
+                  disabled={saving}
                   className="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md hover:bg-blue-700 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   {saving && (

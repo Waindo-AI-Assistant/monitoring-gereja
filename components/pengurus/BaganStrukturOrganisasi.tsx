@@ -80,11 +80,6 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
             <span className="font-extrabold text-slate-950 text-[10.5px] block truncate">
               {item.nama}
             </span>
-            {item.gelar && (
-              <span className="text-[9px] font-semibold text-slate-800 block truncate">
-                {item.gelar}
-              </span>
-            )}
           </div>
         ) : (
           <span className="text-[8.5px] font-medium text-slate-700/60 italic mt-0.5 block">
@@ -498,16 +493,6 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
                   <span className="text-base font-extrabold text-slate-900 block">
                     {selectedPosition.nama}
                   </span>
-                  {selectedPosition.gelar && (
-                    <span className="text-xs font-semibold text-slate-600 block">
-                      Gelar: {selectedPosition.gelar}
-                    </span>
-                  )}
-                  {selectedPosition.noHpWa && (
-                    <span className="text-xs text-blue-600 font-mono block mt-1">
-                      📞 {selectedPosition.noHpWa}
-                    </span>
-                  )}
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-amber-700 text-xs font-semibold">
@@ -523,13 +508,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
               </p>
             )}
 
-            <div className="pt-2 flex items-center justify-between">
-              <a
-                href="/admin"
-                className="text-xs font-bold text-blue-600 hover:text-blue-800 underline"
-              >
-                ✏️ Edit nama di CMS Admin
-              </a>
+            <div className="pt-2 flex items-center justify-end">
               <button
                 type="button"
                 onClick={() => setSelectedPosition(null)}
