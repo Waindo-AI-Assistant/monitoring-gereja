@@ -37,3 +37,20 @@ node --test tests/history.test.cjs
 Fitur ini tidak memerlukan perubahan skema atau seed database. Halaman `/sejarah`
 dan `/sejarah/[slug]` tersedia untuk umum. Menu dashboard tetap memakai proteksi
 yang sudah ada. Sumber asli juga tersedia publik sebagai rujukan pembaca.
+
+## Bahasa Indonesia dan Inggris
+
+Tombol ID/EN di navbar mengubah koleksi, daftar bacaan, seluruh 16 artikel,
+caption, dan navigasi pembaca. Pilihan bahasa tersimpan di browser. PDF sumber
+tetap berbahasa Indonesia; terjemahan Inggris bukan pengganti dokumen asli.
+
+`benih-yang-tumbuh.en.json` adalah data pendamping; teks Indonesia tidak ditimpa.
+`scripts/build-history-english.py` menyimpan terjemahan narasi dan glosarium label
+pengurus. Setelah sumber Indonesia berubah, periksa ulang terjemahan dan jalankan
+script tersebut. Tes memeriksa hash teks sumber, kelengkapan blok, serta rujukan
+halaman dan foto agar terjemahan tidak bergeser ke blok sumber yang salah.
+
+Terjemahan Pengurus Pusat disimpan di `content/leadership/en.json`, dengan judul
+jabatan mengambil `jabatanEn` bila tersedia. Deskripsi atau bidang khusus yang
+diubah client dan belum memiliki padanan tetap menampilkan teks client, agar
+tidak memakai terjemahan lama yang sudah tidak sesuai.

@@ -318,14 +318,10 @@ if (!i18n.isInitialized) {
     },
   });
 
-  // On client, sync with localStorage if different
-  if (typeof window !== "undefined") {
-    const initial = getInitialLanguage();
-    if (initial && initial !== i18n.language) {
-      i18n.changeLanguage(initial);
-    }
-  }
 }
+
+// Restore after hydration so server markup and the first client render agree.
+export const restoreAppLanguage = () => i18n.changeLanguage(getInitialLanguage());
 
 export const setAppLanguage = (lang: "id" | "en") => {
   if (typeof window !== "undefined") {

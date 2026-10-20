@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+import { leadershipText, localizeLeadership } from "@/lib/leadership-language";
 import React, { useState } from "react";
 
 export interface PengurusPosition {
@@ -23,7 +25,12 @@ interface BaganStrukturProps {
 }
 
 export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps) {
-  const [selectedPosition, setSelectedPosition] = useState<PengurusPosition | null>(null);
+  const { i18n } = useTranslation();
+  const isEn = i18n.language === "en";
+  const l = (text: string) => leadershipText(text, isEn);
+  const [selectedSource, setSelectedPosition] = useState<PengurusPosition | null>(null);
+
+  const selectedPosition = selectedSource && (dataMap.get(selectedSource.id) || localizeLeadership(selectedSource, isEn));
 
   const getPosition = (id: string, fallbackTitle: string, defaultKategori: string = "Majelis Lengkap") => {
     let pos = dataMap.get(id);
@@ -37,7 +44,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
       else if (id === "sekretaris-3") pos = dataMap.get("kominfo-1");
       else if (id === "sekretaris-4") pos = dataMap.get("kominfo-2");
     }
-    return (
+    return localizeLeadership(
       pos || {
         id,
         order: 99,
@@ -45,7 +52,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
         kategori: defaultKategori,
         warnaTag: "blue",
         nama: "",
-      }
+      }, isEn
     );
   };
 
@@ -81,7 +88,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
               options.isHeader ? "text-xs sm:text-sm" : "text-[10px] sm:text-[10.5px]"
             }`}
           >
-            {title}
+            {l(title)}
           </span>
         </div>
       );
@@ -101,14 +108,14 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
         className={`w-full rounded-sm ${options.isDashed ? "border-[1.5px] border-dashed" : "border-[1.5px]"} shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition-all duration-150 cursor-pointer hover:shadow-md hover:scale-[1.01] flex flex-col justify-center text-center select-none relative group px-2 py-1.5 ${
           options.minHeight || "min-h-[42px]"
         }`}
-        title={`Klik untuk detail: ${item.jabatan}${hasName ? ` (${item.nama.replace(/\n/g, ', ')})` : " (Belum Ada Data)"}`}
+        title={`${isEn ? "Click for details" : "Klik untuk detail"}: ${item.jabatan}${hasName ? ` (${item.nama.replace(/\n/g, ", ")})` : ` ${l("(Belum Ada Data)")}`}`}
       >
         <span
           className={`font-black uppercase tracking-tight block leading-tight ${
             options.isHeader ? "text-xs sm:text-sm tracking-wide" : "text-[10px] sm:text-[10.5px]"
           }`}
         >
-          {item.jabatan || title}
+          {item.jabatan || l(title)}
         </span>
 
         {hasName ? (
@@ -175,13 +182,13 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
           ========================================================================= */}
           <div className="absolute top-1 left-0 right-0 text-center pointer-events-none">
             <h2 className="text-xl font-black text-slate-900 tracking-wider uppercase font-outfit">
-              STRUKTUR ORGANISASI
+              {l("STRUKTUR ORGANISASI")}
             </h2>
             <h3 className="text-base font-black text-slate-900 tracking-wide uppercase font-outfit mt-0.5">
-              MAJELIS PUSAT GEREJA GERAKAN PENTAKOSTA
+              {l("MAJELIS PUSAT GEREJA GERAKAN PENTAKOSTA")}
             </h3>
             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
-              Masa Bakti 2021 - 2026
+              {l("Masa Bakti 2021 - 2026")}
             </p>
           </div>
 
@@ -423,29 +430,29 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
           <div className="absolute top-[960px] left-0 right-0 flex items-center justify-center gap-6 sm:gap-8 z-10 text-[11px] font-bold text-slate-800 uppercase tracking-tight select-none">
             <div className="flex items-center gap-2">
               <span className="w-5 h-3.5 rounded-xs border border-slate-900 bg-[#9186b0] shrink-0" />
-              <span>Sidang Raya</span>
+              <span>{l("Sidang Raya")}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-5 h-3.5 rounded-xs border border-slate-900 bg-[#74c8ae] shrink-0" />
-              <span>Majelis Harian Pusat</span>
+              <span>{l("Majelis Harian Pusat")}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-5 h-3.5 rounded-xs border border-slate-900 bg-[#aee0fa] shrink-0" />
-              <span>Majelis Lengkap</span>
+              <span>{l("Majelis Lengkap")}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-5 h-3.5 rounded-xs border border-slate-900 bg-[#fffde8] shrink-0" />
-              <span>Dewan Pembina</span>
+              <span>{l("Dewan Pembina")}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-5 h-3.5 rounded-xs border border-slate-900 bg-[#fff736] shrink-0" />
-              <span>Staf Kantor</span>
+              <span>{l("Staf Kantor")}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-6 h-3.5 flex items-center justify-center shrink-0">
                 <span className="w-full border-t-[1.5px] border-dashed border-slate-900" />
               </span>
-              <span>Garis Koordinasi</span>
+              <span>{l("Garis Koordinasi")}</span>
             </div>
           </div>
         </div>
@@ -469,6 +476,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
               </div>
               <button
                 type="button"
+                aria-label={l("Tutup")}
                 onClick={() => setSelectedPosition(null)}
                 className="p-1 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
               >
@@ -478,7 +486,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
 
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                Pejabat Saat Ini
+                {l("Pejabat Saat Ini")}
               </span>
               {selectedPosition.nama ? (
                 <div>
@@ -489,7 +497,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
               ) : (
                 <div className="flex items-center gap-2 text-amber-700 text-xs font-semibold">
                   <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                  Belum Ada Pejabat Ditetapkan (Variabel Kosong)
+                  {l("Belum Ada Pejabat Ditetapkan (Variabel Kosong)")}
                 </div>
               )}
             </div>
@@ -506,7 +514,7 @@ export default function BaganStrukturOrganisasi({ dataMap }: BaganStrukturProps)
                 onClick={() => setSelectedPosition(null)}
                 className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors cursor-pointer"
               >
-                Tutup
+                {l("Tutup")}
               </button>
             </div>
           </div>
