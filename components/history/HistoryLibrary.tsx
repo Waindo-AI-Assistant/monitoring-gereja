@@ -42,7 +42,7 @@ export default function HistoryLibrary({ chapters: originalChapters }: { chapter
       </div>
       <div className="history-chapter-list">
         {filtered.map((chapter) => <Link href={`/sejarah/${chapter.slug}`} key={chapter.slug} className="history-chapter-card">
-          <span className="history-card-year">{chapter.year}–{chapter.periodEnd}</span>
+          <span className="history-card-year"><small>{isEn ? "Period" : "Periode"}</small>{chapter.year}–{chapter.periodEnd}</span>
           <div><p className="history-card-location">{chapter.location}</p><h3>{chapter.title}</h3><p>{chapter.summary}</p><span className="history-card-meta">{chapter.readingMinutes} {l("menit baca")} <span aria-hidden="true">·</span> {l("Hal.")} {chapter.firstPage}–{chapter.lastPage}</span></div>
           <span className="history-card-arrow" aria-hidden="true">↗</span>
         </Link>)}
