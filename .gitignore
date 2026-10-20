@@ -48,3 +48,6 @@ next-env.d.ts
 # /public/data/photos/
 /scratch/
 
+
+# User accounts (password hashes) — never commit
+/data/users.json

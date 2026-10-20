@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error("Gagal membaca pengurus.json:", error);
     return NextResponse.json(
-      { error: "Gagal memuat data pengurus.", details: error.message },
+      { error: "Gagal memuat data pengurus." },
       { status: 500 }
     );
   }
@@ -66,7 +66,7 @@ export async function PUT(req: NextRequest) {
   } catch (error: any) {
     console.error("Gagal mengupdate pengurus.json:", error);
     return NextResponse.json(
-      { error: "Gagal menyimpan perubahan pengurus.", details: error.message },
+      { error: "Gagal menyimpan perubahan pengurus." },
       { status: 500 }
     );
   }

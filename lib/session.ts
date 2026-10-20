@@ -12,19 +12,50 @@ export interface JWTPayload {
   exp: number;
 }
 
-const AUTH_SECRET = process.env.AUTH_SECRET || "ggp-monitoring-jwt-secret-key-2026-auth-token";
+/** Read the signing key at call time so a missing secret fails loudly instead of using a guessable default. */
+function getAuthSecret(): string {
+  const secret = process.env.AUTH_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error("AUTH_SECRET wajib diisi minimal 32 karakter acak (lihat .env.example).");
+  }
+  return secret;
+}
+
+// Hashes are stored as "pbkdf2_sha512$<iterations>$<hex>"; bare hex hashes are legacy 1000-iteration hashes.
+const HASH_PREFIX = "pbkdf2_sha512";
+const HASH_ITERATIONS = 210000;
+const LEGACY_ITERATIONS = 1000;
+
+function pbkdf2Hex(password: string, salt: string, iterations: number): string {
+  return crypto.pbkdf2Sync(password, salt, iterations, 64, "sha512").toString("hex");
+}
+
+function safeEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  return bufA.length === bufB.length && crypto.timingSafeEqual(bufA, bufB);
+}
 
 /** Hash password with PBKDF2 */
 export function hashPassword(password: string, salt?: string): { hash: string; salt: string } {
   const s = salt || crypto.randomBytes(16).toString("hex");
-  const hash = crypto.pbkdf2Sync(password, s, 1000, 64, "sha512").toString("hex");
-  return { hash, salt: s };
+  return { hash: `${HASH_PREFIX}$${HASH_ITERATIONS}$${pbkdf2Hex(password, s, HASH_ITERATIONS)}`, salt: s };
 }
 
-/** Verify password */
+/** Verify password against current or legacy hash format */
 export function verifyPassword(password: string, hash: string, salt: string): boolean {
-  const { hash: calculatedHash } = hashPassword(password, salt);
-  return calculatedHash === hash;
+  const parts = hash.split("$");
+  if (parts.length === 3 && parts[0] === HASH_PREFIX) {
+    const iterations = Number(parts[1]);
+    if (!Number.isInteger(iterations) || iterations < 1) return false;
+    return safeEqual(pbkdf2Hex(password, salt, iterations), parts[2]);
+  }
+  return safeEqual(pbkdf2Hex(password, salt, LEGACY_ITERATIONS), hash);
+}
+
+/** True when a stored hash should be upgraded to the current format after a successful login */
+export function needsRehash(hash: string): boolean {
+  return hash !== "" && !hash.startsWith(`${HASH_PREFIX}$${HASH_ITERATIONS}$`);
 }
 
 /**
@@ -50,7 +81,7 @@ export const jwt = {
     const dataToSign = `${encodedHeader}.${encodedPayload}`;
 
     const signature = crypto
-      .createHmac("sha256", AUTH_SECRET)
+      .createHmac("sha256", getAuthSecret())
       .update(dataToSign)
       .digest("base64url");
 
@@ -59,6 +90,8 @@ export const jwt = {
 
   /** Verify and decode a JWT token */
   verify(token: string): JWTPayload | null {
+    // Outside the try so a misconfigured secret surfaces as an error, not as "logged out".
+    const secret = getAuthSecret();
     try {
       if (!token) return null;
       const parts = token.split(".");
@@ -68,11 +101,11 @@ export const jwt = {
       const dataToVerify = `${encodedHeader}.${encodedPayload}`;
 
       const expectedSignature = crypto
-        .createHmac("sha256", AUTH_SECRET)
+        .createHmac("sha256", secret)
         .update(dataToVerify)
         .digest("base64url");
 
-      if (signature !== expectedSignature) return null;
+      if (!safeEqual(signature, expectedSignature)) return null;
 
       const header = JSON.parse(Buffer.from(encodedHeader, "base64url").toString());
       if (header.alg !== "HS256" || header.typ !== "JWT") return null;

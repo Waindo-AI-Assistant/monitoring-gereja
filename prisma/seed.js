@@ -5,10 +5,12 @@ const crypto = require("crypto");
 
 const prisma = new PrismaClient();
 
+// Same format as lib/session.ts hashPassword.
 function hashPassword(password, salt) {
   const s = salt || crypto.randomBytes(16).toString("hex");
-  const hash = crypto.pbkdf2Sync(password, s, 1000, 64, "sha512").toString("hex");
-  return { hash, salt: s };
+  const iterations = 210000;
+  const hash = crypto.pbkdf2Sync(password, s, iterations, 64, "sha512").toString("hex");
+  return { hash: `pbkdf2_sha512$${iterations}$${hash}`, salt: s };
 }
 
 async function main() {
@@ -20,7 +22,8 @@ async function main() {
   });
 
   if (!existingAdmin) {
-    const { hash, salt } = hashPassword("waindospecterra");
+    const initialPassword = process.env.INITIAL_SUPERADMIN_PASSWORD || crypto.randomBytes(12).toString("base64url");
+    const { hash, salt } = hashPassword(initialPassword);
     await prisma.user.create({
       data: {
         name: "Administrator Majelis Pusat",
@@ -30,7 +33,7 @@ async function main() {
         role: "superadmin",
       },
     });
-    console.log("✅ User superadmin default berhasil dibuat: username: superadmin / password: waindospecterra");
+    console.log(`✅ User superadmin berhasil dibuat: username: superadmin / password: ${initialPassword} — segera ganti password ini.`);
   } else {
     console.log("ℹ️ User superadmin sudah ada di database.");
   }

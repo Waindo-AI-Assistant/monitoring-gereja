@@ -48,9 +48,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (password.length < 5) {
+    if (password.length < 8) {
       return NextResponse.json(
-        { error: "Password minimal 5 karakter." },
+        { error: "Password minimal 8 karakter." },
         { status: 400 }
       );
     }
@@ -249,8 +249,8 @@ export async function PUT(req: NextRequest) {
     // If new password provided, rehash
     let passwordUpdated = false;
     if (password && password.trim()) {
-      if (password.length < 5) {
-        return NextResponse.json({ error: "Password baru minimal 5 karakter." }, { status: 400 });
+      if (password.length < 8) {
+        return NextResponse.json({ error: "Password baru minimal 8 karakter." }, { status: 400 });
       }
       const { hash, salt } = hashPassword(password);
       targetUser.passwordHash = hash;

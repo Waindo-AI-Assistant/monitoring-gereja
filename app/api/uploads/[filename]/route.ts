@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 
+const IMAGE_TYPES: Record<string, string> = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".gif": "image/gif",
+};
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ filename: string }> }
@@ -15,19 +23,19 @@ export async function GET(
     const safeFilename = path.basename(filename);
     const filePath = path.join(process.cwd(), "public", "uploads", safeFilename);
 
-    const fileBuffer = await fs.readFile(filePath);
+    // Hanya sajikan format gambar raster; SVG/HTML dapat menjalankan script di domain aplikasi
+    const contentType = IMAGE_TYPES[path.extname(safeFilename).toLowerCase()];
+    if (!contentType) {
+      return new NextResponse("File not found", { status: 404 });
+    }
 
-    const ext = path.extname(safeFilename).toLowerCase();
-    let contentType = "image/jpeg";
-    if (ext === ".png") contentType = "image/png";
-    else if (ext === ".webp") contentType = "image/webp";
-    else if (ext === ".gif") contentType = "image/gif";
-    else if (ext === ".svg") contentType = "image/svg+xml";
+    const fileBuffer = await fs.readFile(filePath);
 
     return new NextResponse(fileBuffer, {
       status: 200,
       headers: {
         "Content-Type": contentType,
+        "X-Content-Type-Options": "nosniff",
         "Cache-Control": "public, max-age=31536000, immutable",
       },
     });

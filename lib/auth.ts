@@ -2,7 +2,8 @@ import fs from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/prisma";
 import { normalizeRole, type Role } from "@/lib/roles";
-export { jwt, createSessionToken, verifySessionToken, hashPassword, verifyPassword } from "@/lib/session";
+export { jwt, createSessionToken, verifySessionToken, hashPassword, verifyPassword, needsRehash } from "@/lib/session";
+import crypto from "crypto";
 import { hashPassword } from "@/lib/session";
 
 export interface User {
@@ -51,8 +52,12 @@ export async function getUsers(): Promise<User[]> {
       const users: User[] = JSON.parse(content);
       return users.map((user) => ({ ...user, role: normalizeRole(user.role) }));
     } catch {
-      // Default fallback account: superadmin / waindospecterra
-      const { hash, salt } = hashPassword("waindospecterra");
+      // First-run account: password from INITIAL_SUPERADMIN_PASSWORD, or a random one printed once to the server log.
+      const initialPassword = process.env.INITIAL_SUPERADMIN_PASSWORD || crypto.randomBytes(12).toString("base64url");
+      if (!process.env.INITIAL_SUPERADMIN_PASSWORD) {
+        console.warn(`[auth] Akun awal dibuat: superadmin / ${initialPassword} — segera ganti password ini.`);
+      }
+      const { hash, salt } = hashPassword(initialPassword);
       const defaultUsers: User[] = [
         {
           id: "superadmin-default-1",
@@ -72,6 +77,22 @@ export async function getUsers(): Promise<User[]> {
     console.error("Error reading users file:", err);
     return [];
   }
+}
+
+/** Replace one user's password hash in both PostgreSQL and the JSON fallback */
+export async function updateStoredPassword(userId: string, password: string): Promise<void> {
+  const { hash, salt } = hashPassword(password);
+  try {
+    await prisma.user.updateMany({ where: { id: userId }, data: { passwordHash: hash, salt } });
+  } catch (e) {
+    console.warn("Prisma password update sync warning:", e);
+  }
+  const users = await getUsers();
+  const user = users.find((u) => u.id === userId);
+  if (!user) return;
+  user.passwordHash = hash;
+  user.salt = salt;
+  await saveUsers(users);
 }
 
 /** Save users to database and file */

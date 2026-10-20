@@ -2279,7 +2279,7 @@ export default function AdminPage() {
                   required
                   value={newUserData.password}
                   onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
-                  placeholder="Minimal 5 karakter"
+                  placeholder="Minimal 8 karakter"
                   className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
                 />
               </div>
@@ -2381,7 +2381,7 @@ export default function AdminPage() {
                   type="password"
                   value={editingUser.password}
                   onChange={(e) => setEditingUser({ ...editingUser, password: e.target.value })}
-                  placeholder="Minimal 5 karakter (opsional)"
+                  placeholder="Minimal 8 karakter (opsional)"
                   className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
                 />
               </div>

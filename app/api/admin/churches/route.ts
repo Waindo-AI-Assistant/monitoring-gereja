@@ -93,7 +93,8 @@ export async function GET(req: NextRequest) {
       features: data.features || [],
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Church data error:", error);
+    return NextResponse.json({ error: "Terjadi kesalahan saat memproses data gereja." }, { status: 500 });
   }
 }
 
@@ -197,7 +198,8 @@ export async function POST(req: NextRequest) {
       feature: newFeature,
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Church data error:", error);
+    return NextResponse.json({ error: "Terjadi kesalahan saat memproses data gereja." }, { status: 500 });
   }
 }
 
@@ -217,7 +219,7 @@ export async function PUT(req: NextRequest) {
 
     let foundIndex = -1;
     if (fid !== undefined && fid !== null) {
-      foundIndex = geojson.features.findIndex((f: any) => f.properties?.fid === fid);
+      foundIndex = geojson.features.findIndex((f: any) => Number(f.properties?.fid) === Number(fid));
     }
     if (foundIndex === -1 && name) {
       foundIndex = geojson.features.findIndex((f: any) => f.properties?.name === name);
@@ -305,7 +307,8 @@ export async function PUT(req: NextRequest) {
       properties: mergedProps,
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Church data error:", error);
+    return NextResponse.json({ error: "Terjadi kesalahan saat memproses data gereja." }, { status: 500 });
   }
 }
 
@@ -325,7 +328,7 @@ export async function DELETE(req: NextRequest) {
 
     const initialCount = geojson.features.length;
     geojson.features = geojson.features.filter((f: any) => {
-      if (fid !== undefined && f.properties?.fid === fid) return false;
+      if (fid !== undefined && Number(f.properties?.fid) === Number(fid)) return false;
       if (name && f.properties?.name === name) return false;
       return true;
     });
@@ -352,6 +355,7 @@ export async function DELETE(req: NextRequest) {
       message: "Data gereja berhasil dihapus.",
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Church data error:", error);
+    return NextResponse.json({ error: "Terjadi kesalahan saat memproses data gereja." }, { status: 500 });
   }
 }

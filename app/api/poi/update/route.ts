@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     let foundIndex = -1;
     if (fid !== undefined && fid !== null) {
       foundIndex = geojsonData.features.findIndex(
-        (f: any) => f.properties && f.properties.fid === fid
+        (f: any) => f.properties && Number(f.properties.fid) === Number(fid)
       );
     }
 
@@ -143,10 +143,7 @@ export async function POST(req: NextRequest) {
     console.error("Error updating POI:", error);
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Terjadi kesalahan saat menyimpan data.",
+        error: "Terjadi kesalahan saat menyimpan data.",
       },
       { status: 500 }
     );

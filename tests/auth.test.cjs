@@ -5,6 +5,9 @@ const path = require("node:path");
 const vm = require("node:vm");
 const ts = require("typescript");
 const { NextRequest } = require("next/server");
+const crypto = require("node:crypto");
+
+process.env.AUTH_SECRET = "test-secret-for-auth-tests-only-0123456789";
 
 // Load TypeScript with explicit dependencies, without touching the real DB or data files.
 function load(file, mocks = {}) {
@@ -52,6 +55,30 @@ test("forged, expired, missing-expiry, and unsupported-role sessions are rejecte
   assert.equal(session.verifySessionToken(session.jwt.sign(payload, 0)), null);
   assert.equal(session.verifySessionToken(session.jwt.sign(payload, Infinity)), null);
   assert.equal(session.verifySessionToken(session.jwt.sign({ ...payload, role: "owner" })), null);
+});
+
+test("missing or short AUTH_SECRET refuses to sign or verify instead of using a default key", () => {
+  const original = process.env.AUTH_SECRET;
+  try {
+    for (const value of [undefined, "too-short"]) {
+      if (value === undefined) delete process.env.AUTH_SECRET;
+      else process.env.AUTH_SECRET = value;
+      assert.throws(() => tokenFor(), /AUTH_SECRET/);
+      assert.throws(() => session.verifySessionToken("a.b.c"), /AUTH_SECRET/);
+    }
+  } finally { process.env.AUTH_SECRET = original; }
+});
+
+test("passwords use the strong hash format and legacy hashes still verify but need rehash", () => {
+  const { hash, salt } = session.hashPassword("correct-horse");
+  assert.match(hash, /^pbkdf2_sha512\$210000\$[0-9a-f]{128}$/);
+  assert.equal(session.verifyPassword("correct-horse", hash, salt), true);
+  assert.equal(session.verifyPassword("wrong", hash, salt), false);
+  assert.equal(session.needsRehash(hash), false);
+  const legacy = crypto.pbkdf2Sync("old-password", "legacy-salt", 1000, 64, "sha512").toString("hex");
+  assert.equal(session.verifyPassword("old-password", legacy, "legacy-salt"), true);
+  assert.equal(session.verifyPassword("wrong", legacy, "legacy-salt"), false);
+  assert.equal(session.needsRehash(legacy), true);
 });
 
 test("proxy redirects unauthenticated dashboard requests and leaves login reachable", () => {
