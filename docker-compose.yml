@@ -42,32 +42,6 @@ services:
       - ./public/data:/app/public/data
       - ./public/uploads:/app/public/uploads
 
-  # HTTPS otomatis (Let's Encrypt + perpanjangan otomatis) via Caddy.
-  # Aktifkan dengan: docker compose --profile https up -d
-  caddy:
-    image: caddy:2.8.4-alpine
-    container_name: ggp_monitoring_caddy
-    profiles: ["https"]
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    environment:
-      DOMAIN: ${DOMAIN:-}
-      ACME_EMAIL: ${ACME_EMAIL:-}
-    volumes:
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - web
-
 volumes:
   pgdata:
-    driver: local
-  # Menyimpan sertifikat; jangan dihapus agar tidak terkena rate limit Let's Encrypt
-  caddy_data:
-    driver: local
-  caddy_config:
     driver: local
