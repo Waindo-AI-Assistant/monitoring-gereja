@@ -1,0 +1,14 @@
+# Reverse proxy HTTPS otomatis (Let's Encrypt, perpanjangan otomatis) di port 80 + 443.
+# Trafik masuk lewat tunnel WireGuard milik pengguna (IP publik sendiri), bukan Mikrotik kantor.
+{
+	email {$ACME_EMAIL}
+}
+
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:3000
+}

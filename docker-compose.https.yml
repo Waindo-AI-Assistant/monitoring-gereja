@@ -1,0 +1,31 @@
+# Override: HTTPS otomatis (Let's Encrypt) di port 80/443, lewat IP publik tunnel WireGuard milik pengguna.
+# "web" tetap mem-publish port 3000 apa adanya (dipakai Mikrotik kantor) — tidak ada konflik,
+# karena Caddy di sini memakai port 80/443 yang berbeda sama sekali.
+#
+# Aktifkan:   docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
+# Nonaktifkan: docker compose -f docker-compose.yml -f docker-compose.https.yml down caddy
+services:
+  caddy:
+    image: caddy:2.8.4-alpine
+    container_name: ggp_monitoring_caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN wajib diisi di .env}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
+volumes:
+  # Menyimpan sertifikat; jangan dihapus agar tidak terkena rate limit Let's Encrypt
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
