@@ -135,7 +135,7 @@ export default function EditChurchModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-2 sm:p-4 backdrop-blur-xs animate-fade-in">
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-900/60 p-2 sm:p-4 backdrop-blur-xs animate-fade-in">
       <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[94vh] sm:max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-4 sm:px-5 py-3 sm:py-4">

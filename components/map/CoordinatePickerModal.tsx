@@ -252,7 +252,7 @@ export default function CoordinatePickerModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 animate-fade-in">
+    <div className="fixed inset-0 z-[3070] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 animate-fade-in">
       <div className="relative w-full max-w-4xl h-[92vh] sm:h-[85vh] max-h-[750px] bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-100 bg-white flex items-center justify-between shrink-0">

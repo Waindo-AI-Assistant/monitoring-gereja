@@ -9,7 +9,6 @@ import ImageUploadInput from "@/components/ui/ImageUploadInput";
 import { exportGeoJSON, exportCSV } from "@/lib/export";
 import "@/lib/i18n";
 import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import AccessControl from "@/components/admin/AccessControl";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/roles";
 import { defaultPermissions, hasPermission, canAccessAdmin, landingPath, type Permissions, type Permission } from "@/lib/permissions";
@@ -25,7 +24,7 @@ type SafeUser = {
 
 export default function AdminPage() {
   const { t, i18n } = useTranslation();
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const isEn = i18n.language === "en";
 
   // ------------------------------------------------------------- STATE AUTH
   const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
@@ -209,6 +208,7 @@ export default function AdminPage() {
         throw new Error(data.error || "Login gagal.");
       }
 
+      window.dispatchEvent(new Event("ggp-session-changed"));
       const destination = new URLSearchParams(window.location.search).get("next");
       if (!canAccessAdmin(data.permissions) || (destination?.startsWith("/dashboard") && data.permissions["dashboard.view"])) {
         window.location.assign(landingPath(data.permissions));
@@ -222,18 +222,6 @@ export default function AdminPage() {
       setLoginError(err.message);
     } finally {
       setLoginLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      setCurrentUser(null);
-      setChurches([]);
-      setUsersList([]);
-      showToast("Anda telah keluar dari sesi Admin.");
-    } catch (err) {
-      console.error("Logout failed:", err);
     }
   };
 
@@ -572,7 +560,7 @@ export default function AdminPage() {
   // Loading screen during initial session check
   if (checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-600">
+      <div className="min-h-[calc(100dvh-var(--site-navbar-height))] flex items-center justify-center bg-slate-50 text-slate-600">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
           <p className="text-sm font-medium">Memeriksa sesi login...</p>
@@ -586,10 +574,10 @@ export default function AdminPage() {
   // =========================================================================
   if (!currentUser) {
     return (
-      <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-800">
+      <div className="min-h-[calc(100dvh-var(--site-navbar-height))] flex flex-col bg-slate-50 font-sans text-slate-800">
         {/* Toast Notification */}
         {toastMessage && (
-          <div className="fixed top-6 right-6 z-50 rounded-2xl bg-blue-600 text-white px-5 py-3 shadow-xl text-sm font-semibold flex items-center gap-2 animate-bounce">
+          <div className="fixed top-20 right-6 z-50 rounded-2xl bg-blue-600 text-white px-5 py-3 shadow-xl text-sm font-semibold flex items-center gap-2 animate-bounce">
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
               <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.74-5.25Z" clipRule="evenodd" />
             </svg>
@@ -597,33 +585,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Top Navbar Header */}
-        <header className="h-16 sm:h-[72px] shrink-0 bg-[#0f1d3d] px-3 sm:px-6 flex items-center justify-between shadow-md sticky top-0 z-30">
-          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 mr-2 sm:mr-4">
-            <Link href="/" className="landing-navbar__brand min-w-0 flex-1">
-              <div className="landing-navbar__logo-wrap h-8 w-8 sm:h-10 sm:w-10 shrink-0">
-                <img
-                  src="/images/Logo GGP2.png"
-                  alt="Logo GGP"
-                  className="h-8 sm:h-10 w-auto object-contain shrink-0"
-                />
-              </div>
-              <div className="landing-navbar__text min-w-0 flex-1">
-                <span className="landing-navbar__title text-xs sm:text-base font-extrabold truncate block">
-                  Gereja Gerakan Pentakosta
-                </span>
-                <span className="landing-navbar__subtitle hidden sm:block text-[10px] truncate">
-                  {t("dashboard.subtitle") || "Dashboard Pemetaan Geospasial"}
-                </span>
-              </div>
-            </Link>
-          </div>
 
-          {/* Language Switcher */}
-          <div className="flex items-center shrink-0">
-            <LanguageSwitcher variant="compact" />
-          </div>
-        </header>
 
         {/* Center Content Form */}
         <div className="flex-1 flex flex-col justify-center items-center p-4 my-auto">
@@ -735,10 +697,10 @@ export default function AdminPage() {
   // VIEW: AUTHENTICATED ADMIN DASHBOARD (LIGHT THEME)
   // =========================================================================
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col">
+    <div className="min-h-[calc(100dvh-var(--site-navbar-height))] bg-slate-50 text-slate-800 font-sans flex flex-col">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 rounded-2xl bg-blue-600 text-white px-5 py-3 shadow-xl text-sm font-semibold flex items-center gap-2 animate-bounce">
+        <div className="fixed top-20 right-6 z-50 rounded-2xl bg-blue-600 text-white px-5 py-3 shadow-xl text-sm font-semibold flex items-center gap-2 animate-bounce">
           <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
             <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.74-5.25Z" clipRule="evenodd" />
           </svg>
@@ -746,338 +708,17 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Top Navbar */}
-      <header className="h-16 sm:h-[72px] shrink-0 bg-[#0f1d3d] px-3 sm:px-6 flex items-center justify-between shadow-md sticky top-0 z-30">
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 mr-2 sm:mr-4">
-          <Link href="/" className="landing-navbar__brand min-w-0 flex-1">
-            <div className="landing-navbar__logo-wrap h-8 w-8 sm:h-10 sm:w-10 shrink-0">
-              <img
-                src="/images/Logo GGP2.png"
-                alt="Logo GGP"
-                className="h-8 sm:h-10 w-auto object-contain shrink-0"
-              />
-            </div>
-            <div className="landing-navbar__text min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="landing-navbar__title text-xs sm:text-base font-extrabold truncate block">
-                  Gereja Gerakan Pentakosta
-                </span>
-                <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase bg-white/10 text-blue-200 border border-white/20 shrink-0">
-                  {ROLE_LABELS[currentUser.role]}
-                </span>
-              </div>
-              <span className="landing-navbar__subtitle hidden sm:block text-[10px] truncate">
-                {t("dashboard.subtitle") || "Dashboard Pemetaan Geospasial"}
-              </span>
-            </div>
-          </Link>
-        </div>
-
-        {/* Desktop Controls (lg+) */}
-        <div className="hidden lg:flex items-center gap-2 sm:gap-3 shrink-0">
-          <div>
-            <LanguageSwitcher variant="compact" />
-          </div>
-
-          <div className="h-6 w-px bg-white/20" />
-
-          {/* Admin Tabs Switch */}
-          <div className="flex items-center bg-white/10 p-1 rounded-xl border border-white/15">
-            <button style={!(allowed("churches.view")) ? { display: "none" } : undefined}
-              type="button"
-              onClick={() => setActiveTab("churches")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === "churches"
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-white/70 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5 shrink-0">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.333A1.5 1.5 0 0018 9H6a1.5 1.5 0 00-1.5 1.5V21" />
-              </svg>
-              <span>Master Data</span>
-            </button>
-
-            <button style={!(allowed("pengurus.view")) ? { display: "none" } : undefined}
-              type="button"
-              onClick={() => setActiveTab("pengurus")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === "pengurus"
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-white/70 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5 shrink-0">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.999-3.199a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-              </svg>
-              <span>Pengurus Pusat</span>
-            </button>
-
-            <button style={!(allowed("users.view")) ? { display: "none" } : undefined}
-              type="button"
-              onClick={() => setActiveTab("users")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === "users"
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-white/70 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5 shrink-0">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-              </svg>
-              <span>Pengguna</span>
-            </button>
-            <button style={!(currentUser.role === "superadmin") ? { display: "none" } : undefined} type="button" onClick={() => setActiveTab("access")} aria-pressed={activeTab === "access"}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${activeTab === "access" ? "bg-blue-600 text-white" : "text-white/70 hover:bg-white/10"}`}>
-              Hak Akses
-            </button>
-          </div>
-
-          <div className="h-6 w-px bg-white/20" />
-
-          {/* User Profile */}
-          <div className="text-right">
-            <p className="text-xs font-bold text-white leading-tight">{currentUser.name}</p>
-            <p className="text-[10px] text-slate-300 font-mono">@{currentUser.username}</p>
-          </div>
-
-          {/* Logout Button */}
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/30 text-xs font-semibold text-rose-200 hover:bg-rose-600 hover:text-white transition-colors cursor-pointer"
-          >
-            <span>Keluar</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Mobile Controls (< lg) */}
-        <div className="flex lg:hidden items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Quick Tab Switch */}
-          <div className="flex items-center bg-white/10 p-0.5 rounded-xl border border-white/15">
-            <button style={!(allowed("churches.view")) ? { display: "none" } : undefined}
-              type="button"
-              onClick={() => setActiveTab("churches")}
-              className={`px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-                activeTab === "churches"
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-white/70 hover:text-white hover:bg-white/10"
-              }`}
-              title="Master Data Gereja"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3 h-3 shrink-0">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.333A1.5 1.5 0 0018 9H6a1.5 1.5 0 00-1.5 1.5V21" />
-              </svg>
-              <span className="hidden xs:inline">Data</span>
-            </button>
-
-            <button style={!(allowed("pengurus.view")) ? { display: "none" } : undefined}
-              type="button"
-              onClick={() => setActiveTab("pengurus")}
-              className={`px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-                activeTab === "pengurus"
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-white/70 hover:text-white hover:bg-white/10"
-              }`}
-              title="Pengurus Pusat GGP"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3 h-3 shrink-0">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.999-3.199a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-              </svg>
-              <span className="hidden xs:inline">Pengurus</span>
-            </button>
-
-            <button style={!(allowed("users.view")) ? { display: "none" } : undefined}
-              type="button"
-              onClick={() => setActiveTab("users")}
-              className={`px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-                activeTab === "users"
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-white/70 hover:text-white hover:bg-white/10"
-              }`}
-              title="Kelola Pengguna"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3 h-3 shrink-0">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-              </svg>
-              <span className="hidden xs:inline">User</span>
-            </button>
-            <button style={!(currentUser.role === "superadmin") ? { display: "none" } : undefined} type="button" onClick={() => setActiveTab("access")} aria-pressed={activeTab === "access"}
-              className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${activeTab === "access" ? "bg-blue-600 text-white" : "text-white/70 hover:bg-white/10"}`}>
-              Hak Akses
-            </button>
-          </div>
-
-          {/* Mobile Hamburger Drawer Trigger */}
-          <button
-            type="button"
-            onClick={() => setMobileNavOpen(!mobileNavOpen)}
-            aria-label={mobileNavOpen ? "Tutup menu admin" : "Buka menu admin"}
-            aria-expanded={mobileNavOpen}
-            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer border ${
-              mobileNavOpen
-                ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400/50 border-blue-500"
-                : "bg-white/10 text-white hover:bg-white/20 border-white/15"
-            }`}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
-              {mobileNavOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
-              )}
-            </svg>
-          </button>
-        </div>
-      </header>
-
-      {/* Mobile Backdrop */}
-      {mobileNavOpen && (
-        <div
-          onClick={() => setMobileNavOpen(false)}
-          className="fixed inset-0 z-[1300] bg-slate-950/65 backdrop-blur-xs lg:hidden cursor-pointer animate-fade-in"
-        />
-      )}
-
-      {/* Mobile Drawer */}
-      <div
-        className={`fixed inset-y-0 right-0 z-[1310] w-[300px] max-w-[85vw] bg-[#0c1731] border-l border-white/10 shadow-2xl flex flex-col p-5 text-white transition-transform duration-300 ease-out lg:hidden overflow-y-auto thin-scroll ${
-          mobileNavOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
-        }`}
-      >
-        {/* Drawer Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-white/10">
-          <div className="flex items-center gap-2.5">
-            <img
-              src="/images/Logo GGP2.png"
-              alt="Logo GGP"
-              className="h-8 w-auto object-contain shrink-0"
-            />
-            <div>
-              <span className="font-bold text-sm text-white block leading-tight">
-                Gereja Gerakan Pentakosta
-              </span>
-              <span className="text-[10px] text-blue-300 block">
-                Panel Administrasi
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setMobileNavOpen(false)}
-            aria-label="Tutup menu navigasi"
-            className="rounded-xl p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* User Profile Card */}
-        <div className="my-4 p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-inner">
-            {currentUser.name.slice(0, 2).toUpperCase()}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-xs text-white truncate block">{currentUser.name}</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-blue-500/30 text-blue-300 border border-blue-400/30 shrink-0">
-                {ROLE_LABELS[currentUser.role]}
-              </span>
-            </div>
-            <span className="text-[11px] text-slate-300 font-mono truncate block">@{currentUser.username}</span>
-          </div>
-        </div>
-
-        {/* Tab Selection */}
-        <div className="space-y-1.5 pb-4 border-b border-white/10">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-1 mb-2">
-            Modul Admin
-          </span>
-          <button style={!(allowed("churches.view")) ? { display: "none" } : undefined}
-            type="button"
-            onClick={() => {
-              setActiveTab("churches");
-              setMobileNavOpen(false);
-            }}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === "churches"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                : "text-white/80 hover:bg-white/10 hover:text-white"
-            }`}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 shrink-0">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.333A1.5 1.5 0 0018 9H6a1.5 1.5 0 00-1.5 1.5V21" />
-            </svg>
-            <span>Master Data Gereja</span>
-          </button>
-
-          <button style={!(allowed("pengurus.view")) ? { display: "none" } : undefined}
-            type="button"
-            onClick={() => {
-              setActiveTab("pengurus");
-              setMobileNavOpen(false);
-            }}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === "pengurus"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                : "text-white/80 hover:bg-white/10 hover:text-white"
-            }`}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 shrink-0">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.999-3.199a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-            </svg>
-            <span>Pengurus Pusat GGP</span>
-          </button>
-
-          <button style={!(allowed("users.view")) ? { display: "none" } : undefined}
-            type="button"
-            onClick={() => {
-              setActiveTab("users");
-              setMobileNavOpen(false);
-            }}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === "users"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                : "text-white/80 hover:bg-white/10 hover:text-white"
-            }`}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 shrink-0">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-            </svg>
-            <span>Kelola Akun Pengguna</span>
-          </button>
-          <button style={!(currentUser.role === "superadmin") ? { display: "none" } : undefined} type="button" onClick={() => { setActiveTab("access"); setMobileNavOpen(false); }} aria-pressed={activeTab === "access"}
-            className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold cursor-pointer ${activeTab === "access" ? "bg-blue-600 text-white" : "text-white/80 hover:bg-white/10"}`}>
-            Hak Akses
-          </button>
-        </div>
-
-        {/* Site Navigation Links */}
-        {/* Language Switcher */}
-        <div className="py-4 border-b border-white/10 px-1 flex-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-            Bahasa / Language
-          </span>
-          <LanguageSwitcher variant="compact" />
-        </div>
-
-        {/* Drawer Footer: Logout */}
-        <div className="pt-4 border-t border-white/10">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-            </svg>
-            <span>Keluar dari Sesi Admin</span>
-          </button>
+      <div className="border-b border-slate-200 bg-white px-4 sm:px-6 py-4">
+        <div className="mx-auto max-w-[1600px] flex flex-wrap items-center justify-between gap-4">
+          <div><h1 className="font-bold text-slate-900">{isEn ? "Management" : "Pengelolaan"}</h1><p className="text-xs text-slate-500">{currentUser.name} · {ROLE_LABELS[currentUser.role]}</p></div>
+          <nav aria-label={isEn ? "Management menu" : "Menu pengelolaan"} className="flex flex-wrap gap-2">
+            {([
+              ["churches", allowed("churches.view"), isEn ? "Churches" : "Gereja"],
+              ["pengurus", allowed("pengurus.view"), isEn ? "Leadership" : "Pengurus"],
+              ["users", allowed("users.view"), isEn ? "Accounts" : "Akun"],
+              ["access", currentUser.role === "superadmin", isEn ? "Role access" : "Hak Akses Role"],
+            ] as const).filter(([, visible]) => visible).map(([tab, , label]) => <button type="button" key={tab} onClick={() => setActiveTab(tab)} aria-current={activeTab === tab ? "page" : undefined} className={`min-h-11 rounded-xl px-4 text-sm font-semibold transition-colors ${activeTab === tab ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{label}</button>)}
+          </nav>
         </div>
       </div>
 

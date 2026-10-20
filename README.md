@@ -419,6 +419,26 @@ npm run dev
 
 ---
 
+## Bacaan Sejarah GGP
+
+Menu **Sejarah GGP** tersedia publik di `/sejarah`, dengan artikel per periode di
+`/sejarah/[slug]`. Koleksi awal memuat 16 bacaan dan 43 foto dokumentasi dari
+Bab XII buku *Benih yang Tumbuh*, halaman cetak 137–187 (51 halaman PDF).
+
+Tersedia pencarian tahun/tempat/judul, filter dasawarsa, daftar isi, navigasi
+bacaan sebelumnya/berikutnya, ukuran teks, indikator kemajuan membaca, dan tautan
+halaman sumber. Penanda bacaan terakhir disimpan di browser perangkat pembaca.
+
+Narasi dan catatan penulis mengikuti sumber; arsip ini tidak menggantikan data
+kepengurusan aktif. Panduan menambah dokumen berikutnya dan asal aset terdapat
+pada `content/history/README.md`. Fitur ini tidak membutuhkan migrasi atau seed DB.
+
+```bash
+node --test tests/history.test.cjs
+```
+
+---
+
 ## Pengembangan Selanjutnya
 
 Beberapa fitur yang dapat dikembangkan di iterasi berikutnya:

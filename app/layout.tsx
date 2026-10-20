@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./site-layout.css";
+import SiteLayout from "@/components/layout/SiteLayout";
 
 export const metadata: Metadata = {
   title: "Gereja Gerakan Pentakosta",
@@ -33,7 +35,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="h-full">{children}</body>
+      <body className="h-full"><SiteLayout>{children}</SiteLayout></body>
     </html>
   );
 }

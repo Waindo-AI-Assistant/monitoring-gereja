@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { DEFAULT_BASEMAP_ID, LAYERS, ATTRIBUTE_LABELS, GEREJA_ORDERED_FIELDS, formatValue, getAttributeLabel, type LayerId } from "@/config/dashboard";
 import {
@@ -20,7 +19,6 @@ import LayerControl from "./LayerControl";
 import RouteInfoCard from "./RouteInfoCard";
 import "@/lib/i18n";
 import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 // Leaflet menyentuh `window` saat modul dievaluasi, jadi peta tidak boleh
 // ikut render di server.
@@ -486,303 +484,6 @@ function ChurchDetailDrawer({
   );
 }
 
-interface DashboardHeaderProps {
-  readonly hasManagementAccess: boolean;
-  readonly sidebarOpen: boolean;
-  readonly onToggleSidebar: () => void;
-  readonly mobileNavOpen: boolean;
-  readonly onToggleMobileNav: () => void;
-  readonly summary?: {
-    jumlahMada: number;
-    jumlahWilayah: number;
-    totalGereja: number;
-    gerejaTerfilter: number;
-  };
-  readonly onResetFilters?: () => void;
-}
-
-function DashboardHeader({
-  hasManagementAccess,
-  sidebarOpen,
-  onToggleSidebar,
-  mobileNavOpen,
-  onToggleMobileNav,
-  summary,
-  onResetFilters,
-}: DashboardHeaderProps) {
-  const { t, i18n } = useTranslation();
-  const isEn = i18n.language === "en";
-
-  return (
-    <>
-      <header className="h-16 sm:h-[72px] shrink-0 bg-[#0f1d3d] px-3 sm:px-4 lg:px-8 flex items-center justify-between shadow-md relative z-[1000]">
-        {/* Kiri: Brand GGP */}
-        <div className="flex items-center gap-2 sm:gap-3.5 min-w-0 flex-1 mr-2 sm:mr-4">
-          {/* Logo & Judul Dashboard */}
-          <Link href="/" className="flex items-center gap-2.5 min-w-0 flex-1 group text-white">
-            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl overflow-hidden flex items-center justify-center shrink-0">
-              <img
-                src="/images/Logo GGP2.png"
-                alt="Logo GGP"
-                className="h-8 sm:h-10 w-auto object-contain group-hover:scale-105 transition-transform shrink-0"
-              />
-            </div>
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="font-extrabold text-xs sm:text-sm text-white tracking-tight leading-tight truncate block">
-                Gereja Gerakan Pentakosta
-              </span>
-              <span className="hidden sm:block text-[10px] text-slate-300 font-medium truncate">
-                {t("dashboard.subtitle") || "Dashboard Pemetaan Geospasial"}
-              </span>
-            </div>
-          </Link>
-        </div>
-
-        {/* Kanan - Layar Desktop (lg+): Menu Navigasi Lengkap */}
-        <div className="hidden lg:flex items-center gap-1 lg:gap-2 shrink-0">
-          <Link
-            href="/"
-            className="landing-navbar__link text-xs px-2.5 lg:px-3.5 py-1.5"
-          >
-            {t("nav.home") || "Beranda"}
-          </Link>
-
-          <Link
-            href="/pengurus"
-            className="landing-navbar__link text-xs px-2.5 lg:px-3.5 py-1.5"
-          >
-            {t("nav.leadership") || "Pengurus Pusat"}
-          </Link>
-
-          <Link
-            href="/dashboard"
-            className="landing-navbar__link landing-navbar__link--active text-xs px-2.5 lg:px-3.5 py-1.5"
-          >
-            {t("nav.dashboard") || "Dashboard"}
-          </Link>
-
-          {hasManagementAccess && (<Link
-            href="/admin"
-            className="landing-navbar__link text-xs px-2.5 lg:px-3.5 py-1.5"
-          >
-            {t("nav.admin") || "Admin"}
-          </Link>)}
-          <button type="button" onClick={async () => {
-            const response = await fetch("/api/auth/logout", { method: "POST" });
-            if (response.ok) window.location.assign("/admin");
-          }} className="rounded-xl border border-white/20 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10 cursor-pointer">{isEn ? "Sign out" : "Keluar"}</button>
-
-
-          <div className="ml-1 pl-1 border-l border-white/10">
-            <LanguageSwitcher variant="compact" />
-          </div>
-        </div>
-
-        {/* Kanan - Layar Mobile (< lg): Tombol Hamburger Menu Buka/Tutup */}
-        <div className="flex lg:hidden items-center shrink-0">
-          <button
-            type="button"
-            onClick={onToggleMobileNav}
-            aria-label={mobileNavOpen ? (isEn ? "Close navigation menu" : "Tutup menu navigasi") : (isEn ? "Open navigation menu" : "Buka menu navigasi")}
-            aria-expanded={mobileNavOpen}
-            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all cursor-pointer border ${
-              mobileNavOpen
-                ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400/50 border-blue-500"
-                : "bg-white/10 text-white hover:bg-white/20 border-white/15"
-            }`}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
-              {mobileNavOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
-              )}
-            </svg>
-          </button>
-        </div>
-      </header>
-
-      {/* ======================= MOBILE NAVIGATION DRAWER & BACKDROP (< lg) ======================= */}
-      {/* Backdrop */}
-      {mobileNavOpen && (
-        <div
-          onClick={onToggleMobileNav}
-          className="fixed inset-0 z-[1300] bg-slate-950/65 backdrop-blur-xs transition-opacity lg:hidden cursor-pointer animate-fade-in"
-        />
-      )}
-
-      {/* Drawer Panel */}
-      <div
-        className={`fixed inset-y-0 right-0 z-[1310] w-[300px] max-w-[85vw] bg-[#0c1731] border-l border-white/10 shadow-2xl flex flex-col p-5 text-white transition-transform duration-300 ease-out lg:hidden overflow-y-auto thin-scroll ${
-          mobileNavOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
-        }`}
-      >
-        {/* Header Drawer */}
-        <div className="flex items-center justify-between pb-4 border-b border-white/10">
-          <div className="flex items-center gap-2.5">
-            <img
-              src="/images/Logo GGP2.png"
-              alt="Logo GGP"
-              className="h-8 w-auto object-contain shrink-0"
-            />
-            <div>
-              <span className="font-bold text-sm text-white block leading-tight">
-                Gereja Gerakan Pentakosta
-              </span>
-              <span className="text-[10px] text-blue-300 block">
-                {isEn ? "Navigation Menu" : "Menu Navigasi"}
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onToggleMobileNav}
-            aria-label={isEn ? "Close navigation menu" : "Tutup menu navigasi"}
-            className="rounded-xl p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} className="h-5 w-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* List Navigasi */}
-        <div className="py-4 space-y-1.5 flex-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-3 mb-2">
-            {isEn ? "Page Navigation" : "Navigasi Halaman"}
-          </span>
-
-          <Link
-            href="/"
-            onClick={onToggleMobileNav}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-blue-400 shrink-0">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-            </svg>
-            <span>{t("nav.home") || "Beranda"}</span>
-          </Link>
-
-          <Link
-            href="/pengurus"
-            onClick={onToggleMobileNav}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-emerald-400 shrink-0">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.999-3.199a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-            </svg>
-            <span>{t("nav.leadership") || "Pengurus Pusat"}</span>
-          </Link>
-
-          <Link
-            href="/dashboard"
-            onClick={onToggleMobileNav}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-md shadow-blue-600/30"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-white shrink-0">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
-            </svg>
-            <div className="flex items-center justify-between flex-1">
-              <span>{t("nav.dashboard") || "Dashboard"}</span>
-              <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full font-bold">{isEn ? "Active" : "Aktif"}</span>
-            </div>
-          </Link>
-
-          {hasManagementAccess && (<Link
-            href="/admin"
-            onClick={onToggleMobileNav}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="w-4 h-4 text-amber-400 shrink-0">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-            </svg>
-            <span>{t("nav.admin") || "Admin"}</span>
-          </Link>)}
-          <button type="button" onClick={async () => {
-            const response = await fetch("/api/auth/logout", { method: "POST" });
-            if (response.ok) window.location.assign("/admin");
-          }} className="rounded-xl border border-white/20 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10 cursor-pointer">{isEn ? "Sign out" : "Keluar"}</button>
-
-
-          {/* Pengalih Bahasa di Drawer */}
-          <div className="pt-3 mt-3 border-t border-white/10 px-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-              Bahasa / Language
-            </span>
-            <LanguageSwitcher variant="compact" />
-          </div>
-
-          {/* Ringkasan Statistik KPI */}
-          {summary && (
-            <div className="pt-3 mt-3 border-t border-white/10 px-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-2 mb-2">
-                {t("nav.quick_stats") || "Statistik Geospasial"}
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
-                  <span className="text-[9px] text-slate-400 block uppercase font-semibold">{t("dashboard.stats_church") || "Total Gereja"}</span>
-                  <span className="text-base font-black text-white font-mono">{summary.totalGereja}</span>
-                </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
-                  <span className="text-[9px] text-slate-400 block uppercase font-semibold">{t("dashboard.stats_filtered") || "Terfilter"}</span>
-                  <span className="text-base font-black text-blue-400 font-mono">{summary.gerejaTerfilter}</span>
-                </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
-                  <span className="text-[9px] text-slate-400 block uppercase font-semibold">{t("dashboard.stats_mada") || "Majelis Daerah"}</span>
-                  <span className="text-sm font-bold text-white font-mono">{summary.jumlahMada}</span>
-                </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
-                  <span className="text-[9px] text-slate-400 block uppercase font-semibold">{t("dashboard.stats_mawil") || "Majelis Wilayah"}</span>
-                  <span className="text-sm font-bold text-white font-mono">{summary.jumlahWilayah}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Pintasan Aksi Cepat */}
-          <div className="pt-3 mt-3 border-t border-white/10 space-y-2">
-            <button
-              type="button"
-              onClick={() => {
-                onToggleMobileNav();
-                onToggleSidebar();
-              }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white cursor-pointer transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4 text-blue-300 shrink-0">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0L21.75 16.5 12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3" />
-                </svg>
-                <span>{sidebarOpen ? (isEn ? "Close Layer Panel" : "Tutup Panel Layer") : (isEn ? "Open Layer Panel" : "Buka Panel Layer")}</span>
-              </span>
-              <span className="text-[10px] text-blue-300 font-bold uppercase">Layer</span>
-            </button>
-
-            {onResetFilters && (
-              <button
-                type="button"
-                onClick={() => {
-                  onToggleMobileNav();
-                  onResetFilters();
-                }}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-slate-300 cursor-pointer transition-colors"
-              >
-                <span className="flex items-center gap-2">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4 text-slate-400 shrink-0">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                  </svg>
-                  <span>{t("dashboard.reset_map") || "Reset Tampilan Peta"}</span>
-                </span>
-                <span className="text-[10px] text-slate-400 font-bold uppercase">{t("dashboard.reset") || "Reset"}</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
-
 interface MapToolOverlayBadgesProps {
   readonly layerLoading: boolean;
   readonly activeTool: MapTool;
@@ -956,7 +657,7 @@ function PhotoLightboxModal({
   );
 }
 
-export default function DashboardShell({ hasManagementAccess = false }: { hasManagementAccess?: boolean }) {
+export default function DashboardShell() {
   const { t, i18n } = useTranslation();
   const isEn = i18n.language === "en";
   const mapRef = useRef<MapHandle | null>(null);
@@ -970,7 +671,6 @@ export default function DashboardShell({ hasManagementAccess = false }: { hasMan
   const [measure, setMeasure] = useState<MeasureResult>(null);
   const [layerLoading, setLayerLoading] = useState(false);
   const [sidebarToggled, setSidebarToggled] = useState<boolean | null>(null);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState<{
     properties: Record<string, any>;
     layerLabel: string;
@@ -1286,17 +986,7 @@ export default function DashboardShell({ hasManagementAccess = false }: { hasMan
   const effectiveLayers = visibleLayers;
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-slate-100 font-sans text-slate-800">
-      {/* ------------------------------------------------------------- header */}
-      <DashboardHeader
-        hasManagementAccess={hasManagementAccess}
-        sidebarOpen={sidebarOpen}
-        onToggleSidebar={() => setSidebarToggled(!sidebarOpen)}
-        mobileNavOpen={mobileNavOpen}
-        onToggleMobileNav={() => setMobileNavOpen((prev) => !prev)}
-        summary={summary}
-        onResetFilters={handleReset}
-      />
+    <div className="flex h-full w-full flex-col overflow-hidden bg-slate-100 font-sans text-slate-800">
 
       {/* ------------------------------------------------------------- filter & stats bar */}
       <div className="flex shrink-0 items-center justify-between gap-2 sm:gap-3 border-b border-slate-200 bg-slate-50 px-2.5 sm:px-4 py-2 relative z-[1200]">
