@@ -10,7 +10,7 @@ import { exportGeoJSON, exportCSV } from "@/lib/export";
 import "@/lib/i18n";
 import { useTranslation } from "react-i18next";
 import AccessControl from "@/components/admin/AccessControl";
-import { ROLES, ROLE_LABELS, type Role } from "@/lib/roles";
+import { ROLES, ROLE_LABELS, isRoleDisabled, type Role } from "@/lib/roles";
 import { defaultPermissions, hasPermission, canAccessAdmin, landingPath, type Permissions, type Permission } from "@/lib/permissions";
 import PengurusManager from "@/components/admin/PengurusManager";
 
@@ -1933,7 +1933,7 @@ export default function AdminPage() {
                   onChange={(e) => setNewUserData({ ...newUserData, role: e.target.value as Role })}
                   className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
                 >
-                  {ROLES.map((role) => <option key={role} value={role}>{ROLE_LABELS[role]}{role === "superadmin" ? " (Akses Penuh)" : " (Sesuai Hak Akses)"}</option>)}
+                  {ROLES.map((role) => <option key={role} value={role} disabled={isRoleDisabled(role)}>{ROLE_LABELS[role]}{isRoleDisabled(role) ? " (Belum Aktif)" : role === "superadmin" ? " (Akses Penuh)" : " (Sesuai Hak Akses)"}</option>)}
                 </select>
               </div>
 
@@ -2035,7 +2035,7 @@ export default function AdminPage() {
                   onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value as Role })}
                   className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
                 >
-                  {ROLES.map((role) => <option key={role} value={role}>{ROLE_LABELS[role]}{role === "superadmin" ? " (Akses Penuh)" : " (Sesuai Hak Akses)"}</option>)}
+                  {ROLES.map((role) => <option key={role} value={role} disabled={isRoleDisabled(role)}>{ROLE_LABELS[role]}{isRoleDisabled(role) ? " (Belum Aktif)" : role === "superadmin" ? " (Akses Penuh)" : " (Sesuai Hak Akses)"}</option>)}
                 </select>
               </div>
 

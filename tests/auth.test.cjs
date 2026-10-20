@@ -38,11 +38,16 @@ const request = (token, url = "/dashboard", method = "GET", body) => new NextReq
 });
 const tokenFor = (role = "biasa") => session.createSessionToken(account(role));
 
-test("all four roles can have sessions; only superadmin administers access settings", () => {
-  assert.equal(roles.ROLES.length, 4);
+test("all five roles can have sessions; only superadmin administers access settings", () => {
+  assert.equal(roles.ROLES.length, 5);
   for (const role of roles.ROLES) {
     assert.equal(session.verifySessionToken(tokenFor(role)).role, role);
     assert.equal(roles.isSuperadmin(role), role === "superadmin");
+  }
+  assert.equal(roles.ROLE_LABELS.bendahara, "Bendahara");
+  assert.equal(roles.normalizeRole("bendahara"), "bendahara");
+  for (const key of permissions.PERMISSION_KEYS) {
+    assert.equal(permissions.defaultPermissions("bendahara")[key], key === "dashboard.view");
   }
   assert.equal(roles.normalizeRole("admin"), "biasa");
   assert.equal(roles.isSuperadmin("admin"), false);
@@ -102,7 +107,7 @@ test("API authorization uses current role and denies deleted users", async () =>
   const { requireSuperadmin, getRequestUser } = load("lib/authorization.ts", { "@/lib/auth": auth, "@/lib/permission-store": defaultStore });
   const req = request(tokenFor("superadmin"));
   assert.equal((await requireSuperadmin(req)).error, null);
-  for (const role of ["biasa", "kepengurusan", "harian_pusat"]) {
+  for (const role of ["biasa", "kepengurusan", "harian_pusat", "bendahara"]) {
     users = [account(role)];
     assert.equal((await requireSuperadmin(req)).error.status, 403);
   }
@@ -116,7 +121,7 @@ test("API authorization uses current role and denies deleted users", async () =>
 test("all management endpoints reject unauthenticated and non-superadmin calls before reading data", async () => {
   const files = ["app/api/admin/users/route.ts", "app/api/admin/churches/route.ts", "app/api/admin/pengurus/route.ts", "app/api/upload/route.ts", "app/api/poi/update/route.ts", "app/api/admin/permissions/route.ts"];
   for (const file of files) {
-    for (const role of [null, "biasa", "kepengurusan", "harian_pusat"]) {
+    for (const role of [null, "biasa", "kepengurusan", "harian_pusat", "bendahara"]) {
       const auth = { ...session, getUsers: async () => role ? [account(role)] : [] };
       const guard = load("lib/authorization.ts", { "@/lib/auth": auth, "@/lib/permission-store": defaultStore });
       const route = load(file, { "@/lib/authorization": guard, "@/lib/auth": auth, "@/lib/prisma": { prisma: {} }, "@/lib/permission-store": defaultStore });
@@ -137,6 +142,23 @@ test("user management rejects unsupported roles and preserves the last superadmi
   assert.equal(response.status, 400);
   const demote = await route.PUT(request(tokenFor("superadmin"), "/api/admin/users", "PUT", { id: admin.id, role: "biasa" }));
   assert.equal(demote.status, 400);
+});
+
+test("disabled Bendahara role cannot be assigned through user APIs", async () => {
+  const admin = account("superadmin");
+  const member = { ...account("biasa"), id: "member-id", username: "member" };
+  const auth = { ...session, getUsers: async () => [admin, member], saveUsers: async () => assert.fail("disabled role must not be saved") };
+  const guard = load("lib/authorization.ts", { "@/lib/auth": auth, "@/lib/permission-store": defaultStore });
+  const route = load("app/api/admin/users/route.ts", { "@/lib/authorization": guard, "@/lib/auth": auth, "@/lib/prisma": { prisma: {} } });
+  assert.equal(roles.isRoleDisabled("bendahara"), true);
+  assert.equal(roles.isRoleDisabled("biasa"), false);
+  for (const method of ["POST", "PUT"]) {
+    const response = await route[method](request(tokenFor("superadmin"), "/api/admin/users", method, {
+      id: member.id, name: "Treasurer", username: "treasurer", password: "valid-password", role: "bendahara",
+    }));
+    assert.equal(response.status, 400);
+    assert.match((await response.json()).error, /belum aktif/);
+  }
 });
 
 test("database returning no users never resurrects fallback accounts", async () => {
@@ -206,7 +228,7 @@ test("saving the matrix persists every editable role in one transaction and relo
     },
     $transaction: async (operations) => {
       transactions++;
-      assert.equal(operations.length, 3);
+      assert.equal(operations.length, 4);
       for (const { where, create, update } of operations) {
         assert.notEqual(where.role, "superadmin");
         rows.set(where.role, rows.has(where.role) ? { ...rows.get(where.role), ...update } : create);
@@ -215,6 +237,9 @@ test("saving the matrix persists every editable role in one transaction and relo
   };
   const store = load("lib/permission-store.ts", { "@/lib/prisma": { prisma } });
   const matrix = permissions.defaultMatrix();
+  assert.deepEqual(await store.getRolePermissions("bendahara"), permissions.defaultPermissions("bendahara"));
+  assert.equal((await store.getPermissionMatrix()).bendahara["dashboard.view"], true);
+  matrix.bendahara["churches.view"] = true;
   matrix.kepengurusan["pengurus.view"] = true;
   matrix.kepengurusan["pengurus.update"] = true;
   await store.savePermissionMatrix(matrix);
@@ -222,6 +247,7 @@ test("saving the matrix persists every editable role in one transaction and relo
   assert.deepEqual(await store.getPermissionMatrix(), matrix);
   const reloaded = load("lib/permission-store.ts", { "@/lib/prisma": { prisma } });
   assert.equal((await reloaded.getRolePermissions("kepengurusan"))["pengurus.update"], true);
+  assert.equal((await reloaded.getRolePermissions("bendahara"))["churches.view"], true);
 });
 
 test("grants and revocations take effect for existing sessions; DB failure never grants access", async () => {

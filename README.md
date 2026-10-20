@@ -361,6 +361,9 @@ Pengaturan awal (sebelum diubah oleh superadmin):
 | Biasa (`biasa`) | Ya | Tidak |
 | Kepengurusan (`kepengurusan`) | Ya | Tidak |
 | Harian Pusat (`harian_pusat`) | Ya | Tidak |
+| Bendahara (`bendahara`, belum aktif) | Ya | Tidak |
+
+Role Bendahara disiapkan untuk fitur iuran; pilihan role dan pengaturan izinnya sementara dinonaktifkan. API menolak penetapan role ini.
 
 Superadmin memilih role akun melalui menu **Pengguna** dan mengatur izin setiap
 role melalui menu **Hak Akses**. Centang izin lalu klik **Simpan Hak Akses**.

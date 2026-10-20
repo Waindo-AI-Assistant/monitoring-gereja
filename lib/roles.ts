@@ -1,4 +1,4 @@
-export const ROLES = ["superadmin", "biasa", "kepengurusan", "harian_pusat"] as const;
+export const ROLES = ["superadmin", "biasa", "kepengurusan", "harian_pusat", "bendahara"] as const;
 export type Role = (typeof ROLES)[number];
 
 export const ROLE_LABELS: Record<Role, string> = {
@@ -6,6 +6,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   biasa: "Biasa",
   kepengurusan: "Kepengurusan",
   harian_pusat: "Harian Pusat",
+  bendahara: "Bendahara",
 };
 
 export function isRole(value: unknown): value is Role {
@@ -19,4 +20,8 @@ export function normalizeRole(value: unknown): Role {
 
 export function isSuperadmin(role: unknown): boolean {
   return role === "superadmin";
+}
+
+export function isRoleDisabled(role: unknown): boolean {
+  return role === "bendahara";
 }

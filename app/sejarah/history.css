@@ -29,7 +29,7 @@
 .history-collection-note>a { font-size:11px; font-weight:650; padding:12px 0; color:#6f5427; white-space:nowrap; }
 .history-library { padding-top:65px; scroll-margin-top:24px; }
 .history-section-heading { display:flex; justify-content:space-between; gap:24px; align-items:end; margin-bottom:28px; }
-.history-section-heading h2 { font-family:Georgia,'Times New Roman',serif; font-size:32px; font-weight:400; letter-spacing:-.025em; line-height:1.2; margin:10px 0 0; }
+.history-section-heading h1 { font-family:Georgia,'Times New Roman',serif; font-size:32px; font-weight:400; letter-spacing:-.025em; line-height:1.2; margin:10px 0 0; }
 .history-section-heading>p { font-size:12px; color:#647082; max-width:250px; line-height:1.8; }
 .history-filter-bar { display:flex; align-items:center; gap:16px; padding:15px 0; border-top:1px solid #dfd9cb; border-bottom:1px solid #dfd9cb; }
 .history-filter-bar label { font-size:11px; font-weight:650; white-space:nowrap; }
@@ -40,9 +40,9 @@
 .history-decades button:hover { background:#f0ece1; }
 .history-decades button[aria-pressed=true] { background:#152943; border-color:#152943; color:white; }
 .history-chapter-list { border-top:1px solid #dfd9cb; }
-.history-chapter-card { display:grid; grid-template-columns:116px minmax(0,1fr) 44px; gap:30px; padding:29px 10px; border-bottom:1px solid #e0dbd0; color:#142641; transition:background 150ms; }
+.history-chapter-card { display:grid; grid-template-columns:164px minmax(0,1fr) 44px; gap:30px; padding:29px 10px; border-bottom:1px solid #e0dbd0; color:#142641; transition:background 150ms; }
 .history-chapter-card:hover { background:#f0ece3; }
-.history-card-year { font-family:Georgia,'Times New Roman',serif; font-size:34px; color:#897344; }
+.history-card-year { font-family:Georgia,'Times New Roman',serif; font-size:28px; white-space:nowrap; color:#897344; }
 .history-card-year small { display:block; font-family:Inter,Arial,sans-serif; font-size:8px; color:#75808b; letter-spacing:.1em; margin-top:8px; }
 .history-card-location { color:#7b6743; font-size:10px; letter-spacing:.04em; margin-bottom:7px; }
 .history-chapter-card h3 { font-size:20px; font-family:Georgia,'Times New Roman',serif; font-weight:400; margin-bottom:9px; }
@@ -128,13 +128,13 @@
  .history-collection-note { padding:24px 0; }
  .history-library { padding-top:40px; }
  .history-section-heading { flex-direction:column; align-items:start; gap:12px; }
- .history-section-heading h2 { font-size:29px; }
+ .history-section-heading h1 { font-size:29px; }
  .history-section-heading>p { max-width:100%; }
  .history-filter-bar { flex-wrap:wrap; gap:10px; }
  .history-filter-bar label { width:100%; }
  .history-filter-bar input { max-width:none; flex:1; min-width:0; }
- .history-chapter-card { grid-template-columns:66px minmax(0,1fr); padding:24px 0; gap:16px; }
- .history-card-year { font-size:28px; }
+ .history-chapter-card { grid-template-columns:100px minmax(0,1fr); padding:24px 0; gap:16px; }
+ .history-card-year { font-size:20px; }
  .history-card-arrow { display:none; }
  .history-card-year small { font-size:7px; }
  .history-chapter-card h3 { font-size:21px; }

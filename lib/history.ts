@@ -15,6 +15,7 @@ export type HistoryBlock = {
 export type HistoryChapter = {
   slug: string;
   year: number;
+  periodEnd: number;
   title: string;
   location: string;
   summary: string;

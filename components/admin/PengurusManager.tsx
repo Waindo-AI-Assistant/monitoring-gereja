@@ -498,11 +498,6 @@ export default function PengurusManager({ onShowToast, canEdit = false }: Pengur
                               <span className="font-normal text-slate-900 block truncate" title={item.nama}>
                                 {item.nama.replace(/\n/g, " • ")}
                               </span>
-                              {item.keterangan && (
-                                <span className="text-[11px] text-slate-400 truncate block max-w-xs">
-                                  {item.keterangan}
-                                </span>
-                              )}
                             </div>
                           ) : (
                             <div className="flex items-center gap-2">
@@ -598,11 +593,6 @@ export default function PengurusManager({ onShowToast, canEdit = false }: Pengur
                             <span className="font-normal text-sm text-slate-900 block truncate" title={item.nama}>
                               {item.nama.replace(/\n/g, " • ")}
                             </span>
-                            {item.keterangan && (
-                              <span className="text-[11px] text-slate-500 block truncate">
-                                {item.keterangan}
-                              </span>
-                            )}
                           </>
                         ) : (
                           <div>
@@ -712,22 +702,6 @@ export default function PengurusManager({ onShowToast, canEdit = false }: Pengur
                 <p className="text-[11px] text-slate-400 mt-1">
                   Variabel ini akan langsung tampil di halaman Pengurus Pusat. Kosongkan jika belum ditetapkan.
                 </p>
-              </div>
-
-              {/* Keterangan / Deskripsi Tugas */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Keterangan / Deskripsi Tugas
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="Deskripsi singkat peranan atau catatan pelayanan..."
-                  value={editingItem.keterangan || ""}
-                  onChange={(e) =>
-                    setEditingItem((prev) => (prev ? { ...prev, keterangan: e.target.value } : null))
-                  }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                />
               </div>
 
               {/* Actions */}

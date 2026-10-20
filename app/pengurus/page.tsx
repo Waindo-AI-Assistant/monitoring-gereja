@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import SiteFooter from "@/components/layout/SiteFooter";
 import { useTranslation } from "react-i18next";
 import { leadershipText, localizeLeadership } from "@/lib/leadership-language";
 import BaganStrukturOrganisasi from "@/components/pengurus/BaganStrukturOrganisasi";
@@ -78,10 +79,6 @@ export default function PengurusPage() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"chart" | "table">("chart");
 
-  // Filter & Search
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedKategori, setSelectedKategori] = useState("ALL");
-
   useEffect(() => {
     async function loadData() {
       try {
@@ -115,37 +112,7 @@ export default function PengurusPage() {
     return map;
   }, [data, isEn]);
 
-  // Categories list
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    data.forEach((item) => {
-      if (item.kategori) set.add(item.kategori);
-    });
-    return Array.from(set);
-  }, [data]);
-
-  // Filtered list for table view
-  const filteredData = useMemo(() => {
-    return data
-      .filter((item) => item.id !== "sidang-raya")
-      .filter((item) => {
-        if (selectedKategori !== "ALL" && item.kategori !== selectedKategori) {
-          return false;
-        }
-        if (searchQuery.trim() !== "") {
-          const q = searchQuery.toLowerCase();
-          const j = `${item.jabatan} ${item.jabatanEn || ""}`.toLowerCase();
-          const n = (item.nama || "").toLowerCase();
-          const s = (item.subBidang || "").toLowerCase();
-          const k = `${item.kategori} ${leadershipText(item.kategori, true)}`.toLowerCase();
-          return j.includes(q) || n.includes(q) || s.includes(q) || k.includes(q);
-        }
-        return true;
-      });
-  }, [data, selectedKategori, searchQuery]);
-
-  // Statistics
-  const filledCount = useMemo(() => data.filter((p) => p.id !== "sidang-raya" && Boolean((p.nama || "").trim())).length, [data]);
+  const tableData = useMemo(() => data.filter((item) => item.id !== "sidang-raya"), [data]);
 
   // Helper render node for chart
   const renderChartBox = (id: string, customTitle?: string, customWidthClass?: string) => {
@@ -230,7 +197,7 @@ export default function PengurusPage() {
             {l("Bagan hierarki kepengurusan dan tata kelola pelayanan Majelis Pusat Gereja Gerakan Pentakosta (GGP) di tingkat nasional.")}
           </p>
 
-          {/* Controls: Mode Switcher & Admin Link */}
+          {/* View mode */}
           <div className="flex flex-wrap items-center justify-center gap-3">
             {/* View Mode Toggle */}
             <div className="flex items-center bg-white/10 p-1 rounded-2xl border border-white/20 backdrop-blur-sm">
@@ -270,48 +237,6 @@ export default function PengurusPage() {
 
       {/* ==================== MAIN CONTENT ==================== */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-10">
-        {/* ==================== LEGEND BAR (TABLE VIEW) ==================== */}
-        {viewMode === "table" && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-              <span className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-600" />
-                {l("Keterangan Warna Hierarki Bagan")}
-              </span>
-              <span className="text-xs text-slate-500">
-                Total <strong>{data.length}</strong> {l("Posisi Jabatan")} • <strong>{filledCount}</strong> {l("Terisi")}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-3">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-sm bg-[#9186b0] border border-slate-900 shrink-0" />
-                <span className="text-xs font-semibold text-slate-700">{l("Sidang Raya")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-sm bg-[#74c8ae] border border-slate-900 shrink-0" />
-                <span className="text-xs font-semibold text-slate-700">{l("Majelis Harian Pusat")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-sm bg-[#aee0fa] border border-slate-900 shrink-0" />
-                <span className="text-xs font-semibold text-slate-700">{l("Majelis Lengkap")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-sm bg-[#fffde8] border border-slate-900 shrink-0" />
-                <span className="text-xs font-semibold text-slate-700">{l("Dewan Pembina")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-sm bg-[#fff736] border border-slate-900 shrink-0" />
-                <span className="text-xs font-semibold text-slate-700">{l("Staf Kantor")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-sm bg-white border border-slate-900 shrink-0" />
-                <span className="text-xs font-semibold text-slate-700">{l("Badan Pemeriksa")}</span>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ==================== VIEW 1: EXACT 1:1 INTERACTIVE CHART VIEW ==================== */}
         {viewMode === "chart" && (
           <BaganStrukturOrganisasi dataMap={dataMap} />
@@ -320,46 +245,11 @@ export default function PengurusPage() {
         {/* ==================== VIEW 2: TABLE & DIRECTORY VIEW ==================== */}
         {viewMode === "table" && (
           <div className="space-y-6">
-            {/* Filter Bar */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              <div className="relative flex-1">
-                <svg
-                  className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder={l("Cari jabatan atau nama pejabat...")} aria-label={l("Cari jabatan atau nama pejabat...")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
-                />
-              </div>
-
-              <select
-                aria-label={l("Semua Kategori")}
-                value={selectedKategori}
-                onChange={(e) => setSelectedKategori(e.target.value)}
-                className="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer"
-              >
-                <option value="ALL">{l("Semua Kategori")} ({data.length})</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {l(c)} ({data.filter((d) => d.kategori === c).length})
-                  </option>
-                ))}
-              </select>
-            </div>
-
             {/* Table View */}
             <div className="rounded-2xl bg-white border border-slate-200/80 shadow-xs overflow-hidden">
-              {filteredData.length === 0 ? (
+              {tableData.length === 0 ? (
                 <div className="py-16 text-center text-slate-400">
-                  <p className="text-sm font-semibold text-slate-600">{l("Tidak ada jabatan yang sesuai pencarian.")}</p>
+                  <p className="text-sm font-semibold text-slate-600">{isEn ? "No positions available." : "Belum ada data jabatan."}</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -370,14 +260,12 @@ export default function PengurusPage() {
                         <th className="py-3.5 px-4">{l("Jabatan Struktur")}</th>
                         <th className="py-3.5 px-4">{l("Kategori & Naungan")}</th>
                         <th className="py-3.5 px-6">{l("Nama Pejabat")}</th>
-                        <th className="py-3.5 px-4">{l("Deskripsi / Peranan")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {filteredData.map((sourceItem, idx) => {
+                      {tableData.map((sourceItem, idx) => {
                         const item = localizeLeadership(sourceItem, isEn);
                         const hasName = Boolean((item.nama || "").trim());
-                        const colorStyle = CATEGORY_STYLES[item.warnaTag] || CATEGORY_STYLES.blue;
 
                         return (
                           <tr key={item.id} className="hover:bg-blue-50/20 transition-colors">
@@ -387,10 +275,8 @@ export default function PengurusPage() {
                             <td className="py-3.5 px-4 font-bold text-slate-900">
                               {item.jabatan}
                             </td>
-                            <td className="py-3.5 px-4">
-                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${colorStyle.badge}`}>
-                                {item.kategori}
-                              </span>
+                            <td className="py-3.5 px-4 text-slate-700">
+                              {item.kategori}
                             </td>
                             <td className="py-3.5 px-6">
                               {hasName ? (
@@ -404,9 +290,6 @@ export default function PengurusPage() {
                                 </span>
                               )}
                             </td>
-                            <td className="py-3.5 px-4 text-xs text-slate-500 max-w-xs truncate">
-                              {item.keterangan || item.subBidang || "-"}
-                            </td>
                           </tr>
                         );
                       })}
@@ -418,28 +301,19 @@ export default function PengurusPage() {
           </div>
         )}
 
+        <div className="flex justify-center">
+          <Link
+            href="/sejarah"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600"
+          >
+            {t("nav.history")}
+            <span aria-hidden="true">→</span>
+          </Link>
+        </div>
       </main>
 
       {/* ==================== FOOTER ==================== */}
-      <footer className="bg-slate-900 text-white border-t border-slate-800 mt-auto py-10 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-          <div className="flex items-center gap-3">
-            <img src="/images/Logo GGP2.png" alt="Logo GGP" className="h-8 w-auto object-contain" />
-            <span>&copy; {new Date().getFullYear()} PENTAKOSTA • {l("Sinode Gereja Gerakan Pentakosta. All rights reserved.")}</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/" className="hover:text-white transition-colors">
-              {l("Beranda")}
-            </Link>
-            <Link href="/pengurus" className="text-blue-400 font-semibold">
-              {l("Pengurus Pusat")}
-            </Link>
-            <Link href="/dashboard" className="hover:text-white transition-colors">
-              {l("Dashboard Peta")}
-            </Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
