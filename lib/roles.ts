@@ -21,7 +21,3 @@ export function normalizeRole(value: unknown): Role {
 export function isSuperadmin(role: unknown): boolean {
   return role === "superadmin";
 }
-
-export function isRoleDisabled(role: unknown): boolean {
-  return role === "bendahara";
-}

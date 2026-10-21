@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ROLES, ROLE_LABELS, isRoleDisabled, type Role } from "@/lib/roles";
+import { ROLES, ROLE_LABELS, type Role } from "@/lib/roles";
 import { PERMISSION_GROUPS, defaultMatrix, validateMatrix, type Permission, type PermissionMatrix } from "@/lib/permissions";
 
 const ACTION_LABELS = { view: "Lihat", create: "Tambah", update: "Edit", delete: "Hapus" };
@@ -39,7 +39,7 @@ export default function AccessControl() {
   }, [dirty]);
 
   function toggle(role: Role, key: Permission, checked: boolean) {
-    if (role === "superadmin" || isRoleDisabled(role)) return;
+    if (role === "superadmin") return;
     setMessage("");
     setMatrix((previous) => {
       const next = { ...previous, [role]: { ...previous[role], [key]: checked } };
@@ -84,14 +84,14 @@ export default function AccessControl() {
           <table className="w-full min-w-[640px] text-left text-sm">
             <caption className="sr-only">Pengaturan hak akses fitur berdasarkan role pengguna</caption>
             <thead className="bg-slate-50 text-slate-700">
-              <tr><th scope="col" className="p-4 font-semibold">Fitur / Tindakan</th>{ROLES.map((role) => <th key={role} scope="col" className="p-4 text-center font-semibold">{ROLE_LABELS[role]}{isRoleDisabled(role) && <span className="mt-1 block text-xs font-normal text-slate-500">Belum aktif</span>}{role === "superadmin" && <span className="mt-1 block text-xs font-normal text-slate-500">Akses tetap penuh</span>}</th>)}</tr>
+              <tr><th scope="col" className="p-4 font-semibold">Fitur / Tindakan</th>{ROLES.map((role) => <th key={role} scope="col" className="p-4 text-center font-semibold">{ROLE_LABELS[role]}{role === "superadmin" && <span className="mt-1 block text-xs font-normal text-slate-500">Akses tetap penuh</span>}</th>)}</tr>
             </thead>
             {PERMISSION_GROUPS.map((group) => <tbody key={group.key} className="divide-y divide-slate-100 border-t border-slate-200">
               {group.actions.map((action, index) => {
                 const key = `${group.key}.${action}` as Permission;
                 return <tr key={key} className="hover:bg-slate-50">
                   <th scope="row" className="px-4 py-3 font-medium text-slate-800">{index === 0 && <span className="mb-1 block font-bold">{group.label}</span>}<span className="text-xs text-slate-600">{ACTION_LABELS[action]}</span></th>
-                  {ROLES.map((role) => <td key={role} className="px-4 py-2 text-center"><label className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-lg focus-within:ring-2 focus-within:ring-blue-600"><input type="checkbox" checked={matrix[role][key]} disabled={role === "superadmin" || isRoleDisabled(role) || saving} onChange={(event) => toggle(role, key, event.target.checked)} aria-label={`${ROLE_LABELS[role]}: ${ACTION_LABELS[action]} ${group.label}`} className="h-5 w-5 accent-blue-700 disabled:cursor-not-allowed" /></label></td>)}
+                  {ROLES.map((role) => <td key={role} className="px-4 py-2 text-center"><label className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-lg focus-within:ring-2 focus-within:ring-blue-600"><input type="checkbox" checked={matrix[role][key]} disabled={role === "superadmin" || saving} onChange={(event) => toggle(role, key, event.target.checked)} aria-label={`${ROLE_LABELS[role]}: ${ACTION_LABELS[action]} ${group.label}`} className="h-5 w-5 accent-blue-700 disabled:cursor-not-allowed" /></label></td>)}
                 </tr>;
               })}
             </tbody>)}

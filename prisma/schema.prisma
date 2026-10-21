@@ -57,3 +57,35 @@ model Church {
 
   @@map("churches")
 }
+
+model IuranAccount {
+  id          String       @id @default(cuid())
+  year        Int
+  mada        String
+  mawil       String       @default("")
+  churchName  String
+  pastorName  String       @default("")
+  kind        String
+  source      String       @default("")
+  createdBy   String
+  updatedBy   String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  months      IuranMonth[]
+
+  @@unique([year, mada, mawil, churchName, kind])
+  @@index([year, mada])
+  @@map("iuran_accounts")
+}
+
+model IuranMonth {
+  id          String       @id @default(cuid())
+  accountId   String
+  month       Int
+  amount      Decimal?     @db.Decimal(18, 2)
+  receiptNote String       @default("")
+  account     IuranAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, month])
+  @@map("iuran_months")
+}

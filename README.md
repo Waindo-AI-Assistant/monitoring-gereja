@@ -361,9 +361,9 @@ Pengaturan awal (sebelum diubah oleh superadmin):
 | Biasa (`biasa`) | Ya | Tidak |
 | Kepengurusan (`kepengurusan`) | Ya | Tidak |
 | Harian Pusat (`harian_pusat`) | Ya | Tidak |
-| Bendahara (`bendahara`, belum aktif) | Ya | Tidak |
+| Bendahara (`bendahara`) | Ya | Tidak (khusus kelola iuran) |
 
-Role Bendahara disiapkan untuk fitur iuran; pilihan role dan pengaturan izinnya sementara dinonaktifkan. API menolak penetapan role ini.
+Role Bendahara aktif dan secara awal mendapat izin lihat, tambah, edit, dan hapus iuran jemaat. Pengelolaan gereja, pengurus, akun, dan hak akses tetap mengikuti izin tersendiri.
 
 Superadmin memilih role akun melalui menu **Pengguna** dan mengatur izin setiap
 role melalui menu **Hak Akses**. Centang izin lalu klik **Simpan Hak Akses**.
@@ -373,6 +373,7 @@ Pengaturan disimpan di tabel PostgreSQL `role_permissions` dan tidak direset ole
 - Data gereja: lihat, tambah, edit, hapus.
 - Pengurus pusat: lihat dan edit (termasuk mengosongkan nama pejabat).
 - Pengguna: lihat, tambah, edit, hapus.
+- Iuran jemaat: lihat, tambah (termasuk impor), edit, hapus. Ekspor mengikuti izin lihat.
 
 Izin tambah/edit/hapus membutuhkan izin lihat pada fitur yang sama. Panel otomatis
 menyesuaikan menu dan tombol saat halaman dimuat ulang; API memeriksa izin terkini
@@ -464,3 +465,54 @@ Email: sekretariatmajelispusat@gmail.com
 ---
 
 *© 2026 Dashboard Monitoring Gereja. Semua Hak Dilindungi.*
+
+
+### Iuran Jemaat (Bendahara)
+
+Menu **Admin → Iuran Jemaat** mencatat penerimaan Januari–Desember menurut tahun,
+MADA/wilayah, MAWIL, jemaat, gembala, dan jenis iuran. Nominal disimpan sebagai
+Decimal (rupiah, dua desimal); kosong berbeda dari nol. Catatan penerimaan
+mempertahankan tanggal/referensi bank sumber. Persentase pada jenis iuran merupakan
+label sumber, bukan rumus yang diterapkan lagi ke nominal penerimaan.
+
+- Nominal dan tanggal/bank dapat diedit langsung di sel tabel. Simpan/Batal per
+  baris; Tab berpindah sel, Enter/panah atas-bawah berpindah baris, Ctrl+S menyimpan
+  baris, dan Esc membatalkan baris. Baris yang belum disimpan ditandai; filter dan
+  halaman dikunci sementara. Rekap memakai data tersimpan, total baris menampilkan
+  pratinjau perubahan. Nama/wilayah/jenis dapat diubah melalui Detail.
+- Tambah/edit catatan dan nominal bulanan, pencarian/filter, rekap wilayah, dan
+  ekspor CSV sesuai filter. Perubahan bersamaan diperiksa sebelum simpan/hapus.
+- **Impor Excel** membaca format workbook dengan kolom Januari–Desember serta
+  pasangan baris Jumlah / Tgl Terima. Pilih tahun tujuan, unggah `.xlsx` (maksimal
+  10 MB), lalu tinjau lembar dan catatan sebelum klik **Impor Lembar Terpilih**.
+- Catatan dengan kombinasi tahun, MADA, MAWIL, nama jemaat, dan jenis yang sudah
+  ada dilewati seluruhnya saat impor ulang. Koreksi bulan pada catatan tersebut
+  melalui **Edit**. Impor bersifat atomik dan tidak menimpa hasil edit.
+- Lembar rekap/nonbulanan dilewati. Tahun judul berbeda atau tidak tercantum
+  membutuhkan pemeriksaan dan persetujuan di pratinjau. Baris nama jemaat kosong
+  dan format sel yang tidak sesuai ditampilkan sebagai catatan/kesalahan.
+- Workbook referensi memuat lembar KALTIM berjudul 2025, JABAR tanpa tahun pada
+  judul dengan tanggal penerimaan lama, serta rekap berjudul 2025. Lembar tersebut
+  tidak dipilih otomatis untuk tahun 2026. Tanggal sumber yang salah ketik tetap
+  dipertahankan untuk dikoreksi Bendahara.
+
+Setelah memperbarui kode, terapkan tabel PostgreSQL **sebelum** memakai menu:
+
+```bash
+# Pengembangan lokal (DATABASE_URL menuju PostgreSQL lokal)
+npx prisma db push
+npx prisma generate
+
+# Docker / server, setelah rebuild aplikasi
+docker compose up --build -d
+docker compose exec web npx prisma db push
+```
+
+Tabel `iuran_accounts` dan `iuran_months` menyimpan data, sumber impor, dan ID akun
+pembuat/pengubah. Tidak ada data keuangan workbook yang dibundel di berkas publik
+atau seed. Superadmin memilih role **Bendahara** di menu Akun. Izin iuran dapat
+diubah di **Hak Akses Role** dan diperiksa pada setiap request API.
+Matriks Bendahara lama mendapat default izin iuran untuk kunci yang belum pernah
+tersimpan; pencabutan izin yang sudah tersimpan tetap dihormati.
+
+Validasi fitur: `node --test tests/iuran.test.cjs tests/auth.test.cjs`.

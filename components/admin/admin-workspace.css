@@ -1,0 +1,144 @@
+.admin-shell { --admin-ink:#17263f; --admin-muted:#617087; --admin-line:#dfe5ed; --admin-blue:#1d4ed8; display:grid; grid-template-columns:224px minmax(0,1fr); min-height:calc(100dvh - var(--site-navbar-height)); background:#f4f6fa; color:var(--admin-ink); font-family:Inter,Arial,sans-serif; }
+.admin-shell * { box-sizing:border-box; }
+.admin-shell button { cursor:pointer; }
+.admin-shell button:disabled { cursor:not-allowed; }
+.admin-shell :focus-visible { outline:2px solid #2563eb; outline-offset:3px; }
+.admin-shell--collapsed { grid-template-columns:76px minmax(0,1fr); }
+.admin-sidebar { position:sticky; top:var(--site-navbar-height); height:calc(100dvh - var(--site-navbar-height)); display:flex; flex-direction:column; border-right:1px solid var(--admin-line); background:white; padding:24px 14px 16px; overflow-y:auto; }
+.admin-sidebar-brand { display:flex; align-items:center; gap:10px; padding:0 8px 28px; }
+.admin-brand-mark { display:grid; place-items:center; width:34px; height:38px; border-radius:10px; color:#1d4ed8; background:#edf3ff; flex-shrink:0; }
+.admin-brand-mark svg { width:21px; height:21px; }
+.admin-sidebar-brand strong { display:block; font-size:14px; letter-spacing:-.02em; }
+.admin-sidebar-brand small { display:block; margin-top:4px; color:#7b8799; font-size:8px; font-weight:600; letter-spacing:.1em; }
+.admin-nav-group { margin-bottom:24px; }
+.admin-nav-group>p { color:#7a879a; font-size:9px; font-weight:700; letter-spacing:.1em; padding:0 12px; margin-bottom:9px; }
+.admin-nav-item { display:flex; align-items:center; gap:11px; width:100%; min-height:44px; padding:10px 12px; margin:3px 0; border-radius:8px; color:#536079; text-align:left; font-size:12px; font-weight:550; white-space:nowrap; }
+.admin-nav-item svg { width:19px; height:19px; flex-shrink:0; }
+.admin-nav-item:hover { background:#f3f6fa; color:#17263f; }
+.admin-nav-item[aria-current] { color:#1d4ed8; background:#edf3ff; font-weight:700; box-shadow:inset 3px 0 #2563eb; }
+.admin-nav-dirty { width:7px; height:7px; border-radius:50%; background:#ca8a04; margin-left:auto; flex-shrink:0; }
+.admin-sidebar-bottom { margin-top:auto; padding-top:24px; }
+.admin-public-link { display:flex; align-items:center; gap:9px; padding:12px 8px; min-height:44px; color:#68778f; font-size:10px; }
+.admin-public-link svg { width:16px; height:16px; }
+.admin-profile { display:flex; align-items:center; gap:9px; margin-top:12px; padding:16px 6px 0; border-top:1px solid var(--admin-line); }
+.admin-avatar { display:inline-grid; place-items:center; width:33px; height:33px; background:#e8edf6; color:#334766; border:1px solid #d8e0ed; border-radius:50%; font-size:10px; font-weight:750; flex-shrink:0; }
+.admin-profile>div { min-width:0; }
+.admin-profile strong { display:block; font-size:10px; line-height:1.5; overflow-wrap:anywhere; font-weight:650; }
+.admin-profile div>span { display:block; margin-top:3px; font-size:9px; color:#718098; }
+.admin-shell--collapsed .admin-sidebar-brand>div,.admin-shell--collapsed .admin-nav-group>p,.admin-shell--collapsed .admin-nav-item>span:not(.admin-nav-dirty),.admin-shell--collapsed .admin-profile>div,.admin-shell--collapsed .admin-public-link>span { display:none; }
+.admin-shell--collapsed .admin-sidebar { padding-right:10px; padding-left:10px; }
+.admin-shell--collapsed .admin-sidebar-brand { padding:0 10px 28px; }
+.admin-shell--collapsed .admin-nav-item { justify-content:center; padding:12px; }
+.admin-shell--collapsed .admin-nav-dirty { position:absolute; margin-left:27px; margin-top:-20px; }
+.admin-shell--collapsed .admin-profile,.admin-shell--collapsed .admin-public-link { justify-content:center; }
+.admin-workspace { min-width:0; }
+.admin-context { position:sticky; top:var(--site-navbar-height); z-index:30; min-height:60px; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:10px 28px; background:#ffffffee; border-bottom:1px solid var(--admin-line); backdrop-filter:blur(8px); }
+.admin-context-title { display:flex; align-items:center; min-width:0; gap:16px; }
+.admin-collapse { display:grid; place-items:center; width:36px; height:36px; color:#67778d; border:1px solid #e3e8f0; border-radius:7px; }
+.admin-collapse svg { width:18px; height:18px; }
+.admin-breadcrumb { display:flex; align-items:center; gap:12px; font-size:11px; color:#7a879a; }
+.admin-breadcrumb>span { color:#b0b9c6; }
+.admin-breadcrumb h1 { color:#283b57; font-size:12px; font-weight:650; }
+.admin-context-account { display:flex; align-items:center; gap:12px; }
+.admin-context-account>span:first-child { font-size:10px; color:#718098; }
+.admin-main { min-width:0; padding:26px 28px 40px; }
+.admin-content { min-width:0; }
+.admin-mobile-nav { display:none; }
+.admin-skip { position:fixed; top:-100px; left:16px; z-index:100; background:white; padding:12px; border:2px solid #2563eb; }
+.admin-skip:focus { top:12px; }
+.iuran-workspace { min-width:0; display:grid; gap:18px; }
+.iuran-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; }
+.iuran-header h2 { font-size:23px; letter-spacing:-.04em; font-weight:750; color:#182a46; line-height:1.2; }
+.iuran-header p { color:#738096; font-size:11px; margin-top:6px; }
+.iuran-header-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.iuran-header-actions>label { display:flex; align-items:center; gap:8px; color:#6a7890; font-size:11px; }
+.iuran-header-actions select { min-height:40px; border:1px solid #dbe2ed; border-radius:7px; background:white; color:#263c5e; padding:8px 10px; font-size:12px; font-weight:650; }
+.iuran-action { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:40px; padding:9px 12px; border:1px solid #dbe2ed; background:white; border-radius:7px; font-size:11px; font-weight:650; color:#4d5e77; }
+.iuran-action svg { width:15px; height:15px; }
+.iuran-action:hover { background:#f7f9fc; }
+.iuran-action--primary { background:#1d4ed8; border-color:#1d4ed8; color:white; box-shadow:0 2px 4px #1d4ed815; }
+.iuran-action--primary:hover { background:#1e40af; }
+.iuran-action:disabled { opacity:.45; }
+.iuran-summary { display:grid; grid-template-columns:1.35fr 1fr 1fr; border:1px solid var(--admin-line); border-radius:10px; background:white; overflow:hidden; }
+.iuran-stat { padding:16px 20px; border-right:1px solid #e8edf3; }
+.iuran-stat:last-child { border-right:0; }
+.iuran-stat:first-child { background:#f7faff; }
+.iuran-stat p { font-size:10px; color:#6d7d94; }
+.iuran-stat strong { display:block; margin-top:6px; font-size:23px; letter-spacing:-.03em; color:#1b355b; font-weight:750; line-height:1.2; font-variant-numeric:tabular-nums; }
+.iuran-stat:first-child strong { color:#1d4ed8; }
+.iuran-stat small { display:block; font-size:9px; color:#8190a5; margin-top:5px; }
+.iuran-sheet { min-width:0; background:white; border:1px solid #dfe5ed; border-radius:10px; box-shadow:0 2px 3px #17263f03; overflow:hidden; }
+.iuran-sheet-tabs { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 16px; border-bottom:1px solid #e4e9f1; }
+.iuran-sheet-tabs>div { display:flex; gap:24px; }
+.iuran-sheet-tabs button { min-height:46px; border-bottom:2px solid transparent; color:#748198; font-size:11px; font-weight:600; }
+.iuran-sheet-tabs button[aria-pressed=true] { border-bottom-color:#2563eb; color:#1d4ed8; }
+.iuran-sheet-tabs button:disabled { opacity:.5; }
+.iuran-sheet-tabs>span { font-size:10px; color:#8390a3; }
+.iuran-filters { display:grid; grid-template-columns:minmax(170px,1.3fr) repeat(3,minmax(115px,1fr)) auto; gap:10px; padding:14px 16px; border-bottom:1px solid #e4e9f1; align-items:end; }
+.iuran-filters label { min-width:0; font-size:9px; font-weight:650; color:#748198; }
+.iuran-filters input,.iuran-filters select { margin-top:5px; min-height:38px; font-size:11px; font-weight:450; padding:8px 10px; border:1px solid #e0e5ee; border-radius:6px; background:white; width:100%; color:#384c6b; }
+.iuran-reset { min-height:38px; min-width:38px; display:grid; place-items:center; color:#718098; border-radius:6px; border:1px solid #e0e5ee; }
+.iuran-reset svg { width:15px; height:15px; }
+.iuran-filters :disabled { opacity:.5; }
+.iuran-grid-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:10px 16px; border-bottom:1px solid #e4e9f1; background:#fcfdff; }
+.iuran-grid-options { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+.iuran-periods { display:flex; gap:2px; background:#eef2f7; padding:3px; border-radius:6px; }
+.iuran-periods button { min-width:35px; min-height:28px; padding:5px 8px; color:#76839a; border-radius:4px; font-size:9px; font-weight:600; }
+.iuran-periods button[aria-pressed=true] { background:white; color:#273f64; box-shadow:0 1px 3px #17263f14; }
+.iuran-grid-options>label { display:flex; align-items:center; gap:6px; font-size:10px; color:#738198; min-height:32px; }
+.iuran-grid-options input { width:13px; height:13px; accent-color:#2563eb; }
+.iuran-grid-tools { display:flex; align-items:center; gap:12px; }
+.iuran-save-status { font-size:10px; color:#688272; display:flex; align-items:center; gap:5px; }
+.iuran-save-status::before { content:""; width:5px; height:5px; background:#34a46a; border-radius:50%; }
+.iuran-save-status--dirty { color:#a16c0b; }
+.iuran-save-status--dirty::before { background:#d8a328; }
+.iuran-grid-help { position:relative; font-size:10px; color:#77859b; }
+.iuran-grid-help summary { cursor:pointer; min-height:32px; display:flex; align-items:center; padding:5px; }
+.iuran-grid-help p { position:absolute; top:35px; right:0; width:260px; background:white; border:1px solid #dfe5ed; padding:12px; border-radius:8px; z-index:35; box-shadow:0 8px 24px #17263f18; line-height:1.8; }
+.iuran-grid-scroll { max-height:calc(100dvh - 390px); min-height:180px; overflow:auto; scrollbar-color:#b7c3d4 #f3f5f9; scrollbar-width:thin; }
+.iuran-grid-table { width:100%; border-collapse:separate; border-spacing:0; font-size:12px; table-layout:auto; }
+.iuran-grid-table thead { position:sticky; top:0; z-index:20; color:#5e7089; }
+.iuran-grid-table thead th { height:48px; padding:10px 12px; background:#f4f7fb; border-bottom:1px solid #d8e0eb; border-right:1px solid #e4e9f1; font-size:10px; font-weight:650; }
+.iuran-grid-table thead th>span { display:block; margin-top:3px; font-size:8px; font-weight:450; color:#8b99ac; }
+.iuran-grid-identity { min-width:220px; width:220px; max-width:250px; }
+.iuran-grid-month { min-width:158px; }
+.iuran-grid-table td { border-bottom:1px solid #e6ebf2; border-right:1px solid #edf0f5; }
+.iuran-grid-table tbody th { border-bottom:1px solid #e4e9f1; border-right:1px solid #dfe5ed; padding:12px; }
+.iuran-grid-table tbody th>span:first-child { font-size:11px; line-height:1.5; }
+.iuran-grid-table tbody th>span { font-size:9px; }
+.iuran-grid-table tbody th>span:nth-child(3) { margin-top:5px; color:#4c6c9c; font-weight:550; }
+.iuran-grid-table tbody tr:hover>td:not(.bg-amber-50),.iuran-grid-table tbody tr:hover>th:not(.bg-amber-50) { background:#fbfcff; }
+.iuran-grid-table input { min-width:145px; height:39px; font-size:12px; }
+.iuran-grid-table input[data-grid-column$=receiptNote] { height:31px; font-size:9px; color:#8190a5; }
+.iuran-grid-table input:focus { position:relative; z-index:1; background:#eff6ff; color:#223e65; }
+.iuran-grid-actions { min-width:128px; width:128px; }
+.iuran-grid-actions>div { flex-direction:row; flex-wrap:wrap; gap:5px; }
+.iuran-grid-actions button { min-height:32px; padding:5px 8px; font-size:9px; border-radius:5px; }
+.iuran-grid-table .iuran-grid-total { min-width:130px; padding:14px 12px; font-size:11px; background:#fafcfe; }
+.iuran-grid-table thead .iuran-grid-actions { z-index:30; box-shadow:-4px 0 8px #17263f05; }
+.iuran-grid-pending { padding:9px 16px; background:#fffbeb; border-bottom:1px solid #f1e5c8; font-size:10px; color:#996b1e; }
+.iuran-pagination { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 16px; border-top:1px solid #e4e9f1; color:#8190a5; font-size:10px; }
+.iuran-pagination>div { display:flex; align-items:center; gap:6px; }
+.iuran-pagination button { min-height:32px; padding:5px 10px; border:1px solid #e1e7ef; color:#62738b; border-radius:5px; }
+.iuran-pagination button:disabled { opacity:.4; }
+.iuran-pagination select { background:white; color:#506581; border:1px solid #e1e7ef; border-radius:5px; padding:5px; min-height:32px; }
+.iuran-footnote { font-size:9px; color:#8c98aa; line-height:1.6; }
+.iuran-message { display:flex; align-items:center; gap:8px; background:#ecf8f1; border:1px solid #cce9d8; padding:10px 14px; border-radius:8px; color:#2e7950; font-size:11px; }
+.iuran-message svg { width:16px; height:16px; }
+.iuran-message button { margin-left:auto; padding:4px; }
+.iuran-error { border:1px solid #f4ced0; border-radius:8px; background:#fff4f4; padding:12px 14px; color:#a34248; font-size:11px; }
+.iuran-empty { display:grid; justify-items:center; gap:10px; padding:50px 20px; text-align:center; }
+.iuran-empty>svg { width:34px; height:34px; color:#9babc0; margin-bottom:4px; }
+.iuran-empty h3 { font-size:14px; font-weight:650; color:#344b6e; }
+.iuran-empty p { max-width:390px; font-size:11px; line-height:1.8; color:#8391a6; }
+.iuran-empty>div { display:flex; gap:8px; margin-top:6px; }
+.admin-shell:has(.iuran-workspace--focus) { grid-template-columns:minmax(0,1fr); }
+.admin-shell:has(.iuran-workspace--focus) .admin-sidebar,.admin-shell:has(.iuran-workspace--focus) .admin-collapse { display:none; }
+.iuran-workspace--focus { min-width:0; }
+.iuran-workspace--focus .iuran-summary,.iuran-workspace--focus .iuran-footnote { display:none; }
+.iuran-workspace--focus .iuran-grid-scroll { max-height:calc(100dvh - 300px); }
+.iuran-editor,.iuran-import { scroll-margin-top:150px; }
+@media (min-width:1500px) { .admin-main { padding:30px 36px 40px; } .iuran-grid-month { min-width:175px; } }
+@media (max-width:1100px) { .admin-shell { grid-template-columns:76px minmax(0,1fr); } .admin-sidebar-brand>div,.admin-nav-group>p,.admin-nav-item>span:not(.admin-nav-dirty),.admin-profile>div,.admin-public-link>span { display:none; } .admin-nav-item,.admin-profile,.admin-public-link { justify-content:center; } .admin-sidebar { padding-left:10px; padding-right:10px; } .admin-main { padding:20px; } .admin-collapse { display:none; } .iuran-filters { grid-template-columns:1.3fr 1fr 1fr; } .iuran-grid-scroll { max-height:65dvh; } }
+@media (max-width:640px) { .admin-shell { display:block; } .admin-sidebar { display:none; } .admin-context { padding:8px 16px; min-height:50px; } .admin-context-title { gap:0; } .admin-context-account>span:first-child { display:none; } .admin-avatar { width:28px; height:28px; font-size:9px; } .admin-breadcrumb { font-size:10px; gap:8px; } .admin-breadcrumb h1 { font-size:11px; } .admin-mobile-nav { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 16px; background:white; border-bottom:1px solid #e0e6ef; } .admin-mobile-nav label { display:grid; gap:4px; font-size:8px; color:#7a879a; } .admin-mobile-nav select { min-height:38px; min-width:155px; padding:6px 8px; border:1px solid #dfe5ed; border-radius:6px; color:#344b6e; font-size:11px; } .admin-mobile-nav>span { text-align:right; max-width:135px; font-size:10px; color:#7b899f; } .admin-main { padding:18px 12px 30px; } .iuran-workspace { gap:12px; } .iuran-header h2 { font-size:20px; } .iuran-header-actions { width:100%; } .iuran-header-actions>label { margin-right:auto; } .iuran-action { min-height:40px; padding:8px 10px; font-size:10px; } .iuran-summary { grid-template-columns:1fr 1fr; } .iuran-stat { padding:12px 14px; } .iuran-stat:first-child { grid-column:1/-1; border-bottom:1px solid #e8edf3; border-right:0; } .iuran-stat strong { font-size:20px; } .iuran-stat:first-child strong { font-size:24px; } .iuran-stat small { display:none; } .iuran-filters { grid-template-columns:1fr 1fr; padding:12px; } .iuran-filters label:first-child { grid-column:1/-1; } .iuran-grid-options { gap:8px; } .iuran-grid-toolbar { padding:8px 12px; } .iuran-grid-tools { width:100%; justify-content:space-between; } .iuran-sheet-tabs { padding:0 12px; } .iuran-sheet-tabs>div { gap:18px; } .iuran-sheet-tabs>span { font-size:8px; } .iuran-pagination { flex-wrap:wrap; padding:10px 12px; }  .iuran-workspace--focus .iuran-header p { display:none; } .iuran-workspace--focus .iuran-grid-scroll { max-height:55dvh; } }
+@media (prefers-reduced-motion:reduce) { .admin-shell * { scroll-behavior:auto!important; animation:none!important; transition:none!important; } }

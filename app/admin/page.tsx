@@ -9,9 +9,11 @@ import ImageUploadInput from "@/components/ui/ImageUploadInput";
 import { exportGeoJSON, exportCSV } from "@/lib/export";
 import "@/lib/i18n";
 import { useTranslation } from "react-i18next";
+import AdminShell from "@/components/admin/AdminShell";
 import AccessControl from "@/components/admin/AccessControl";
-import { ROLES, ROLE_LABELS, isRoleDisabled, type Role } from "@/lib/roles";
+import { ROLES, ROLE_LABELS, type Role } from "@/lib/roles";
 import { defaultPermissions, hasPermission, canAccessAdmin, landingPath, type Permissions, type Permission } from "@/lib/permissions";
+import IuranManager from "@/components/admin/IuranManager";
 import PengurusManager from "@/components/admin/PengurusManager";
 
 type SafeUser = {
@@ -31,7 +33,7 @@ export default function AdminPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [permissions, setPermissions] = useState<Permissions>(defaultPermissions);
   const allowed = (permission: Permission) => hasPermission(permissions, permission);
-  const initialTab = (granted: Permissions) => granted["churches.view"] ? "churches" : granted["pengurus.view"] ? "pengurus" : "users";
+  const initialTab = (granted: Permissions) => granted["churches.view"] ? "churches" : granted["pengurus.view"] ? "pengurus" : granted["iuran.view"] ? "iuran" : "users";
 
   // Form Login
   const [loginUsername, setLoginUsername] = useState("");
@@ -40,8 +42,10 @@ export default function AdminPage() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState("");
 
+  const [iuranDirty, setIuranDirty] = useState(false);
+
   // Navigation Tab
-  const [activeTab, setActiveTab] = useState<"churches" | "users" | "pengurus" | "access">("churches");
+  const [activeTab, setActiveTab] = useState<"churches" | "users" | "pengurus" | "access" | "iuran">("churches");
 
   // ------------------------------------------------------------- STATE DATA GEREJA
   const [churches, setChurches] = useState<any[]>([]);
@@ -577,7 +581,7 @@ export default function AdminPage() {
       <div className="min-h-[calc(100dvh-var(--site-navbar-height))] flex flex-col bg-slate-50 font-sans text-slate-800">
         {/* Toast Notification */}
         {toastMessage && (
-          <div className="fixed top-20 right-6 z-50 rounded-2xl bg-blue-600 text-white px-5 py-3 shadow-xl text-sm font-semibold flex items-center gap-2 animate-bounce">
+          <div className="fixed top-20 right-6 z-50 rounded-2xl bg-blue-600 text-white px-5 py-3 shadow-xl text-sm font-semibold flex items-center gap-2" role="status">
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
               <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.74-5.25Z" clipRule="evenodd" />
             </svg>
@@ -697,10 +701,10 @@ export default function AdminPage() {
   // VIEW: AUTHENTICATED ADMIN DASHBOARD (LIGHT THEME)
   // =========================================================================
   return (
-    <div className="min-h-[calc(100dvh-var(--site-navbar-height))] bg-slate-50 text-slate-800 font-sans flex flex-col">
+    <AdminShell user={currentUser} permissions={permissions} active={activeTab} isEn={isEn} dirty={iuranDirty} onNavigate={(tab) => { if (tab !== activeTab && iuranDirty && !window.confirm("Ada perubahan iuran yang belum disimpan. Pindah menu dan batalkan perubahan?")) return; if (tab !== activeTab) setIuranDirty(false); setActiveTab(tab); }}>
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 rounded-2xl bg-blue-600 text-white px-5 py-3 shadow-xl text-sm font-semibold flex items-center gap-2 animate-bounce">
+        <div className="fixed top-20 right-6 z-50 rounded-2xl bg-blue-600 text-white px-5 py-3 shadow-xl text-sm font-semibold flex items-center gap-2" role="status">
           <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
             <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.74-5.25Z" clipRule="evenodd" />
           </svg>
@@ -708,22 +712,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      <div className="border-b border-slate-200 bg-white px-4 sm:px-6 py-4">
-        <div className="mx-auto max-w-[1600px] flex flex-wrap items-center justify-between gap-4">
-          <div><h1 className="font-bold text-slate-900">{isEn ? "Management" : "Pengelolaan"}</h1><p className="text-xs text-slate-500">{currentUser.name} · {ROLE_LABELS[currentUser.role]}</p></div>
-          <nav aria-label={isEn ? "Management menu" : "Menu pengelolaan"} className="flex flex-wrap gap-2">
-            {([
-              ["churches", allowed("churches.view"), isEn ? "Churches" : "Gereja"],
-              ["pengurus", allowed("pengurus.view"), isEn ? "Leadership" : "Pengurus"],
-              ["users", allowed("users.view"), isEn ? "Accounts" : "Akun"],
-              ["access", currentUser.role === "superadmin", isEn ? "Role access" : "Hak Akses Role"],
-            ] as const).filter(([, visible]) => visible).map(([tab, , label]) => <button type="button" key={tab} onClick={() => setActiveTab(tab)} aria-current={activeTab === tab ? "page" : undefined} className={`min-h-11 rounded-xl px-4 text-sm font-semibold transition-colors ${activeTab === tab ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{label}</button>)}
-          </nav>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <main className="flex-1 p-3.5 sm:p-6 max-w-7xl w-full mx-auto space-y-4 sm:space-y-6">
+      <div className="admin-content space-y-4 sm:space-y-6">
         {/* =========================================================================
             TAB 1: MASTER DATA GEREJA
         ========================================================================= */}
@@ -1508,8 +1497,9 @@ export default function AdminPage() {
         {activeTab === "pengurus" && allowed("pengurus.view") && (
           <PengurusManager onShowToast={showToast} canEdit={allowed("pengurus.update")} />
         )}
+        {activeTab === "iuran" && allowed("iuran.view") && <IuranManager permissions={permissions} onDirtyChange={setIuranDirty} />}
         {currentUser.role === "superadmin" && <div className={activeTab === "access" ? "" : "hidden"}><AccessControl /></div>}
-      </main>
+      </div>
 
       {/* =========================================================================
           MODAL: EDIT DATA GEREJA
@@ -1933,7 +1923,7 @@ export default function AdminPage() {
                   onChange={(e) => setNewUserData({ ...newUserData, role: e.target.value as Role })}
                   className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
                 >
-                  {ROLES.map((role) => <option key={role} value={role} disabled={isRoleDisabled(role)}>{ROLE_LABELS[role]}{isRoleDisabled(role) ? " (Belum Aktif)" : role === "superadmin" ? " (Akses Penuh)" : " (Sesuai Hak Akses)"}</option>)}
+                  {ROLES.map((role) => <option key={role} value={role}>{ROLE_LABELS[role]}{role === "superadmin" ? " (Akses Penuh)" : " (Sesuai Hak Akses)"}</option>)}
                 </select>
               </div>
 
@@ -2035,7 +2025,7 @@ export default function AdminPage() {
                   onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value as Role })}
                   className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
                 >
-                  {ROLES.map((role) => <option key={role} value={role} disabled={isRoleDisabled(role)}>{ROLE_LABELS[role]}{isRoleDisabled(role) ? " (Belum Aktif)" : role === "superadmin" ? " (Akses Penuh)" : " (Sesuai Hak Akses)"}</option>)}
+                  {ROLES.map((role) => <option key={role} value={role}>{ROLE_LABELS[role]}{role === "superadmin" ? " (Akses Penuh)" : " (Sesuai Hak Akses)"}</option>)}
                 </select>
               </div>
 
@@ -2115,6 +2105,6 @@ export default function AdminPage() {
           </div>
         </div>
       )}
-    </div>
+    </AdminShell>
   );
 }

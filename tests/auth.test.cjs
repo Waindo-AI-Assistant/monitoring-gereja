@@ -47,7 +47,7 @@ test("all five roles can have sessions; only superadmin administers access setti
   assert.equal(roles.ROLE_LABELS.bendahara, "Bendahara");
   assert.equal(roles.normalizeRole("bendahara"), "bendahara");
   for (const key of permissions.PERMISSION_KEYS) {
-    assert.equal(permissions.defaultPermissions("bendahara")[key], key === "dashboard.view");
+    assert.equal(permissions.defaultPermissions("bendahara")[key], key === "dashboard.view" || key.startsWith("iuran."));
   }
   assert.equal(roles.normalizeRole("admin"), "biasa");
   assert.equal(roles.isSuperadmin("admin"), false);
@@ -144,21 +144,25 @@ test("user management rejects unsupported roles and preserves the last superadmi
   assert.equal(demote.status, 400);
 });
 
-test("disabled Bendahara role cannot be assigned through user APIs", async () => {
+test("superadmin can assign Bendahara; its access is limited to iuran and dashboard", async () => {
   const admin = account("superadmin");
   const member = { ...account("biasa"), id: "member-id", username: "member" };
-  const auth = { ...session, getUsers: async () => [admin, member], saveUsers: async () => assert.fail("disabled role must not be saved") };
+  let saved;
+  const auth = { ...session, getUsers: async () => [admin, member], saveUsers: async (users) => { saved = users; } };
   const guard = load("lib/authorization.ts", { "@/lib/auth": auth, "@/lib/permission-store": defaultStore });
-  const route = load("app/api/admin/users/route.ts", { "@/lib/authorization": guard, "@/lib/auth": auth, "@/lib/prisma": { prisma: {} } });
-  assert.equal(roles.isRoleDisabled("bendahara"), true);
-  assert.equal(roles.isRoleDisabled("biasa"), false);
+  const prisma = { user: { upsert: async () => {}, updateMany: async () => {} } };
+  const route = load("app/api/admin/users/route.ts", { "@/lib/authorization": guard, "@/lib/auth": auth, "@/lib/prisma": { prisma } });
+  assert.equal(roles.ROLES.includes("bendahara"), true);
   for (const method of ["POST", "PUT"]) {
     const response = await route[method](request(tokenFor("superadmin"), "/api/admin/users", method, {
       id: member.id, name: "Treasurer", username: "treasurer", password: "valid-password", role: "bendahara",
     }));
-    assert.equal(response.status, 400);
-    assert.match((await response.json()).error, /belum aktif/);
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).user.role, "bendahara");
+    assert.equal(saved.find((u) => u.username === "treasurer").role, "bendahara");
   }
+  assert.equal(permissions.canAccessAdmin(permissions.defaultPermissions("bendahara")), true);
+  assert.equal(permissions.defaultPermissions("bendahara")["users.view"], false);
 });
 
 test("database returning no users never resurrects fallback accounts", async () => {

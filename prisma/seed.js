@@ -43,17 +43,17 @@ async function main() {
 
   const digitalPassword = hashPassword("digitalggp");
   await prisma.user.upsert({
-    where: { username: "digitalgpp" },
+    where: { username: "digitalggp" },
     update: { role: "biasa" },
     create: {
-      name: "Digital GPP",
-      username: "digitalgpp",
+      name: "Digital ggp",
+      username: "digitalggp",
       passwordHash: digitalPassword.hash,
       salt: digitalPassword.salt,
       role: "biasa",
     },
   });
-  console.log("✅ Akun digitalgpp tersedia dengan role biasa (akses dashboard).");
+  console.log("✅ Akun digitalggp tersedia dengan role biasa (akses dashboard).");
 
   // 2. Seed Churches from poi.geojson
   const churchCount = await prisma.church.count();

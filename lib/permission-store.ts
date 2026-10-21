@@ -5,7 +5,7 @@ import { defaultMatrix, defaultPermissions, readStoredPermissions, type Permissi
 export async function getRolePermissions(role: Role): Promise<Permissions> {
   if (role === "superadmin") return defaultPermissions(role);
   const row = await prisma.rolePermission.findUnique({ where: { role } });
-  return row ? readStoredPermissions(row.permissions) : defaultPermissions(role);
+  return row ? readStoredPermissions(row.permissions, role) : defaultPermissions(role);
 }
 
 export async function getPermissionMatrix(): Promise<PermissionMatrix> {
@@ -14,7 +14,7 @@ export async function getPermissionMatrix(): Promise<PermissionMatrix> {
   for (const role of ROLES) {
     if (role === "superadmin") continue;
     const row = rows.find((item) => item.role === role);
-    if (row) matrix[role] = readStoredPermissions(row.permissions);
+    if (row) matrix[role] = readStoredPermissions(row.permissions, role);
   }
   return matrix;
 }

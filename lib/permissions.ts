@@ -4,11 +4,13 @@ export const PERMISSION_GROUPS = [
   { label: "Dashboard", key: "dashboard", actions: ["view"] },
   { label: "Data gereja", key: "churches", actions: ["view", "create", "update", "delete"] },
   { label: "Pengurus pusat", key: "pengurus", actions: ["view", "update"] },
+  { label: "Iuran jemaat", key: "iuran", actions: ["view", "create", "update", "delete"] },
   { label: "Pengguna", key: "users", actions: ["view", "create", "update", "delete"] },
 ] as const;
 
 export const PERMISSION_KEYS = [
   "dashboard.view", "churches.view", "churches.create", "churches.update", "churches.delete",
+  "iuran.view", "iuran.create", "iuran.update", "iuran.delete",
   "pengurus.view", "pengurus.update", "users.view", "users.create", "users.update", "users.delete",
 ] as const;
 export type Permission = (typeof PERMISSION_KEYS)[number];
@@ -16,7 +18,7 @@ export type Permissions = Record<Permission, boolean>;
 export type PermissionMatrix = Record<Role, Permissions>;
 
 export function defaultPermissions(role?: Role): Permissions {
-  return Object.fromEntries(PERMISSION_KEYS.map((key) => [key, role === "superadmin" || (role !== undefined && key === "dashboard.view")])) as Permissions;
+  return Object.fromEntries(PERMISSION_KEYS.map((key) => [key, role === "superadmin" || (role !== undefined && key === "dashboard.view") || (role === "bendahara" && key.startsWith("iuran."))])) as Permissions;
 }
 
 export function defaultMatrix(): PermissionMatrix {
@@ -29,7 +31,7 @@ export function hasPermission(permissions: Permissions, permission: Permission):
 }
 
 export function canAccessAdmin(permissions: Permissions): boolean {
-  return ["churches.view", "pengurus.view", "users.view"].some((key) => hasPermission(permissions, key as Permission));
+  return ["churches.view", "pengurus.view", "users.view", "iuran.view"].some((key) => hasPermission(permissions, key as Permission));
 }
 
 export function landingPath(permissions: Permissions): string {
@@ -56,11 +58,12 @@ export function validateMatrix(value: unknown): value is PermissionMatrix {
 }
 
 /** Stored rows grant only explicitly enabled, recognized permissions. */
-export function readStoredPermissions(value: unknown): Permissions {
+export function readStoredPermissions(value: unknown, role?: Role): Permissions {
   const result = defaultPermissions();
   if (!value || typeof value !== "object" || Array.isArray(value)) return result;
   const record = value as Record<string, unknown>;
-  for (const key of PERMISSION_KEYS) result[key] = record[key] === true;
+  const legacyComplete = PERMISSION_KEYS.filter((key) => !key.startsWith("iuran.")).every((key) => typeof record[key] === "boolean");
+  for (const key of PERMISSION_KEYS) result[key] = record[key] === true || (legacyComplete && !Object.hasOwn(record, key) && key.startsWith("iuran.") && role === "bendahara");
   for (const key of PERMISSION_KEYS) result[key] = hasPermission(result, key);
   return result;
 }

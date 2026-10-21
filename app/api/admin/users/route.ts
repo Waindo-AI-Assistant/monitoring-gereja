@@ -1,4 +1,4 @@
-import { isRole, isRoleDisabled } from "@/lib/roles";
+import { isRole } from "@/lib/roles";
 import { requirePermission } from "@/lib/authorization";
 import { NextRequest, NextResponse } from "next/server";
 import { getUsers, saveUsers, hashPassword, User, SafeUser } from "@/lib/auth";
@@ -70,9 +70,6 @@ export async function POST(req: NextRequest) {
     const { hash, salt } = hashPassword(password);
     if (role !== undefined && !isRole(role)) {
       return NextResponse.json({ error: "Role tidak valid." }, { status: 400 });
-    }
-    if (isRoleDisabled(role)) {
-      return NextResponse.json({ error: "Role Bendahara belum aktif." }, { status: 400 });
     }
     const assignedRole = role ?? "biasa";
     if (actor.role !== "superadmin" && assignedRole !== "biasa") {
@@ -245,9 +242,6 @@ export async function PUT(req: NextRequest) {
       }
       if (targetUser.role === "superadmin" && role !== "superadmin" && users.filter((user) => user.role === "superadmin").length <= 1) {
         return NextResponse.json({ error: "Role superadmin terakhir tidak boleh diturunkan." }, { status: 400 });
-      }
-      if (isRoleDisabled(role)) {
-        return NextResponse.json({ error: "Role Bendahara belum aktif." }, { status: 400 });
       }
       targetUser.role = role;
     }
