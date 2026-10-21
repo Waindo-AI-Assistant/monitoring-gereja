@@ -30,7 +30,7 @@ export function AdminIcon({ name, className = "" }: { name: string; className?: 
 }
 
 export default function AdminShell({ user, permissions, active, onNavigate, dirty, isEn, children }: Props) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(active === "iuran");
   const sections = [
     { id: "churches", label: isEn ? "Churches" : "Data Gereja", group: "data", visible: hasPermission(permissions, "churches.view") },
     { id: "pengurus", label: isEn ? "Leadership" : "Pengurus Pusat", group: "data", visible: hasPermission(permissions, "pengurus.view") },

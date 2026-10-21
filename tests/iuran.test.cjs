@@ -30,6 +30,19 @@ test("financial amounts preserve zeros and missing values and sum exact decimal 
   for (const value of [-1, 1.234, "1,000", "1.234", "NaN", true, "1000000000000", "=SUM(A1)"]) assert.throws(() => logic.amountString(value));
 });
 
+test("formatAmountDisplay renders clean Indonesian thousands format and parseToRawAmount converts back", () => {
+  assert.equal(logic.formatAmountDisplay("2000000.00"), "2.000.000");
+  assert.equal(logic.formatAmountDisplay("2000000"), "2.000.000");
+  assert.equal(logic.formatAmountDisplay("0.00"), "0");
+  assert.equal(logic.formatAmountDisplay("0"), "0");
+  assert.equal(logic.formatAmountDisplay(null), "");
+  assert.equal(logic.formatAmountDisplay(""), "");
+  assert.equal(logic.formatAmountDisplay("2.000.000"), "2.000.000");
+  assert.equal(logic.parseToRawAmount("2.000.000"), "2000000");
+  assert.equal(logic.parseToRawAmount("2000000.00"), "2000000.00");
+  assert.equal(logic.parseToRawAmount(null), null);
+});
+
 test("monthly input rejects duplicate months, invalid years and unsupported kinds", () => {
   for (const change of [{ year: null }, { year: 2026.5 }, { kind: "unknown" }, { churchName: "" }, { months: [{ month: 13, amount: "1" }] }, { months: [{ month: 1, amount: "1" }, { month: 1, amount: "2" }] }, { months: [{ month: 1, amount: "-1" }] }]) assert.throws(() => logic.validateIuran({ ...valid(), ...change }));
 });

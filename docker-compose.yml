@@ -30,7 +30,7 @@ services:
     ports:
       - "127.0.0.1:${PORT:-3000}:3000"
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-monitoring_gereja}?schema=public}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-monitoring_gereja}?schema=public
       AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET wajib diisi di .env (minimal 32 karakter acak)}
       INITIAL_SUPERADMIN_PASSWORD: ${INITIAL_SUPERADMIN_PASSWORD:-}
       NODE_ENV: "production"

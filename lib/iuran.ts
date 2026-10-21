@@ -29,6 +29,61 @@ export function sumAmounts(values: (string | null)[]): string {
   return `${cents / BigInt(100)}.${String(cents % BigInt(100)).padStart(2, "0")}`;
 }
 
+export function formatAmountDisplay(value: unknown): string {
+  if (value === null || value === undefined || value === "") return "";
+  const str = String(value).trim();
+  if (!str) return "";
+
+  let whole = str;
+  let fraction = "";
+
+  if (str.includes(",")) {
+    [whole, fraction] = str.split(",");
+  } else if (str.includes(".")) {
+    const parts = str.split(".");
+    if (parts.length === 2 && parts[1].length <= 2) {
+      whole = parts[0];
+      fraction = parts[1];
+    } else {
+      whole = parts.join("");
+    }
+  }
+
+  const digits = whole.replace(/\D/g, "");
+  if (!digits) return "";
+
+  const cleanWhole = BigInt(digits).toString();
+  const formattedWhole = cleanWhole.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+  if (!fraction || fraction === "00" || fraction === "0") {
+    return formattedWhole;
+  }
+
+  return `${formattedWhole},${fraction}`;
+}
+
+export function parseToRawAmount(value: unknown): string | null {
+  if (value === null || value === undefined || value === "") return null;
+  const str = String(value).trim();
+  if (!str) return null;
+
+  let clean = str;
+  if (clean.includes(",")) {
+    const [w, f] = clean.split(",");
+    clean = `${w.replace(/\./g, "")}.${f}`;
+  } else if (clean.includes(".")) {
+    const parts = clean.split(".");
+    if (parts.length === 2 && parts[1].length === 2 && Number(parts[0]) > 0) {
+      clean = `${parts[0]}.${parts[1]}`;
+    } else {
+      clean = parts.join("");
+    }
+  }
+
+  const raw = clean.replace(/[^\d.]/g, "");
+  return raw || null;
+}
+
 function field(value: unknown, label: string, required = false): string {
   if (value !== undefined && typeof value !== "string") throw new Error(`${label} tidak valid.`);
   const text = (value as string | undefined || "").trim().replace(/\s+/g, " ");

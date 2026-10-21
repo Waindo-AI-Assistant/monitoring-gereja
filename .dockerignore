@@ -8,3 +8,21 @@ yarn-debug.log*
 yarn-error.log*
 .DS_Store
 *.pem
+
+# Python & virtual environments
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Heavy data & mounts (sudah di-mount via docker-compose volumes)
+data/
+public/data/
+public/uploads/
+
+# Scratch & tests
+scratch/
+tests/
+*.dump
+*.sql
+*.gdb
